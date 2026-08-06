@@ -2,15 +2,15 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>유성클리닝 현황지 출력</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>유성클리닝 현장 출력 프로그램</title>
 <style>
   :root {
     --navy: #1a3a5c;
-    --blue: #3b82f6;
-    --blue-dark: #2563eb;
+    --blue: #2563eb;
+    --blue-dark: #1d4ed8;
     --border: #e2e8f0;
-    --bg: #f7f8fa;
+    --bg: #f1f5f9;
     --text: #1e293b;
     --text-sub: #64748b;
     --green-bg: #ecfdf5;
@@ -20,81 +20,66 @@
     --green-dot: #22c55e;
   }
   * { box-sizing: border-box; }
-  body {
+  html, body {
     margin: 0;
+    min-width: 1080px;
     font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif;
     background: var(--bg);
     color: var(--text);
-    padding-bottom: 40px;
-  }
-  .wrap {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 0 16px;
   }
 
   /* Header */
   header {
     background: var(--navy);
     color: #fff;
-    padding: 18px 16px;
+    padding: 14px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
-  header .header-inner {
-    max-width: 720px;
-    margin: 0 auto;
+  header .title-group {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    width: 100%;
+    gap: 10px;
+  }
+  header .title-group .icon {
+    font-size: 22px;
   }
   header h1 {
-    font-size: 18px;
+    font-size: 19px;
     margin: 0;
     font-weight: 700;
-  }
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
   }
   .status-pill {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     font-size: 13px;
-    background: rgba(255,255,255,0.1);
-    padding: 5px 10px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.12);
+    padding: 7px 14px;
     border-radius: 999px;
   }
-  .dot {
-    width: 8px;
-    height: 8px;
+  .status-pill .dot {
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
     background: var(--red);
   }
-  .dot.connected { background: var(--green-dot); }
-  .gear-btn {
-    background: transparent;
-    border: none;
-    color: #fff;
-    font-size: 18px;
-    cursor: pointer;
-    padding: 4px 6px;
-    border-radius: 6px;
-    line-height: 1;
+  .status-pill .dot.connected { background: var(--green-dot); }
+  .status-pill .dot.running {
+    background: #fbbf24;
+    animation: pulse 1s infinite;
   }
-  .gear-btn:hover { background: rgba(255,255,255,0.15); }
+  @keyframes pulse { 50% { opacity: 0.3; } }
 
   /* Banner */
   .banner {
-    margin-top: 16px;
+    margin: 16px 24px 0;
     background: #fffbeb;
     border: 1px solid #fde68a;
     color: #92400e;
-    padding: 12px 14px;
+    padding: 12px 16px;
     border-radius: 10px;
     font-size: 13px;
     display: none;
@@ -114,190 +99,113 @@
     white-space: nowrap;
   }
 
-  /* Date section */
+  /* Layout */
+  .layout {
+    display: grid;
+    grid-template-columns: 300px 1fr 320px;
+    gap: 16px;
+    padding: 20px 24px;
+    align-items: start;
+  }
   .card {
     background: #fff;
     border: 1px solid var(--border);
     border-radius: 14px;
-    padding: 16px;
-    margin-top: 16px;
+    padding: 18px;
   }
-  .date-row {
+  .card-title {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .date-display {
-    font-size: 17px;
+    gap: 8px;
+    font-size: 15px;
     font-weight: 700;
     color: var(--navy);
-  }
-  .date-actions {
-    display: flex;
-    gap: 8px;
-  }
-  .btn-sm {
-    padding: 8px 14px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: #fff;
-    font-size: 13px;
-    cursor: pointer;
-    color: var(--text);
-  }
-  .btn-sm:hover { background: #f1f5f9; }
-  .date-picker-row {
-    margin-top: 10px;
-    display: none;
-  }
-  .date-picker-row.show { display: block; }
-  .date-picker-row input[type="date"] {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    font-size: 14px;
+    margin: 0 0 14px;
   }
 
-  /* Menu grid */
-  .menu-title {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text-sub);
-    margin: 20px 0 10px;
-  }
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  .menu-btn {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px 12px;
-    text-align: left;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    transition: background 0.15s, transform 0.05s;
-    min-height: 78px;
-  }
-  .menu-btn:hover:not(:disabled) { background: #f1f5f9; }
-  .menu-btn:active:not(:disabled) { transform: scale(0.98); }
-  .menu-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  .menu-btn .name {
-    font-weight: 700;
-    font-size: 14px;
-    color: var(--text);
-  }
-  .menu-btn .desc {
+  /* Left column */
+  .field-label {
     font-size: 12px;
-    color: var(--text-sub);
-  }
-  .menu-btn.primary {
-    background: var(--blue);
-    border-color: var(--blue);
-    grid-column: 1 / span 2;
-  }
-  .menu-btn.primary:hover:not(:disabled) { background: var(--blue-dark); }
-  .menu-btn.primary .name { color: #fff; }
-  .menu-btn.primary .desc { color: rgba(255,255,255,0.85); }
-
-  /* Spinner in button */
-  .spinner {
-    width: 14px;
-    height: 14px;
-    border: 2px solid rgba(0,0,0,0.15);
-    border-top-color: var(--navy);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    display: inline-block;
-  }
-  .menu-btn.primary .spinner {
-    border: 2px solid rgba(255,255,255,0.35);
-    border-top-color: #fff;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* Progress */
-  .progress-box {
-    margin-top: 16px;
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    border-radius: 12px;
-    padding: 14px 16px;
-    display: none;
-    align-items: center;
-    gap: 12px;
-    font-size: 14px;
-    color: #1e40af;
-  }
-  .progress-box.show { display: flex; }
-  .progress-box .spinner {
-    border-color: rgba(30,64,175,0.2);
-    border-top-color: #1e40af;
-    width: 18px;
-    height: 18px;
-  }
-
-  /* Error box */
-  .error-box {
-    margin-top: 16px;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: 12px;
-    padding: 14px 16px;
-    display: none;
-    font-size: 14px;
-    color: #b91c1c;
-  }
-  .error-box.show { display: block; }
-
-  /* Result */
-  .result-box {
-    margin-top: 16px;
-    background: var(--green-bg);
-    border: 1px solid var(--green-border);
-    border-radius: 12px;
-    padding: 16px;
-    display: none;
-  }
-  .result-box.show { display: block; }
-  .result-box .title {
     font-weight: 700;
-    color: var(--green-text);
+    color: var(--text-sub);
+    margin-bottom: 6px;
+  }
+  .field-group { margin-bottom: 16px; }
+  .field-group input[type="date"],
+  .field-group input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
     font-size: 14px;
-    margin-bottom: 10px;
+    color: var(--text);
+  }
+  .btn-primary {
+    width: 100%;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
   }
-  .link-item {
+  .btn-primary:hover:not(:disabled) { background: var(--blue-dark); }
+  .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  .menu-list { display: flex; flex-direction: column; gap: 8px; }
+  .menu-btn {
+    width: 100%;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+  }
+  .menu-btn .icon { font-size: 16px; width: 18px; text-align: center; }
+  .menu-btn:hover:not(:disabled) { background: #f1f5f9; border-color: #cbd5e1; }
+  .menu-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .menu-btn.danger:hover:not(:disabled) { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+
+  /* Center column: file list */
+  .file-list-card { min-height: 480px; display: flex; flex-direction: column; }
+  .file-list { flex: 1; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+  .file-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #fff;
-    border: 1px solid var(--green-border);
+    gap: 10px;
+    background: #f8fafc;
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 10px 12px;
-    margin-bottom: 8px;
-    font-size: 13px;
-    gap: 10px;
   }
-  .link-item .fname {
+  .file-item .fname {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--text);
   }
-  .link-item a {
+  .file-item .fname .pdf-icon { color: var(--red); font-size: 15px; flex-shrink: 0; }
+  .file-item a {
+    flex-shrink: 0;
     background: var(--navy);
     color: #fff;
     text-decoration: none;
@@ -306,55 +214,103 @@
     font-size: 12px;
     white-space: nowrap;
   }
-  .link-item a:hover { opacity: 0.9; }
-  .more-toggle {
+  .file-item a:hover { opacity: 0.9; }
+  .empty-state {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-sub);
+    font-size: 14px;
     text-align: center;
-    font-size: 13px;
-    color: var(--green-text);
-    cursor: pointer;
-    padding: 6px;
-    font-weight: 600;
+    line-height: 1.6;
+  }
+  .error-banner {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 14px;
+    margin-bottom: 12px;
   }
 
-  /* History */
-  .history-toggle {
-    margin-top: 16px;
-    width: 100%;
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px;
+  /* Right column: progress */
+  .progress-label {
     font-size: 13px;
     color: var(--text-sub);
-    cursor: pointer;
-    text-align: center;
-    font-weight: 600;
+    margin-bottom: 6px;
   }
-  .history-toggle:hover { background: #f1f5f9; }
-  .history-list {
-    display: none;
-    margin-top: 10px;
-    gap: 8px;
-    flex-direction: column;
+  .progress-label b { color: var(--blue); font-weight: 700; }
+  .progress-track {
+    background: #e2e8f0;
+    border-radius: 999px;
+    height: 16px;
+    overflow: hidden;
+    margin-bottom: 8px;
   }
-  .history-list.show { display: flex; }
-  .history-item {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 12px;
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--blue);
+    transition: width 0.3s;
+  }
+  .progress-percent {
+    text-align: right;
     font-size: 13px;
+    font-weight: 700;
+    color: var(--blue);
+    margin-bottom: 10px;
+  }
+  .progress-remain {
+    font-size: 12px;
+    color: var(--text-sub);
+  }
+  .progress-idle {
+    font-size: 13px;
+    color: var(--text-sub);
+    text-align: center;
+    padding: 12px 0;
+  }
+
+  .guide-list { display: flex; flex-direction: column; gap: 10px; }
+  .guide-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text); }
+  .guide-num {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--blue);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
     display: flex;
-    justify-content: space-between;
-    color: var(--text-sub);
+    align-items: center;
+    justify-content: center;
   }
-  .history-item .h-main { color: var(--text); font-weight: 600; }
-  .history-empty {
-    text-align: center;
-    color: var(--text-sub);
-    font-size: 13px;
-    padding: 10px;
+
+  /* Bottom bar */
+  .bottom-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    padding: 0 24px 24px;
   }
+  .bottom-btn {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .bottom-btn:hover { background: #f1f5f9; }
 
   /* Modal */
   .modal-overlay {
@@ -373,7 +329,10 @@
     border-radius: 14px;
     padding: 20px;
     width: 100%;
-    max-width: 360px;
+    max-width: 420px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
   }
   .modal h3 {
     margin: 0 0 6px;
@@ -414,92 +373,107 @@
   .modal-actions .confirm:hover { background: var(--blue-dark); }
   .modal-actions .cancel:hover { background: #f1f5f9; }
 
-  @media (max-width: 420px) {
-    .menu-btn { min-height: 72px; padding: 12px 10px; }
-    .menu-btn .name { font-size: 13px; }
-    .menu-btn .desc { font-size: 11px; }
+  .history-list { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+  .history-item {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-sub);
+  }
+  .history-item .h-main { color: var(--text); font-weight: 600; }
+  .history-empty {
+    text-align: center;
+    color: var(--text-sub);
+    font-size: 13px;
+    padding: 20px;
   }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="header-inner">
-    <h1>유성클리닝 현황지 출력</h1>
-    <div class="header-right">
-      <div class="status-pill">
-        <span class="dot" id="statusDot"></span>
-        <span id="statusText">연결 안됨</span>
-      </div>
-      <button class="gear-btn" id="settingsBtn" title="설정" aria-label="설정">⚙</button>
-    </div>
+  <div class="title-group">
+    <span class="icon">🖨️</span>
+    <h1>유성클리닝 현장 출력 프로그램</h1>
+  </div>
+  <div class="status-pill">
+    <span class="dot" id="statusDot"></span>
+    <span id="statusText">연결 안됨</span>
   </div>
 </header>
 
-<div class="wrap">
+<div class="banner" id="setupBanner">
+  <span>GAS Web App URL이 설정되지 않았어요. 설정 버튼을 눌러 URL을 입력해주세요.</span>
+  <button id="bannerSettingsBtn">설정하기</button>
+</div>
 
-  <div class="banner" id="setupBanner">
-    <span>GAS Web App URL이 설정되지 않았어요. 설정 아이콘을 눌러 URL을 입력해주세요.</span>
-    <button id="bannerSettingsBtn">설정하기</button>
-  </div>
+<div class="layout">
 
+  <!-- Left column -->
   <div class="card">
-    <div class="date-row">
-      <div class="date-display" id="dateDisplay">-</div>
-      <div class="date-actions">
-        <button class="btn-sm" id="todayBtn">오늘</button>
-        <button class="btn-sm" id="changeDateBtn">날짜 변경</button>
-      </div>
-    </div>
-    <div class="date-picker-row" id="datePickerRow">
+    <div class="card-title">📅 출력 날짜</div>
+    <div class="field-group">
       <input type="date" id="datePicker">
     </div>
+
+    <div class="card-title">🧪 테스트 코스</div>
+    <div class="field-group">
+      <input type="text" id="courseInput" placeholder="예: B, C, D, Z">
+    </div>
+
+    <button class="btn-primary" id="btnTodayPackage">🖨️ 오늘 전체 출력</button>
+
+    <div class="menu-list">
+      <button class="menu-btn" id="btnTest"><span class="icon">🧪</span> 테스트 출력</button>
+      <button class="menu-btn" id="btnCloser"><span class="icon">👤</span> 마감자 출력</button>
+      <button class="menu-btn" id="btnDrivers"><span class="icon">🚚</span> 기사별 출력</button>
+      <button class="menu-btn" id="btnPacking"><span class="icon">📦</span> 포장담당자 출력</button>
+      <button class="menu-btn" id="btnWeek"><span class="icon">🗓️</span> 주차 출력</button>
+      <button class="menu-btn danger" id="btnReset"><span class="icon">↺</span> 수정모드 복구</button>
+    </div>
   </div>
 
-  <div class="menu-title">출력 메뉴</div>
-  <div class="grid" id="menuGrid">
-    <button class="menu-btn primary" data-action="exportTodayPackage">
-      <span class="name">오늘 출력 패키지 ★</span>
-      <span class="desc">마감자+포장+기사별 한번에</span>
-    </button>
-    <button class="menu-btn" data-action="exportCloserByDate">
-      <span class="name">마감자 출력</span>
-      <span class="desc">전체 현황지+주소지</span>
-    </button>
-    <button class="menu-btn" data-action="exportByDateDriversOnly">
-      <span class="name">기사별 출력</span>
-      <span class="desc">코스별 현황지+주소지</span>
-    </button>
-    <button class="menu-btn" data-action="exportPackingByDate">
-      <span class="name">포장담당자 출력</span>
-      <span class="desc">포장 작업 지시서</span>
-    </button>
-    <button class="menu-btn" data-action="exportByWeek" data-needs="week">
-      <span class="name">주차 출력</span>
-      <span class="desc">화~일 6일치 일괄</span>
-    </button>
-    <button class="menu-btn" data-action="exportTestByJ1" data-needs="course">
-      <span class="name">테스트 출력</span>
-      <span class="desc">코스 하나만 선택 출력</span>
-    </button>
+  <!-- Center column -->
+  <div class="card file-list-card">
+    <div class="card-title" id="fileListTitle">📄 오늘 생성될 파일</div>
+    <div class="error-banner" id="errorBanner" style="display:none;"></div>
+    <div class="file-list" id="fileList"></div>
+    <div class="empty-state" id="emptyState">출력 버튼을 누르면<br>여기에 생성된 파일 목록이 표시됩니다.</div>
   </div>
 
-  <div class="progress-box" id="progressBox">
-    <span class="spinner"></span>
-    <span id="progressText">출력 중... (1~3분 소요)</span>
+  <!-- Right column -->
+  <div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">🕐 진행상황</div>
+      <div id="progressIdle" class="progress-idle">대기 중</div>
+      <div id="progressActive" style="display:none;">
+        <div class="progress-label">현재 작업: <b id="progressLabelText">-</b></div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-percent" id="progressPercent">0%</div>
+        <div class="progress-remain" id="progressRemain">예상 남은 시간: 계산 중</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💡 빠른 안내</div>
+      <div class="guide-list">
+        <div class="guide-item"><span class="guide-num">1</span> 날짜 선택</div>
+        <div class="guide-item"><span class="guide-num">2</span> 오늘 전체 출력 클릭</div>
+        <div class="guide-item"><span class="guide-num">3</span> PDF 확인</div>
+      </div>
+    </div>
   </div>
 
-  <div class="error-box" id="errorBox"></div>
+</div>
 
-  <div class="result-box" id="resultBox">
-    <div class="title">✅ 출력 완료</div>
-    <div id="linkList"></div>
-    <div class="more-toggle" id="moreToggle" style="display:none;"></div>
-  </div>
-
-  <button class="history-toggle" id="historyToggle">출력 기록 보기</button>
-  <div class="history-list" id="historyList"></div>
-
+<div class="bottom-bar">
+  <button class="bottom-btn" id="btnOpenFolder">📁 오늘 출력 폴더 열기</button>
+  <button class="bottom-btn" id="btnHistory">🕐 최근 출력 내역</button>
+  <button class="bottom-btn" id="btnSettings">⚙️ 설정</button>
 </div>
 
 <!-- Week modal -->
@@ -511,19 +485,6 @@
     <div class="modal-actions">
       <button class="cancel" data-close="weekModalOverlay">취소</button>
       <button class="confirm" id="weekConfirmBtn">확인</button>
-    </div>
-  </div>
-</div>
-
-<!-- Course modal -->
-<div class="modal-overlay" id="courseModalOverlay">
-  <div class="modal">
-    <h3>테스트 출력</h3>
-    <p>출력할 코스명을 입력하세요 (예: B, C, D, Z)</p>
-    <input type="text" id="courseInput" placeholder="예: B">
-    <div class="modal-actions">
-      <button class="cancel" data-close="courseModalOverlay">취소</button>
-      <button class="confirm" id="courseConfirmBtn">확인</button>
     </div>
   </div>
 </div>
@@ -541,6 +502,17 @@
   </div>
 </div>
 
+<!-- History modal -->
+<div class="modal-overlay" id="historyModalOverlay">
+  <div class="modal">
+    <h3>최근 출력 내역</h3>
+    <div class="history-list" id="historyList"></div>
+    <div class="modal-actions" style="margin-top:14px;">
+      <button class="cancel" data-close="historyModalOverlay">닫기</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function () {
   'use strict';
@@ -552,6 +524,7 @@
   var DEFAULT_URL_PLACEHOLDER = '여기에_입력';
   var DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbxJqi62_b869ZWCBLgO_YzrZFBT2C2TnGWpmmgTtD2vh0zTYeA-UfHkHSo6gGfU1591/exec';
   var FETCH_TIMEOUT_MS = 300000; // 5 minutes
+  var PROGRESS_POLL_MS = 1500;
 
   var MENU_LABELS = {
     exportTodayPackage: '오늘 출력 패키지',
@@ -559,52 +532,62 @@
     exportByDateDriversOnly: '기사별 출력',
     exportPackingByDate: '포장담당자 출력',
     exportByWeek: '주차 출력',
-    exportTestByJ1: '테스트 출력'
+    exportTestByJ1: '테스트 출력',
+    resetViewMode: '수정모드 복구'
   };
 
   var state = {
     selectedDate: new Date(),
-    isRunning: false
+    isRunning: false,
+    lastFolderUrl: ''
   };
+
+  var progressTimer = null;
 
   // ---------- DOM refs ----------
   var statusDot = document.getElementById('statusDot');
   var statusText = document.getElementById('statusText');
   var setupBanner = document.getElementById('setupBanner');
   var bannerSettingsBtn = document.getElementById('bannerSettingsBtn');
-  var settingsBtn = document.getElementById('settingsBtn');
 
-  var dateDisplay = document.getElementById('dateDisplay');
-  var todayBtn = document.getElementById('todayBtn');
-  var changeDateBtn = document.getElementById('changeDateBtn');
-  var datePickerRow = document.getElementById('datePickerRow');
   var datePicker = document.getElementById('datePicker');
+  var courseInput = document.getElementById('courseInput');
 
-  var menuGrid = document.getElementById('menuGrid');
-  var progressBox = document.getElementById('progressBox');
-  var progressText = document.getElementById('progressText');
-  var errorBox = document.getElementById('errorBox');
-  var resultBox = document.getElementById('resultBox');
-  var linkList = document.getElementById('linkList');
-  var moreToggle = document.getElementById('moreToggle');
+  var btnTodayPackage = document.getElementById('btnTodayPackage');
+  var btnTest = document.getElementById('btnTest');
+  var btnCloser = document.getElementById('btnCloser');
+  var btnDrivers = document.getElementById('btnDrivers');
+  var btnPacking = document.getElementById('btnPacking');
+  var btnWeek = document.getElementById('btnWeek');
+  var btnReset = document.getElementById('btnReset');
+  var allActionButtons = [btnTodayPackage, btnTest, btnCloser, btnDrivers, btnPacking, btnWeek, btnReset];
 
-  var historyToggle = document.getElementById('historyToggle');
-  var historyList = document.getElementById('historyList');
+  var fileListTitle = document.getElementById('fileListTitle');
+  var errorBanner = document.getElementById('errorBanner');
+  var fileList = document.getElementById('fileList');
+  var emptyState = document.getElementById('emptyState');
+
+  var progressIdle = document.getElementById('progressIdle');
+  var progressActive = document.getElementById('progressActive');
+  var progressLabelText = document.getElementById('progressLabelText');
+  var progressFill = document.getElementById('progressFill');
+  var progressPercent = document.getElementById('progressPercent');
+  var progressRemain = document.getElementById('progressRemain');
+
+  var btnOpenFolder = document.getElementById('btnOpenFolder');
+  var btnHistory = document.getElementById('btnHistory');
+  var btnSettings = document.getElementById('btnSettings');
 
   var weekModalOverlay = document.getElementById('weekModalOverlay');
   var weekInput = document.getElementById('weekInput');
   var weekConfirmBtn = document.getElementById('weekConfirmBtn');
 
-  var courseModalOverlay = document.getElementById('courseModalOverlay');
-  var courseInput = document.getElementById('courseInput');
-  var courseConfirmBtn = document.getElementById('courseConfirmBtn');
-
   var settingsModalOverlay = document.getElementById('settingsModalOverlay');
   var gasUrlInput = document.getElementById('gasUrlInput');
   var gasUrlConfirmBtn = document.getElementById('gasUrlConfirmBtn');
 
-  var allResultLinks = [];
-  var resultsExpanded = false;
+  var historyModalOverlay = document.getElementById('historyModalOverlay');
+  var historyList = document.getElementById('historyList');
 
   // ---------- Utility ----------
   function getGasUrl() {
@@ -618,124 +601,106 @@
     return !!url && url.indexOf(DEFAULT_URL_PLACEHOLDER) === -1;
   }
 
-  function formatDateDisplay(date) {
-    var days = ['일', '월', '화', '수', '목', '금', '토'];
-    var y = date.getFullYear();
-    var m = date.getMonth() + 1;
-    var d = date.getDate();
-    var w = days[date.getDay()];
-    return y + '년 ' + m + '월 ' + d + '일 ' + w + '요일';
-  }
   function formatDateForGas(date) {
     var y = date.getFullYear();
     var m = String(date.getMonth() + 1).padStart(2, '0');
     var d = String(date.getDate()).padStart(2, '0');
     return y + '-' + m + '-' + d;
   }
-  function formatDateForInput(date) {
-    return formatDateForGas(date);
+
+  function updateDatePickerFromState() {
+    datePicker.value = formatDateForGas(state.selectedDate);
   }
 
-  function updateDateDisplay() {
-    dateDisplay.textContent = formatDateDisplay(state.selectedDate);
-    datePicker.value = formatDateForInput(state.selectedDate);
+  datePicker.addEventListener('change', function () {
+    if (datePicker.value) {
+      var parts = datePicker.value.split('-');
+      state.selectedDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    }
+  });
+
+  function setStatus(mode, text) {
+    statusDot.classList.remove('connected', 'running');
+    if (mode === 'connected') statusDot.classList.add('connected');
+    if (mode === 'running') statusDot.classList.add('running');
+    statusText.textContent = text;
   }
 
   function updateConnectionStatus() {
     var configured = isGasUrlConfigured();
     if (configured) {
-      statusDot.classList.add('connected');
-      statusText.textContent = '연결됨';
+      setStatus('connected', '오늘 출력 준비 완료');
       setupBanner.classList.remove('show');
     } else {
-      statusDot.classList.remove('connected');
-      statusText.textContent = '연결 안됨';
+      setStatus('idle', '연결 안됨');
       setupBanner.classList.add('show');
     }
   }
 
-  function showModal(overlay) {
-    overlay.classList.add('show');
-  }
-  function hideModal(overlay) {
-    overlay.classList.remove('show');
-  }
+  function showModal(overlay) { overlay.classList.add('show'); }
+  function hideModal(overlay) { overlay.classList.remove('show'); }
 
-  function setRunning(running, activeBtn) {
+  function setRunning(running) {
     state.isRunning = running;
-    var btns = menuGrid.querySelectorAll('.menu-btn');
-    btns.forEach(function (btn) {
-      btn.disabled = running;
-      var nameEl = btn.querySelector('.name');
-      if (btn === activeBtn) {
-        if (running) {
-          btn.dataset.originalName = nameEl.textContent;
-          nameEl.innerHTML = '<span class="spinner"></span> 처리 중...';
-        } else if (btn.dataset.originalName) {
-          nameEl.textContent = btn.dataset.originalName;
-        }
-      }
-    });
+    allActionButtons.forEach(function (btn) { btn.disabled = running; });
+
     if (running) {
-      progressBox.classList.add('show');
-      errorBox.classList.remove('show');
-      resultBox.classList.remove('show');
+      setStatus('running', '출력 중...');
+      errorBanner.style.display = 'none';
+      startProgressPolling();
     } else {
-      progressBox.classList.remove('show');
+      stopProgressPolling();
     }
   }
 
   function showError(message) {
-    errorBox.textContent = message;
-    errorBox.classList.add('show');
-    resultBox.classList.remove('show');
+    errorBanner.textContent = '⚠️ ' + message;
+    errorBanner.style.display = 'block';
+    fileList.innerHTML = '';
+    emptyState.style.display = 'none';
+    setStatus(isGasUrlConfigured() ? 'idle' : 'idle', '출력 실패');
   }
 
-  function showResult(links) {
-    allResultLinks = links || [];
-    resultsExpanded = false;
-    renderResultLinks();
-    resultBox.classList.add('show');
-    errorBox.classList.remove('show');
-  }
+  function showResult(links, menuLabel) {
+    errorBanner.style.display = 'none';
+    fileListTitle.textContent = '📄 ' + (menuLabel || '생성된 파일');
+    fileList.innerHTML = '';
 
-  function renderResultLinks() {
-    linkList.innerHTML = '';
-    var limit = 5;
-    var toShow = resultsExpanded ? allResultLinks : allResultLinks.slice(0, limit);
+    if (!links || links.length === 0) {
+      emptyState.style.display = 'flex';
+      emptyState.innerHTML = '완료되었습니다. (생성된 파일 없음)';
+      return;
+    }
 
-    toShow.forEach(function (link) {
+    emptyState.style.display = 'none';
+
+    links.forEach(function (link) {
       var item = document.createElement('div');
-      item.className = 'link-item';
+      item.className = 'file-item';
+
       var fname = document.createElement('span');
       fname.className = 'fname';
-      fname.textContent = link.fileName || '(파일명 없음)';
+      fname.innerHTML = '<span class="pdf-icon">📕</span><span>' + escapeHtml(link.fileName || '(파일명 없음)') + '</span>';
+
       var a = document.createElement('a');
       a.href = link.url || '#';
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
       a.textContent = '열기';
+
       item.appendChild(fname);
       item.appendChild(a);
-      linkList.appendChild(item);
+      fileList.appendChild(item);
     });
 
-    if (allResultLinks.length > limit) {
-      moreToggle.style.display = 'block';
-      if (resultsExpanded) {
-        moreToggle.textContent = '접기';
-      } else {
-        moreToggle.textContent = '외 ' + (allResultLinks.length - limit) + '개 · 전체 보기';
-      }
-    } else {
-      moreToggle.style.display = 'none';
-    }
+    setStatus('connected', '오늘 출력 완료');
   }
 
-  moreToggle.addEventListener('click', function () {
-    resultsExpanded = !resultsExpanded;
-    renderResultLinks();
-  });
+  function escapeHtml(s) {
+    var div = document.createElement('div');
+    div.textContent = s;
+    return div.innerHTML;
+  }
 
   // ---------- History ----------
   function getHistory() {
@@ -748,9 +713,8 @@
   function addHistory(entry) {
     var hist = getHistory();
     hist.unshift(entry);
-    hist = hist.slice(0, 5);
+    hist = hist.slice(0, 10);
     localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(hist));
-    renderHistory();
   }
   function renderHistory() {
     var hist = getHistory();
@@ -776,10 +740,55 @@
     });
   }
 
-  historyToggle.addEventListener('click', function () {
-    historyList.classList.toggle('show');
-    historyToggle.textContent = historyList.classList.contains('show') ? '출력 기록 접기' : '출력 기록 보기';
+  btnHistory.addEventListener('click', function () {
+    renderHistory();
+    showModal(historyModalOverlay);
   });
+
+  // ---------- Progress polling ----------
+  function startProgressPolling() {
+    stopProgressPolling();
+    progressIdle.style.display = 'none';
+    progressActive.style.display = 'block';
+    pollProgressOnce();
+    progressTimer = setInterval(pollProgressOnce, PROGRESS_POLL_MS);
+  }
+
+  function stopProgressPolling() {
+    if (progressTimer) {
+      clearInterval(progressTimer);
+      progressTimer = null;
+    }
+    progressActive.style.display = 'none';
+    progressIdle.style.display = 'block';
+    progressIdle.textContent = '대기 중';
+  }
+
+  function formatSec(sec) {
+    if (sec === null || sec === undefined) return '계산 중';
+    sec = Number(sec);
+    if (sec < 60) return sec + '초';
+    var min = Math.floor(sec / 60);
+    var remain = sec % 60;
+    return min + '분 ' + remain + '초';
+  }
+
+  function pollProgressOnce() {
+    var url = getGasUrl();
+    fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'getProgress' })
+    }).then(function (res) { return res.json(); })
+      .then(function (p) {
+        if (!state.isRunning) return;
+        var percent = p.percent || 0;
+        progressFill.style.width = percent + '%';
+        progressPercent.textContent = percent + '%';
+        progressLabelText.textContent = p.label || '-';
+        progressRemain.textContent = '예상 남은 시간: ' + formatSec(p.remainSec);
+      })
+      .catch(function () {});
+  }
 
   // ---------- GAS call ----------
   function callGAS(action, date, extra) {
@@ -802,7 +811,7 @@
     });
   }
 
-  function runAction(action, extra, activeBtn) {
+  function runAction(action, extra) {
     if (!isGasUrlConfigured()) {
       showModal(settingsModalOverlay);
       return;
@@ -811,34 +820,32 @@
 
     var dateStr = formatDateForGas(state.selectedDate);
     var startTime = Date.now();
-    setRunning(true, activeBtn);
+    setRunning(true);
 
     callGAS(action, dateStr, extra)
       .then(function (result) {
-        setRunning(false, activeBtn);
+        setRunning(false);
         var elapsedSec = Math.round((Date.now() - startTime) / 1000);
         var durationStr = elapsedSec < 60
           ? elapsedSec + '초'
           : Math.floor(elapsedSec / 60) + '분 ' + (elapsedSec % 60) + '초';
 
         if (result && result.status === 'ok') {
-          showResult(result.links || []);
+          if (result.folderUrl) state.lastFolderUrl = result.folderUrl;
+          showResult(result.links || [], MENU_LABELS[action] || action);
           addHistory({
             date: dateStr,
             menuName: MENU_LABELS[action] || action,
             duration: durationStr
           });
-          statusDot.classList.add('connected');
-          statusText.textContent = '연결됨';
+          updateConnectionStatus();
         } else {
           var msg = (result && result.message) ? result.message : '알 수 없는 오류가 발생했습니다.';
-          showError('출력에 실패했어요. GAS 연결을 확인해주세요. (' + msg + ')');
+          showError(msg);
         }
       })
       .catch(function (err) {
-        setRunning(false, activeBtn);
-        statusDot.classList.remove('connected');
-        statusText.textContent = '연결 안됨';
+        setRunning(false);
         if (err && err.name === 'AbortError') {
           showError('출력 시간이 너무 오래 걸려 중단되었어요. GAS 실행 상태를 확인해주세요.');
         } else {
@@ -848,50 +855,31 @@
   }
 
   // ---------- Event bindings ----------
+  btnTodayPackage.addEventListener('click', function () { runAction('exportTodayPackage', null); });
+  btnCloser.addEventListener('click', function () { runAction('exportCloserByDate', null); });
+  btnDrivers.addEventListener('click', function () { runAction('exportByDateDriversOnly', null); });
+  btnPacking.addEventListener('click', function () { runAction('exportPackingByDate', null); });
 
-  todayBtn.addEventListener('click', function () {
-    state.selectedDate = new Date();
-    updateDateDisplay();
-    datePickerRow.classList.remove('show');
-  });
-
-  changeDateBtn.addEventListener('click', function () {
-    datePickerRow.classList.toggle('show');
-  });
-
-  datePicker.addEventListener('change', function () {
-    if (datePicker.value) {
-      var parts = datePicker.value.split('-');
-      state.selectedDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-      updateDateDisplay();
-    }
-  });
-
-  var pendingBtn = null;
-
-  menuGrid.addEventListener('click', function (e) {
-    var btn = e.target.closest('.menu-btn');
-    if (!btn || btn.disabled) return;
-    var action = btn.dataset.action;
-    var needs = btn.dataset.needs;
-
-    if (needs === 'week') {
-      pendingBtn = btn;
-      weekInput.value = '';
-      showModal(weekModalOverlay);
-      setTimeout(function () { weekInput.focus(); }, 50);
+  btnTest.addEventListener('click', function () {
+    var course = courseInput.value.trim();
+    if (!course) {
+      courseInput.focus();
       return;
     }
-    if (needs === 'course') {
-      pendingBtn = btn;
-      courseInput.value = '';
-      showModal(courseModalOverlay);
-      setTimeout(function () { courseInput.focus(); }, 50);
-      return;
-    }
-    runAction(action, null, btn);
+    runAction('exportTestByJ1', course);
   });
 
+  btnReset.addEventListener('click', function () {
+    if (state.isRunning) return;
+    if (!confirm('수정모드로 복구하면 모든 행/열 숨김이 해제됩니다. 계속할까요?')) return;
+    runAction('resetViewMode', null);
+  });
+
+  btnWeek.addEventListener('click', function () {
+    weekInput.value = '';
+    showModal(weekModalOverlay);
+    setTimeout(function () { weekInput.focus(); }, 50);
+  });
   weekConfirmBtn.addEventListener('click', function () {
     var val = weekInput.value.trim();
     if (!val) {
@@ -899,23 +887,18 @@
       return;
     }
     hideModal(weekModalOverlay);
-    runAction('exportByWeek', val, pendingBtn);
+    runAction('exportByWeek', val);
   });
   weekInput.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') weekConfirmBtn.click();
   });
 
-  courseConfirmBtn.addEventListener('click', function () {
-    var val = courseInput.value.trim();
-    if (!val) {
-      courseInput.focus();
-      return;
+  btnOpenFolder.addEventListener('click', function () {
+    if (state.lastFolderUrl) {
+      window.open(state.lastFolderUrl, '_blank');
+    } else {
+      alert('아직 오늘 생성된 출력 폴더가 없어요. 먼저 출력을 한 번 실행해주세요.');
     }
-    hideModal(courseModalOverlay);
-    runAction('exportTestByJ1', val, pendingBtn);
-  });
-  courseInput.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') courseConfirmBtn.click();
   });
 
   // Settings modal
@@ -924,7 +907,7 @@
     showModal(settingsModalOverlay);
     setTimeout(function () { gasUrlInput.focus(); }, 50);
   }
-  settingsBtn.addEventListener('click', openSettingsModal);
+  btnSettings.addEventListener('click', openSettingsModal);
   bannerSettingsBtn.addEventListener('click', openSettingsModal);
 
   gasUrlConfirmBtn.addEventListener('click', function () {
@@ -954,9 +937,8 @@
   });
 
   // ---------- Init ----------
-  updateDateDisplay();
+  updateDatePickerFromState();
   updateConnectionStatus();
-  renderHistory();
 
 })();
 </script>
