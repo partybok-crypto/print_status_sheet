@@ -619,8 +619,9 @@ function prepareTempSheetForRows_(ss, sourceSheet, dataEndRow, items, isAlpha, k
     if (courseLabel) {
       // 주소지만 따로 출력했을 때 주소만 보고는 어느 코스인지 알 수 없어서,
       // 주소지 범위 맨 위에 코스명(+기사명)을 표시해준다.
-      // 원본 헤더는 이 범위보다 넓게 병합돼 있을 수 있어 1행 전체를 먼저 병합 해제한다.
-      tempSheet.getRange(1, 1, 1, tempSheet.getLastColumn()).breakApart();
+      // 원본 헤더는 이 범위보다 넓게(여러 행에 걸쳐) 병합돼 있을 수 있어
+      // 헤더 영역(1~3행) 전체를 먼저 병합 해제한다.
+      tempSheet.getRange(1, 1, DATA_START_ROW - 1, tempSheet.getLastColumn()).breakApart();
 
       var addrHeaderRange = tempSheet.getRange(
         1, ALPHA_ADDRESS_START_COL, 1, ALPHA_ADDRESS_END_COL - ALPHA_ADDRESS_START_COL + 1
