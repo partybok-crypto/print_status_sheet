@@ -149,6 +149,25 @@
     font-size: 14px;
     color: var(--text);
   }
+  .day-selector {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+  .day-btn {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .day-btn:hover:not(:disabled) { background: #f1f5f9; }
+  .day-btn.selected { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .day-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
   .btn-primary {
     width: 100%;
     background: var(--blue);
@@ -424,24 +443,16 @@
 
   <!-- Left column -->
   <div class="card">
-    <div class="card-title">📅 출력 날짜</div>
+    <div class="card-title">📅 출력 요일</div>
     <div class="field-group">
-      <input type="date" id="datePicker">
-    </div>
-
-    <div class="card-title">🧪 테스트 코스</div>
-    <div class="field-group">
-      <input type="text" id="courseInput" placeholder="예: B, C, D, Z">
+      <div class="day-selector" id="daySelector"></div>
     </div>
 
     <button class="btn-primary" id="btnTodayPackage">🖨️ 오늘 전체 출력</button>
 
     <div class="menu-list">
-      <button class="menu-btn" id="btnTest"><span class="icon">🧪</span> 테스트 출력</button>
+      <button class="menu-btn" id="btnCourses"><span class="icon">🧭</span> 코스별 출력</button>
       <button class="menu-btn" id="btnCloser"><span class="icon">👤</span> 마감자 출력</button>
-      <button class="menu-btn" id="btnDrivers"><span class="icon">🚚</span> 기사별 출력</button>
-      <button class="menu-btn" id="btnPacking"><span class="icon">📦</span> 포장담당자 출력</button>
-      <button class="menu-btn" id="btnWeek"><span class="icon">🗓️</span> 주차 출력</button>
       <button class="menu-btn danger" id="btnReset"><span class="icon">↺</span> 수정모드 복구</button>
     </div>
   </div>
@@ -470,7 +481,7 @@
     <div class="card">
       <div class="card-title">💡 빠른 안내</div>
       <div class="guide-list">
-        <div class="guide-item"><span class="guide-num">1</span> 날짜 선택</div>
+        <div class="guide-item"><span class="guide-num">1</span> 요일 확인 (오늘 자동 선택)</div>
         <div class="guide-item"><span class="guide-num">2</span> 오늘 전체 출력 클릭</div>
         <div class="guide-item"><span class="guide-num">3</span> PDF 확인</div>
       </div>
@@ -483,19 +494,6 @@
   <button class="bottom-btn" id="btnOpenFolder">📁 오늘 출력 폴더 열기</button>
   <button class="bottom-btn" id="btnHistory">🕐 최근 출력 내역</button>
   <button class="bottom-btn" id="btnSettings">⚙️ 설정</button>
-</div>
-
-<!-- Week modal -->
-<div class="modal-overlay" id="weekModalOverlay">
-  <div class="modal">
-    <h3>주차 출력</h3>
-    <p>출력할 주차 번호를 입력하세요 (예: 32)</p>
-    <input type="text" id="weekInput" placeholder="예: 32" inputmode="numeric">
-    <div class="modal-actions">
-      <button class="cancel" data-close="weekModalOverlay">취소</button>
-      <button class="confirm" id="weekConfirmBtn">확인</button>
-    </div>
-  </div>
 </div>
 
 <!-- Settings modal -->
@@ -535,18 +533,18 @@
   var FETCH_TIMEOUT_MS = 300000; // 5 minutes
   var PROGRESS_POLL_MS = 1500;
 
+  var WEEKDAYS = ['월', '화', '수', '목', '금', '토', '일'];
+  var WEEKDAY_FROM_JS_DAY = ['일', '월', '화', '수', '목', '금', '토']; // Date#getDay() 0=일 ~ 6=토
+
   var MENU_LABELS = {
-    exportTodayPackage: '오늘 출력 패키지',
+    exportTodayPackage: '오늘 전체 출력',
     exportCloserByDate: '마감자 출력',
-    exportByDateDriversOnly: '기사별 출력',
-    exportPackingByDate: '포장담당자 출력',
-    exportByWeek: '주차 출력',
-    exportTestByJ1: '테스트 출력',
+    exportByDateDriversOnly: '코스별 출력',
     resetViewMode: '수정모드 복구'
   };
 
   var state = {
-    selectedDate: new Date(),
+    selectedDay: WEEKDAY_FROM_JS_DAY[new Date().getDay()],
     isRunning: false,
     lastFolderUrl: ''
   };
@@ -559,17 +557,13 @@
   var setupBanner = document.getElementById('setupBanner');
   var bannerSettingsBtn = document.getElementById('bannerSettingsBtn');
 
-  var datePicker = document.getElementById('datePicker');
-  var courseInput = document.getElementById('courseInput');
+  var daySelector = document.getElementById('daySelector');
 
   var btnTodayPackage = document.getElementById('btnTodayPackage');
-  var btnTest = document.getElementById('btnTest');
   var btnCloser = document.getElementById('btnCloser');
-  var btnDrivers = document.getElementById('btnDrivers');
-  var btnPacking = document.getElementById('btnPacking');
-  var btnWeek = document.getElementById('btnWeek');
+  var btnCourses = document.getElementById('btnCourses');
   var btnReset = document.getElementById('btnReset');
-  var allActionButtons = [btnTodayPackage, btnTest, btnCloser, btnDrivers, btnPacking, btnWeek, btnReset];
+  var allActionButtons = [btnTodayPackage, btnCloser, btnCourses, btnReset];
 
   var fileListTitle = document.getElementById('fileListTitle');
   var errorBanner = document.getElementById('errorBanner');
@@ -586,10 +580,6 @@
   var btnOpenFolder = document.getElementById('btnOpenFolder');
   var btnHistory = document.getElementById('btnHistory');
   var btnSettings = document.getElementById('btnSettings');
-
-  var weekModalOverlay = document.getElementById('weekModalOverlay');
-  var weekInput = document.getElementById('weekInput');
-  var weekConfirmBtn = document.getElementById('weekConfirmBtn');
 
   var settingsModalOverlay = document.getElementById('settingsModalOverlay');
   var gasUrlInput = document.getElementById('gasUrlInput');
@@ -610,23 +600,28 @@
     return !!url && url.indexOf(DEFAULT_URL_PLACEHOLDER) === -1;
   }
 
-  function formatDateForGas(date) {
-    var y = date.getFullYear();
-    var m = String(date.getMonth() + 1).padStart(2, '0');
-    var d = String(date.getDate()).padStart(2, '0');
-    return y + '-' + m + '-' + d;
+  function buildDaySelector() {
+    daySelector.innerHTML = '';
+    WEEKDAYS.forEach(function (d) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'day-btn';
+      b.id = 'day-' + d;
+      b.textContent = d;
+      b.addEventListener('click', function () { selectDay(d); });
+      daySelector.appendChild(b);
+    });
+    selectDay(state.selectedDay);
   }
 
-  function updateDatePickerFromState() {
-    datePicker.value = formatDateForGas(state.selectedDate);
+  function selectDay(d) {
+    state.selectedDay = d;
+    WEEKDAYS.forEach(function (w) {
+      var btn = document.getElementById('day-' + w);
+      if (!btn) return;
+      btn.classList.toggle('selected', w === d);
+    });
   }
-
-  datePicker.addEventListener('change', function () {
-    if (datePicker.value) {
-      var parts = datePicker.value.split('-');
-      state.selectedDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-    }
-  });
 
   function setStatus(mode, text) {
     statusDot.classList.remove('connected', 'running');
@@ -740,7 +735,7 @@
       item.className = 'history-item';
       var left = document.createElement('span');
       left.className = 'h-main';
-      left.textContent = h.date + ' · ' + h.menuName;
+      left.textContent = (h.weekday || h.date || '') + '요일 · ' + h.menuName;
       var right = document.createElement('span');
       right.textContent = h.duration;
       item.appendChild(left);
@@ -800,14 +795,14 @@
   }
 
   // ---------- GAS call ----------
-  function callGAS(action, date, extra) {
+  function callGAS(action, weekday) {
     var url = getGasUrl();
     var controller = new AbortController();
     var timeoutId = setTimeout(function () { controller.abort(); }, FETCH_TIMEOUT_MS);
 
     return fetch(url, {
       method: 'POST',
-      body: JSON.stringify({ action: action, date: date, extra: extra }),
+      body: JSON.stringify({ action: action, weekday: weekday }),
       signal: controller.signal
     }).then(function (res) {
       clearTimeout(timeoutId);
@@ -820,18 +815,18 @@
     });
   }
 
-  function runAction(action, extra) {
+  function runAction(action) {
     if (!isGasUrlConfigured()) {
       showModal(settingsModalOverlay);
       return;
     }
     if (state.isRunning) return;
 
-    var dateStr = formatDateForGas(state.selectedDate);
+    var weekday = state.selectedDay;
     var startTime = Date.now();
     setRunning(true);
 
-    callGAS(action, dateStr, extra)
+    callGAS(action, weekday)
       .then(function (result) {
         setRunning(false);
         var elapsedSec = Math.round((Date.now() - startTime) / 1000);
@@ -843,7 +838,7 @@
           if (result.folderUrl) state.lastFolderUrl = result.folderUrl;
           showResult(result.links || [], MENU_LABELS[action] || action);
           addHistory({
-            date: dateStr,
+            weekday: weekday,
             menuName: MENU_LABELS[action] || action,
             duration: durationStr
           });
@@ -864,42 +859,14 @@
   }
 
   // ---------- Event bindings ----------
-  btnTodayPackage.addEventListener('click', function () { runAction('exportTodayPackage', null); });
-  btnCloser.addEventListener('click', function () { runAction('exportCloserByDate', null); });
-  btnDrivers.addEventListener('click', function () { runAction('exportByDateDriversOnly', null); });
-  btnPacking.addEventListener('click', function () { runAction('exportPackingByDate', null); });
-
-  btnTest.addEventListener('click', function () {
-    var course = courseInput.value.trim();
-    if (!course) {
-      courseInput.focus();
-      return;
-    }
-    runAction('exportTestByJ1', course);
-  });
+  btnTodayPackage.addEventListener('click', function () { runAction('exportTodayPackage'); });
+  btnCloser.addEventListener('click', function () { runAction('exportCloserByDate'); });
+  btnCourses.addEventListener('click', function () { runAction('exportByDateDriversOnly'); });
 
   btnReset.addEventListener('click', function () {
     if (state.isRunning) return;
     if (!confirm('수정모드로 복구하면 모든 행/열 숨김이 해제됩니다. 계속할까요?')) return;
-    runAction('resetViewMode', null);
-  });
-
-  btnWeek.addEventListener('click', function () {
-    weekInput.value = '';
-    showModal(weekModalOverlay);
-    setTimeout(function () { weekInput.focus(); }, 50);
-  });
-  weekConfirmBtn.addEventListener('click', function () {
-    var val = weekInput.value.trim();
-    if (!val) {
-      weekInput.focus();
-      return;
-    }
-    hideModal(weekModalOverlay);
-    runAction('exportByWeek', val);
-  });
-  weekInput.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') weekConfirmBtn.click();
+    runAction('resetViewMode');
   });
 
   btnOpenFolder.addEventListener('click', function () {
@@ -946,7 +913,7 @@
   });
 
   // ---------- Init ----------
-  updateDatePickerFromState();
+  buildDaySelector();
   updateConnectionStatus();
 
 })();
