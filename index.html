@@ -243,6 +243,20 @@
     white-space: nowrap;
   }
   .file-item a:hover { opacity: 0.9; }
+  .file-item.merged {
+    background: #eff6ff;
+    border: 1.5px solid var(--navy);
+  }
+  .file-item.merged .fname { font-weight: 700; }
+  .file-item.merged .fname .pdf-icon { color: var(--navy); }
+  .file-item.merged a { background: var(--navy); font-weight: 700; }
+  .file-list-divider {
+    font-size: 11px;
+    color: #94a3b8;
+    margin: 2px 0;
+    padding-top: 4px;
+    border-top: 1px dashed var(--border);
+  }
   .empty-state {
     flex: 1;
     display: flex;
@@ -678,24 +692,38 @@
 
     emptyState.style.display = 'none';
 
-    links.forEach(function (link) {
+    var mergedLinks = links.filter(function (l) { return (l.fileType || '').indexOf('통합인쇄') !== -1; });
+    var normalLinks = links.filter(function (l) { return (l.fileType || '').indexOf('통합인쇄') === -1; });
+
+    function renderLink(link, isMerged) {
       var item = document.createElement('div');
-      item.className = 'file-item';
+      item.className = isMerged ? 'file-item merged' : 'file-item';
 
       var fname = document.createElement('span');
       fname.className = 'fname';
-      fname.innerHTML = '<span class="pdf-icon">📕</span><span>' + escapeHtml(link.fileName || '(파일명 없음)') + '</span>';
+      fname.innerHTML = '<span class="pdf-icon">' + (isMerged ? '🖨️' : '📕') + '</span><span>' + escapeHtml(link.fileName || '(파일명 없음)') + '</span>';
 
       var a = document.createElement('a');
       a.href = link.url || '#';
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
-      a.textContent = '열기';
+      a.textContent = isMerged ? '전체 인쇄' : '열기';
 
       item.appendChild(fname);
       item.appendChild(a);
       fileList.appendChild(item);
-    });
+    }
+
+    mergedLinks.forEach(function (link) { renderLink(link, true); });
+
+    if (mergedLinks.length && normalLinks.length) {
+      var divider = document.createElement('div');
+      divider.className = 'file-list-divider';
+      divider.textContent = '개별 파일';
+      fileList.appendChild(divider);
+    }
+
+    normalLinks.forEach(function (link) { renderLink(link, false); });
 
     setStatus('connected', '오늘 출력 완료');
   }

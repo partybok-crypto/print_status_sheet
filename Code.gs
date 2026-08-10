@@ -509,6 +509,73 @@ function fetchPdfsInParallel_(jobs, existingFileMap) {
 }
 
 // =============================================
+// 통합 인쇄용 PDF 병합
+// Sheets PDF 내보내기는 gid를 지정하지 않으면 "보이는 시트 전체"를
+// 탭 순서대로 이어서 한 PDF로 만들어준다. 이 성질을 이용해,
+// 이미 만들어진 임시시트에서 원하는 열 범위만 남긴 시트를 페이지 수만큼 복제하고
+// 그 시트들만 보이게 한 뒤 워크북 전체를 내보내면 여러 페이지짜리 PDF 1개가 된다.
+// (세로/가로 방향이 섞이면 한쪽이 깨지므로 현황지·주소지는 항상 따로 합친다)
+// =============================================
+function buildMergePageSheet_(ss, sourceTempSheet, startCol, endCol) {
+  var pageSheet = sourceTempSheet.copyTo(ss);
+  pageSheet.setName("__PRINT__" + Utilities.getUuid().slice(0, 8));
+
+  var lastCol = pageSheet.getLastColumn();
+  if (endCol < lastCol) pageSheet.deleteColumns(endCol + 1, lastCol - endCol);
+  if (startCol > 1) pageSheet.deleteColumns(1, startCol - 1);
+
+  return pageSheet;
+}
+
+function exportMergedWorkbookPdf_(ss, mergeSheets, portrait, folder, fileName) {
+  var mergeIds = {};
+  mergeSheets.forEach(function(s) { mergeIds[s.getSheetId()] = true; });
+
+  var hiddenByUs = [];
+  ss.getSheets().forEach(function(s) {
+    if (mergeIds[s.getSheetId()]) return;
+    if (!s.isSheetHidden()) {
+      hiddenByUs.push(s);
+      s.hideSheet();
+    }
+  });
+
+  try {
+    var token = ScriptApp.getOAuthToken();
+    var url = "https://docs.google.com/spreadsheets/d/" + ss.getId() +
+      "/export?exportFormat=pdf&format=pdf" +
+      "&size=A4" +
+      "&portrait=" + (portrait ? "true" : "false") +
+      "&fitw=true" +
+      "&sheetnames=false" +
+      "&printtitle=false" +
+      "&pagenumbers=false" +
+      "&gridlines=false" +
+      "&fzr=false" +
+      "&top_margin=0.25" +
+      "&bottom_margin=0.25" +
+      "&left_margin=0.25" +
+      "&right_margin=0.25";
+
+    var res = UrlFetchApp.fetch(url, {
+      headers: { Authorization: "Bearer " + token },
+      muteHttpExceptions: true
+    });
+
+    if (res.getResponseCode() !== 200) {
+      throw new Error("통합 인쇄용 PDF 생성 실패 [HTTP " + res.getResponseCode() + "] " + fileName);
+    }
+
+    trashDuplicateFiles_(folder, fileName);
+    var blob = res.getBlob().setName(fileName);
+    return folder.createFile(blob).getUrl();
+
+  } finally {
+    hiddenByUs.forEach(function(s) { s.showSheet(); });
+  }
+}
+
+// =============================================
 // 임시시트 준비 (메모리에서 계산한 값만 반영, 원본은 읽기만 함)
 // =============================================
 function prepareTempSheetForRows_(ss, sourceSheet, dataEndRow, items, isAlpha, k1Name, headerDate, courseLabel) {
@@ -818,6 +885,8 @@ function buildExportJobs_(ss, sheet, weekday, options) {
 
   var tempSheets = [];
   var jobs = [];
+  var statusMergeSheets = [];
+  var addressMergeSheets = [];
 
   try {
     if (includeTotal) {
@@ -831,6 +900,7 @@ function buildExportJobs_(ss, sheet, weekday, options) {
       tempSheets.push(totalTemp);
       // 전체 주소지는 코스별 주소지로 대체되어 불필요 → 현황지만 생성
       addPairJobs_(ss, totalTemp, prefix + "_전체", folder, false, "전체", jobs, false);
+      statusMergeSheets.push(buildMergePageSheet_(ss, totalTemp, TOTAL_STATUS_START_COL, TOTAL_STATUS_END_COL));
 
       doneUnits++;
       progressStep_(doneUnits, totalUnits, label + " - 전체(마감자) 준비 완료");
@@ -846,6 +916,8 @@ function buildExportJobs_(ss, sheet, weekday, options) {
         var courseTemp = prepareTempSheetForRows_(ss, sheet, dataEndRow, items, true, driverName, headerDate, alpha);
         tempSheets.push(courseTemp);
         addPairJobs_(ss, courseTemp, prefix + "_" + alpha, folder, true, alpha, jobs, true);
+        statusMergeSheets.push(buildMergePageSheet_(ss, courseTemp, ALPHA_STATUS_START_COL, ALPHA_STATUS_END_COL));
+        addressMergeSheets.push(buildMergePageSheet_(ss, courseTemp, ALPHA_ADDRESS_START_COL, ALPHA_ADDRESS_END_COL));
 
         doneUnits++;
         progressStep_(doneUnits, totalUnits, label + " - " + alpha + " 코스 준비 완료");
@@ -863,7 +935,24 @@ function buildExportJobs_(ss, sheet, weekday, options) {
       links.push(makeOutputItem_(label, weekday, jobs[i].course, jobs[i].fileType, jobs[i].fileName, urls[i]));
     }
 
-    progressFinish_(label + " 완료 (" + jobs.length + "개 파일)");
+    // 파일을 하나씩 열어 인쇄하는 번거로움을 줄이기 위해,
+    // 개별 파일은 그대로 두고 같은 방향(세로:현황지 / 가로:주소지)끼리 묶은
+    // 인쇄 전용 통합 PDF를 추가로 만든다. 파일이 2개 미만이면 합칠 의미가 없어 건너뜀.
+    if (statusMergeSheets.length >= 2) {
+      progressStep_(doneUnits, totalUnits, label + " - 현황지 통합 PDF 생성 중...");
+      var statusMergedName = prefix + "_현황지_전체인쇄.pdf";
+      var statusMergedUrl = exportMergedWorkbookPdf_(ss, statusMergeSheets, true, folder, statusMergedName);
+      links.unshift(makeOutputItem_(label, weekday, "통합", "현황지_통합인쇄", statusMergedName, statusMergedUrl));
+    }
+
+    if (addressMergeSheets.length >= 2) {
+      progressStep_(doneUnits, totalUnits, label + " - 주소지 통합 PDF 생성 중...");
+      var addressMergedName = prefix + "_주소지_전체인쇄.pdf";
+      var addressMergedUrl = exportMergedWorkbookPdf_(ss, addressMergeSheets, false, folder, addressMergedName);
+      links.unshift(makeOutputItem_(label, weekday, "통합", "주소지_통합인쇄", addressMergedName, addressMergedUrl));
+    }
+
+    progressFinish_(label + " 완료 (" + links.length + "개 파일)");
 
     return links;
 
@@ -873,6 +962,9 @@ function buildExportJobs_(ss, sheet, weekday, options) {
   } finally {
     tempSheets.forEach(function(ts) {
       try { ss.deleteSheet(ts); } catch (e2) {}
+    });
+    statusMergeSheets.concat(addressMergeSheets).forEach(function(ms) {
+      try { ss.deleteSheet(ms); } catch (e2) {}
     });
   }
 }
