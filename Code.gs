@@ -16,7 +16,7 @@ const DATA_START_ROW = 4;
 const FETCH_BASE_DELAY_MS = 0;
 const FETCH_RETRY_DELAY_MS = 3000;
 const FETCH_MAX_RETRY = 3;
-const FETCH_PARALLEL_BATCH_SIZE = 8; // UrlFetchApp.fetchAll 배치당 요청 수 (429 방지용 안전선)
+const FETCH_PARALLEL_BATCH_SIZE = 20; // UrlFetchApp.fetchAll 배치당 요청 수 (429 방지용 안전선)
 
 const FORCE_FONT_ON_TEMP = true;
 const PDF_FONT_FAMILY = "Noto Sans KR";
@@ -96,6 +96,15 @@ function getTodayWeekday_() {
   return map[new Date().getDay()];
 }
 
+// 원본 시트의 인쇄 헤더(H1 및 이를 참조하는 날짜/요일 표시 셀)를 채우기 위한 날짜 계산.
+// 이번 주(월~일) 안에서 해당 요일에 해당하는 날짜를 반환한다.
+function getDateForWeekday_(weekday) {
+  var idx = WEEKDAY_LIST.indexOf(weekday); // 월=0 ... 일=6
+  var today = new Date();
+  var todayIdx = (today.getDay() + 6) % 7; // 월=0 ... 일=6
+  return new Date(today.getFullYear(), today.getMonth(), today.getDate() + (idx - todayIdx));
+}
+
 // =============================================
 // Google Drive 폴더 자동 생성
 // 현황지_출력 / 2026년_27주차 / 7월4일_토요일
@@ -133,6 +142,23 @@ function trashDuplicateFiles_(folder, fileName) {
   while (files.hasNext()) {
     files.next().setTrashed(true);
   }
+}
+
+// 폴더 파일 목록을 한 번만 훑어서 이름→파일 맵을 만든다.
+// (fetchPdfsInParallel_에서 파일마다 getFilesByName으로 검색하는 대신 이 맵을 재사용해
+// Drive API 왕복 횟수를 줄인다.)
+function buildExistingFileMap_(folder) {
+  var map = {};
+  var files = folder.getFiles();
+
+  while (files.hasNext()) {
+    var f = files.next();
+    var name = f.getName();
+    if (!map[name]) map[name] = [];
+    map[name].push(f);
+  }
+
+  return map;
 }
 
 // =============================================
@@ -436,7 +462,7 @@ function buildPdfExportUrl_(ss, sheet, rangeA1, portrait) {
 // jobs: [{ url, fileName, folder, course, fileType }]
 // 반환: jobs와 같은 순서의 Drive 파일 URL 배열
 // =============================================
-function fetchPdfsInParallel_(jobs) {
+function fetchPdfsInParallel_(jobs, existingFileMap) {
   var token = ScriptApp.getOAuthToken();
   var results = new Array(jobs.length);
   var retryIdx = [];
@@ -461,7 +487,10 @@ function fetchPdfsInParallel_(jobs) {
       var code = res.getResponseCode();
 
       if (code === 200) {
-        trashDuplicateFiles_(job.folder, job.fileName);
+        var existing = existingFileMap && existingFileMap[job.fileName];
+        if (existing) {
+          existing.forEach(function(f) { f.setTrashed(true); });
+        }
         var blob = res.getBlob().setName(job.fileName);
         results[idx] = job.folder.createFile(blob).getUrl();
       } else {
@@ -482,7 +511,7 @@ function fetchPdfsInParallel_(jobs) {
 // =============================================
 // 임시시트 준비 (메모리에서 계산한 값만 반영, 원본은 읽기만 함)
 // =============================================
-function prepareTempSheetForRows_(ss, sourceSheet, dataEndRow, items, isAlpha, k1Name) {
+function prepareTempSheetForRows_(ss, sourceSheet, dataEndRow, items, isAlpha, k1Name, headerDate) {
   var tempSheet = sourceSheet.copyTo(ss);
   tempSheet.setName("__TEMP__" + Utilities.getUuid().slice(0, 8));
 
@@ -506,6 +535,12 @@ function prepareTempSheetForRows_(ss, sourceSheet, dataEndRow, items, isAlpha, k
 
   if (k1Name) {
     tempSheet.getRange(1, 11).setValue(k1Name); // K1
+  }
+
+  if (headerDate) {
+    // H1은 원본 시트의 날짜/요일 표시 셀(L2 등)이 "=H1"으로 참조하는 값이라,
+    // 비워두면 예전에 남아있던 값(예: 1 → 1899-12-31)이 그대로 인쇄되어 나온다.
+    tempSheet.getRange(1, 8).setValue(headerDate); // H1
   }
 
   var keepMap = {};
@@ -744,6 +779,7 @@ function buildExportJobs_(ss, sheet, weekday, options) {
 
   var folder = getOutputFolderForToday_();
   var prefix = weekday + "요일";
+  var headerDate = getDateForWeekday_(weekday);
 
   var totalUnits = (includeTotal ? 1 : 0) + (includeCourses ? order.length : 0);
   var doneUnits = 0;
@@ -759,7 +795,7 @@ function buildExportJobs_(ss, sheet, weekday, options) {
       var allItems = [];
       order.forEach(function(a) { allItems = allItems.concat(groups[a]); });
 
-      var totalTemp = prepareTempSheetForRows_(ss, sheet, dataEndRow, allItems, false, "마감자");
+      var totalTemp = prepareTempSheetForRows_(ss, sheet, dataEndRow, allItems, false, "마감자", headerDate);
       appendCourseSummaryToTempSheet_(totalTemp);
       tempSheets.push(totalTemp);
       addPairJobs_(ss, totalTemp, prefix + "_전체", folder, false, "전체", jobs);
@@ -775,7 +811,7 @@ function buildExportJobs_(ss, sheet, weekday, options) {
         var items = groups[alpha];
         var driverName = items.length ? items[0].driver : "";
 
-        var courseTemp = prepareTempSheetForRows_(ss, sheet, dataEndRow, items, true, driverName);
+        var courseTemp = prepareTempSheetForRows_(ss, sheet, dataEndRow, items, true, driverName, headerDate);
         tempSheets.push(courseTemp);
         addPairJobs_(ss, courseTemp, prefix + "_" + alpha, folder, true, alpha, jobs);
 
@@ -787,7 +823,8 @@ function buildExportJobs_(ss, sheet, weekday, options) {
     SpreadsheetApp.flush();
 
     progressStep_(doneUnits, totalUnits, label + " - PDF 생성(병렬) 중...");
-    var urls = fetchPdfsInParallel_(jobs);
+    var existingFileMap = buildExistingFileMap_(folder);
+    var urls = fetchPdfsInParallel_(jobs, existingFileMap);
 
     var links = [];
     for (var i = 0; i < jobs.length; i++) {
