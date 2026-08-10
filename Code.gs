@@ -22,9 +22,9 @@ const FORCE_FONT_ON_TEMP = true;
 const PDF_FONT_FAMILY = "Noto Sans KR";
 
 /***** 출력 범위 설정 *****/
-// 전체 출력
+// 전체 출력 (S 포장담당자는 전체 현황지에는 불필요해서 제외)
 const TOTAL_STATUS_START_COL = 8;    // H
-const TOTAL_STATUS_END_COL   = 19;   // S
+const TOTAL_STATUS_END_COL   = 18;   // R
 const TOTAL_ADDRESS_START_COL = 28;  // AB
 const TOTAL_ADDRESS_END_COL   = 34;  // AH
 
@@ -511,7 +511,7 @@ function fetchPdfsInParallel_(jobs, existingFileMap) {
 // =============================================
 // 임시시트 준비 (메모리에서 계산한 값만 반영, 원본은 읽기만 함)
 // =============================================
-function prepareTempSheetForRows_(ss, sourceSheet, dataEndRow, items, isAlpha, k1Name, headerDate) {
+function prepareTempSheetForRows_(ss, sourceSheet, dataEndRow, items, isAlpha, k1Name, headerDate, courseLabel) {
   var tempSheet = sourceSheet.copyTo(ss);
   tempSheet.setName("__TEMP__" + Utilities.getUuid().slice(0, 8));
 
@@ -536,8 +536,12 @@ function prepareTempSheetForRows_(ss, sourceSheet, dataEndRow, items, isAlpha, k
     );
 
     if (FORCE_FONT_ON_TEMP) {
+      // 원본 셀 서식을 그대로 복사해오다 보니 글자 크기/정렬이 셀마다 들쭉날쭉한 경우가 있어서
+      // 출력용 시트에서는 크기·정렬을 통일한다.
       usedRange.setFontFamily(PDF_FONT_FAMILY);
+      usedRange.setFontSize(10);
       usedRange.setVerticalAlignment("middle");
+      usedRange.setHorizontalAlignment("center");
     }
   }
 
@@ -611,6 +615,25 @@ function prepareTempSheetForRows_(ss, sourceSheet, dataEndRow, items, isAlpha, k
     tempSheet.deleteColumns(17, 1); // Q 사이즈
     tempSheet.deleteColumns(10, 1); // J 기사명
     tempSheet.deleteColumns(8, 1);  // H 구역
+
+    if (courseLabel) {
+      // 주소지만 따로 출력했을 때 주소만 보고는 어느 코스인지 알 수 없어서,
+      // 주소지 범위 맨 위에 코스명(+기사명)을 표시해준다.
+      var addrHeaderRange = tempSheet.getRange(
+        1, ALPHA_ADDRESS_START_COL, 1, ALPHA_ADDRESS_END_COL - ALPHA_ADDRESS_START_COL + 1
+      );
+      addrHeaderRange.breakApart();
+      addrHeaderRange.clearContent();
+      addrHeaderRange.merge()
+        .setValue(courseLabel + "코스" + (k1Name ? " · " + k1Name : ""))
+        .setFontFamily(PDF_FONT_FAMILY)
+        .setFontSize(13)
+        .setFontWeight("bold")
+        .setHorizontalAlignment("center")
+        .setVerticalAlignment("middle")
+        .setBackground("#FFF2CC")
+        .setBorder(true, true, true, true, true, true);
+    }
   }
 
   tempSheet.showColumns(1, tempSheet.getMaxColumns());
@@ -713,25 +736,17 @@ function makeOutputItem_(menuName, weekday, course, fileType, fileName, url) {
   };
 }
 
-function addPairJobs_(ss, tempSheet, prefix, folder, isAlpha, courseLabel, jobs) {
+function addPairJobs_(ss, tempSheet, prefix, folder, isAlpha, courseLabel, jobs, includeAddress) {
   var lastRow = tempSheet.getLastRow();
 
   var statusStartCol = isAlpha ? ALPHA_STATUS_START_COL : TOTAL_STATUS_START_COL;
   var statusEndCol   = isAlpha ? ALPHA_STATUS_END_COL   : TOTAL_STATUS_END_COL;
 
-  var addressStartCol = isAlpha ? ALPHA_ADDRESS_START_COL : TOTAL_ADDRESS_START_COL;
-  var addressEndCol   = isAlpha ? ALPHA_ADDRESS_END_COL   : TOTAL_ADDRESS_END_COL;
-
   var statusRangeA1 = tempSheet
     .getRange(1, statusStartCol, lastRow, statusEndCol - statusStartCol + 1)
     .getA1Notation();
 
-  var addressRangeA1 = tempSheet
-    .getRange(1, addressStartCol, lastRow, addressEndCol - addressStartCol + 1)
-    .getA1Notation();
-
   var statusFileName = prefix + "_현황지.pdf";
-  var addressFileName = prefix + "_주소지_가로.pdf";
 
   jobs.push({
     url: buildPdfExportUrl_(ss, tempSheet, statusRangeA1, true),
@@ -740,6 +755,17 @@ function addPairJobs_(ss, tempSheet, prefix, folder, isAlpha, courseLabel, jobs)
     course: courseLabel,
     fileType: "현황지"
   });
+
+  if (includeAddress === false) return;
+
+  var addressStartCol = isAlpha ? ALPHA_ADDRESS_START_COL : TOTAL_ADDRESS_START_COL;
+  var addressEndCol   = isAlpha ? ALPHA_ADDRESS_END_COL   : TOTAL_ADDRESS_END_COL;
+
+  var addressRangeA1 = tempSheet
+    .getRange(1, addressStartCol, lastRow, addressEndCol - addressStartCol + 1)
+    .getA1Notation();
+
+  var addressFileName = prefix + "_주소지_가로.pdf";
 
   jobs.push({
     url: buildPdfExportUrl_(ss, tempSheet, addressRangeA1, false),
@@ -800,7 +826,8 @@ function buildExportJobs_(ss, sheet, weekday, options) {
       var totalTemp = prepareTempSheetForRows_(ss, sheet, dataEndRow, allItems, false, "마감자", headerDate);
       appendCourseSummaryToTempSheet_(totalTemp);
       tempSheets.push(totalTemp);
-      addPairJobs_(ss, totalTemp, prefix + "_전체", folder, false, "전체", jobs);
+      // 전체 주소지는 코스별 주소지로 대체되어 불필요 → 현황지만 생성
+      addPairJobs_(ss, totalTemp, prefix + "_전체", folder, false, "전체", jobs, false);
 
       doneUnits++;
       progressStep_(doneUnits, totalUnits, label + " - 전체(마감자) 준비 완료");
@@ -813,9 +840,9 @@ function buildExportJobs_(ss, sheet, weekday, options) {
         var items = groups[alpha];
         var driverName = items.length ? items[0].driver : "";
 
-        var courseTemp = prepareTempSheetForRows_(ss, sheet, dataEndRow, items, true, driverName, headerDate);
+        var courseTemp = prepareTempSheetForRows_(ss, sheet, dataEndRow, items, true, driverName, headerDate, alpha);
         tempSheets.push(courseTemp);
-        addPairJobs_(ss, courseTemp, prefix + "_" + alpha, folder, true, alpha, jobs);
+        addPairJobs_(ss, courseTemp, prefix + "_" + alpha, folder, true, alpha, jobs, true);
 
         doneUnits++;
         progressStep_(doneUnits, totalUnits, label + " - " + alpha + " 코스 준비 완료");
