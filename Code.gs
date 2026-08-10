@@ -515,6 +515,14 @@ function prepareTempSheetForRows_(ss, sourceSheet, dataEndRow, items, isAlpha, k
   var tempSheet = sourceSheet.copyTo(ss);
   tempSheet.setName("__TEMP__" + Utilities.getUuid().slice(0, 8));
 
+  if (headerDate) {
+    // H1은 날짜/요일 표시 셀(L2 등)이 "=H1"으로 참조하는 값이다.
+    // 아래 PASTE_VALUES가 수식을 그 순간의 계산값으로 굳혀버리므로,
+    // H1을 먼저 바꾸고 재계산까지 끝낸 뒤에 값으로 고정해야 날짜가 제대로 찍힌다.
+    tempSheet.getRange(1, 8).setValue(headerDate); // H1
+    SpreadsheetApp.flush();
+  }
+
   var usedLastRow = tempSheet.getLastRow();
   var usedLastCol = tempSheet.getLastColumn();
 
@@ -535,12 +543,6 @@ function prepareTempSheetForRows_(ss, sourceSheet, dataEndRow, items, isAlpha, k
 
   if (k1Name) {
     tempSheet.getRange(1, 11).setValue(k1Name); // K1
-  }
-
-  if (headerDate) {
-    // H1은 원본 시트의 날짜/요일 표시 셀(L2 등)이 "=H1"으로 참조하는 값이라,
-    // 비워두면 예전에 남아있던 값(예: 1 → 1899-12-31)이 그대로 인쇄되어 나온다.
-    tempSheet.getRange(1, 8).setValue(headerDate); // H1
   }
 
   var keepMap = {};
