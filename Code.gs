@@ -79,17 +79,21 @@ function resetViewModeMenu_() {
   resetViewMode();
 }
 
-// 실패한 출력 실행이 남긴 임시/병합용 시트(__TEMP__*, __PRINT__*)를 정리한다.
-// 정상 실행은 자체 finally에서 이 시트들을 지우지만, Apps Script 최대 실행
-// 시간(6분) 초과로 강제 종료되면 finally도 못 돌고 시트가 남을 수 있다.
-// 에디터에서 수동으로 실행하는 유지보수용 함수.
+// 실패한 출력 실행이 남긴 임시/병합용 시트를 정리한다: __TEMP__*(기존 단일요청
+// 방식), __PRINT__*(기존 단일요청 방식 병합용), __PRINT_S__*/__PRINT_A__*(코스
+// 분할 요청 방식의 현황지/주소지 병합용). 정상 실행은 자체적으로 이 시트들을
+// 지우지만, 도중에 브라우저를 닫거나 Apps Script 6분 실행 제한에 걸리면
+// exportFinalize까지 못 가서 시트가 남을 수 있다. 에디터에서 수동 실행하는
+// 유지보수용 함수.
 function cleanupOrphanTempSheets_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var removed = [];
+  var prefixes = ["__TEMP__", "__PRINT__", "__PRINT_S__", "__PRINT_A__"];
 
   ss.getSheets().forEach(function(s) {
     var name = s.getName();
-    if (name.indexOf("__TEMP__") === 0 || name.indexOf("__PRINT__") === 0) {
+    var isOrphan = prefixes.some(function(p) { return name.indexOf(p) === 0; });
+    if (isOrphan) {
       removed.push(name);
       ss.deleteSheet(s);
     }
@@ -701,30 +705,6 @@ function prepareTempSheetForRows_(ss, sourceSheet, dataEndRow, items, isAlpha, k
       SpreadsheetApp.CopyPasteType.PASTE_VALUES,
       false
     );
-
-    if (FORCE_FONT_ON_TEMP) {
-      // 원본 셀 서식을 그대로 복사해오다 보니 글자 크기/정렬이 셀마다 들쭉날쭉한 경우가 있어서
-      // 출력용 시트에서는 크기·정렬을 통일한다.
-      usedRange.setFontFamily(PDF_FONT_FAMILY);
-      usedRange.setFontSize(10);
-      usedRange.setVerticalAlignment("middle");
-      usedRange.setHorizontalAlignment("center");
-      usedRange.setWrap(true); // 컬럼 폭을 줄이므로 긴 텍스트가 잘리지 않고 줄바꿈되게
-
-      // PDF 내보내기에서 폭 맞춤(fitw) 축소를 없애고 실제 크기(100%)로 인쇄하기로 했다.
-      // 원본 컬럼 폭 그대로면 인쇄 범위가 A4 폭의 약 2배라 오른쪽 컬럼이 다음 페이지로
-      // 잘려나가므로, 여기서 폭을 절반으로 줄여 A4 폭에 맞춘다.
-      // (실제 내보내기에 쓰이는 열만 처리 — 시트 전체를 훑지 않음)
-      var widthColStart = Math.max(1, EXPORT_MIN_COL);
-      var widthColEnd = Math.min(usedLastCol, EXPORT_MAX_COL);
-      for (var col = widthColStart; col <= widthColEnd; col++) {
-        tempSheet.setColumnWidth(col, Math.round(tempSheet.getColumnWidth(col) * 0.5));
-      }
-
-      // 줄바꿈으로 늘어난 행 높이가 이후 복사본(centerContentVertically_ 등)에도
-      // 정확히 반영되도록, 여기서 한 번 반영을 확정짓는다.
-      SpreadsheetApp.flush();
-    }
   }
 
   if (k1Name) {
@@ -797,36 +777,66 @@ function prepareTempSheetForRows_(ss, sourceSheet, dataEndRow, items, isAlpha, k
     tempSheet.deleteColumns(17, 1); // Q 사이즈
     tempSheet.deleteColumns(10, 1); // J 기사명
     tempSheet.deleteColumns(8, 1);  // H 구역
-
-    if (courseLabel) {
-      // 주소지만 따로 출력했을 때 주소만 보고는 어느 코스인지 알 수 없어서,
-      // 주소지 범위 맨 위에 코스명(+기사명)을 표시해준다.
-      // 원본 헤더는 이 범위보다 넓게(여러 행에 걸쳐) 병합돼 있을 수 있어
-      // 헤더 영역(1~3행) 전체를 먼저 병합 해제한다.
-      tempSheet.getRange(1, 1, DATA_START_ROW - 1, tempSheet.getLastColumn()).breakApart();
-
-      var addrHeaderRange = tempSheet.getRange(
-        1, ALPHA_ADDRESS_START_COL, 1, ALPHA_ADDRESS_END_COL - ALPHA_ADDRESS_START_COL + 1
-      );
-      addrHeaderRange.clearContent();
-      addrHeaderRange.merge()
-        .setValue(courseLabel + "코스" + (k1Name ? " · " + k1Name : ""))
-        .setFontFamily(PDF_FONT_FAMILY)
-        .setFontSize(13)
-        .setFontWeight("bold")
-        .setHorizontalAlignment("center")
-        .setVerticalAlignment("middle")
-        .setBackground("#FFF2CC")
-        .setBorder(true, true, true, true, true, true);
-    }
   }
 
-  // 열 너비를 절반으로 줄이면서 줄바꿈(wrap)이 늘었는데, 행 높이는 원본 시트의
-  // (화면 보기 편하라고 넉넉하게 잡힌) 값을 그대로 물려받아 글자가 셀 안에서
-  // 붕 뜬 것처럼 작아 보인다. 최종 열 구성이 정해진 지금 시점에 행 높이를
-  // 실제 내용에 맞게 다시 계산해 글자가 셀에 꽉 차 보이게 한다.
-  SpreadsheetApp.flush();
-  tempSheet.autoResizeRows(1, tempSheet.getLastRow());
+  // 서식/줄바꿈/열너비/행높이 조정은 해당 코스 행만 남기고 정렬·열 삭제까지 끝난
+  // 지금 시점에 한다. 예전에는 이 작업이 행 삭제보다 앞에 있어서 원본 전체
+  // (보통 수백 행)에 매번 적용됐는데, 실제로 남는 건 코스당 20~30행뿐이라
+  // 대부분 낭비였다 — Apps Script 6분 실행시간 제한에 실제로 걸린 적이 있어
+  // (실행 로그로 확인) 이 최적화가 꼭 필요하다.
+  var finalLastRow = tempSheet.getLastRow();
+  var finalLastCol = tempSheet.getLastColumn();
+
+  if (FORCE_FONT_ON_TEMP && finalLastRow > 0 && finalLastCol > 0) {
+    var finalRange = tempSheet.getRange(1, 1, finalLastRow, finalLastCol);
+
+    // 원본 셀 서식을 그대로 복사해오다 보니 글자 크기/정렬이 셀마다 들쭉날쭉한 경우가 있어서
+    // 출력용 시트에서는 크기·정렬을 통일한다.
+    finalRange.setFontFamily(PDF_FONT_FAMILY);
+    finalRange.setFontSize(10);
+    finalRange.setVerticalAlignment("middle");
+    finalRange.setHorizontalAlignment("center");
+    finalRange.setWrap(true); // 컬럼 폭을 줄이므로 긴 텍스트가 잘리지 않고 줄바꿈되게
+
+    // PDF 내보내기에서 폭 맞춤(fitw) 축소를 없애고 실제 크기(100%)로 인쇄하기로 했다.
+    // 원본 컬럼 폭 그대로면 인쇄 범위가 A4 폭의 약 2배라 오른쪽 컬럼이 다음 페이지로
+    // 잘려나가므로, 여기서 폭을 절반으로 줄여 A4 폭에 맞춘다.
+    // (실제 내보내기에 쓰이는 열만 처리 — 시트 전체를 훑지 않음)
+    var widthColStart = Math.max(1, EXPORT_MIN_COL);
+    var widthColEnd = Math.min(finalLastCol, EXPORT_MAX_COL);
+    for (var col = widthColStart; col <= widthColEnd; col++) {
+      tempSheet.setColumnWidth(col, Math.round(tempSheet.getColumnWidth(col) * 0.5));
+    }
+
+    // 열 너비를 줄이면서 줄바꿈이 늘었는데, 행 높이는 원본 시트의 (화면 보기 편하라고
+    // 넉넉하게 잡힌) 값을 그대로 물려받아 글자가 셀 안에서 붕 뜬 것처럼 작아 보인다.
+    // 실제 내용에 맞게 다시 계산해 글자가 셀에 꽉 차 보이게 한다.
+    SpreadsheetApp.flush();
+    tempSheet.autoResizeRows(1, finalLastRow);
+  }
+
+  if (isAlpha && courseLabel) {
+    // 주소지만 따로 출력했을 때 주소만 보고는 어느 코스인지 알 수 없어서,
+    // 주소지 범위 맨 위에 코스명(+기사명)을 표시해준다. 위 서식 일괄 적용(폰트 10)
+    // 다음에 와야 이 헤더의 13pt/굵게가 덮어써지지 않는다.
+    // 원본 헤더는 이 범위보다 넓게(여러 행에 걸쳐) 병합돼 있을 수 있어
+    // 헤더 영역(1~3행) 전체를 먼저 병합 해제한다.
+    tempSheet.getRange(1, 1, DATA_START_ROW - 1, tempSheet.getLastColumn()).breakApart();
+
+    var addrHeaderRange = tempSheet.getRange(
+      1, ALPHA_ADDRESS_START_COL, 1, ALPHA_ADDRESS_END_COL - ALPHA_ADDRESS_START_COL + 1
+    );
+    addrHeaderRange.clearContent();
+    addrHeaderRange.merge()
+      .setValue(courseLabel + "코스" + (k1Name ? " · " + k1Name : ""))
+      .setFontFamily(PDF_FONT_FAMILY)
+      .setFontSize(13)
+      .setFontWeight("bold")
+      .setHorizontalAlignment("center")
+      .setVerticalAlignment("middle")
+      .setBackground("#FFF2CC")
+      .setBorder(true, true, true, true, true, true);
+  }
 
   tempSheet.showColumns(1, tempSheet.getMaxColumns());
 
@@ -1670,6 +1680,137 @@ function buildExportJobsWithRetry_(ss, sheet, weekday, options) {
   }
 }
 
+// =============================================
+// 코스 단위 분할 출력 (Apps Script 웹앱 6분 실행 제한 대응)
+// exportTodayPackage 등을 한 번의 doPost로 처리하면 코스가 많을 때 6분을
+// 넘겨 강제 종료된다(실행 로그에서 "시간이 초과되었습니다" 확인). 그래서
+// 클라이언트가 "전체(마감자)"와 코스 하나하나를 각각 별도의 짧은 요청으로
+// 순차 호출하고, 모든 코스 준비가 끝난 뒤 마지막 호출에서만 통합 인쇄용
+// PDF(현황지/주소지)를 만든다. 각 요청은 그 자체로 몇 초~몇십 초 안에 끝나
+// 6분 제한에 걸릴 일이 없다.
+//
+// 코스별로 만든 임시/병합 시트는 다음 요청까지 스프레드시트에 그대로 남아있어야
+// 하므로(JS 변수는 요청이 끝나면 사라짐), 이름에 runId를 박아 넣어 이후
+// exportFinalize에서 이름으로 다시 찾는다: __TEMP__<runId>_<unit>,
+// __PRINT_S__<runId>_<unit>(현황지 병합용), __PRINT_A__<runId>_<unit>(주소지 병합용).
+// =============================================
+function exportGetOrder_(sheet, weekday, includeTotal, includeCourses, label) {
+  var data = collectWeekdayCourseData_(sheet, weekday);
+
+  if (data.order.length === 0) {
+    throw new Error(weekday + "요일에 해당하는 코스 데이터가 없습니다.");
+  }
+
+  var totalUnits = (includeTotal ? 1 : 0) + (includeCourses ? data.order.length : 0);
+  progressStart_(label, Math.max(totalUnits, 1));
+
+  return { order: data.order, totalUnits: totalUnits };
+}
+
+function exportPrepareUnit_(ss, sheet, weekday, runId, unit, unitIndex, totalUnits, label) {
+  var data = collectWeekdayCourseData_(sheet, weekday);
+  var order = data.order;
+  var groups = data.groups;
+  var dataEndRow = data.dataEndRow;
+
+  var folder = getOutputFolderForToday_();
+  var prefix = weekday + "요일";
+  var headerDate = getDateForWeekday_(weekday);
+
+  var jobs = [];
+  var tempSheet;
+
+  if (unit === "__TOTAL__") {
+    progressStep_(unitIndex - 1, totalUnits, label + " - 전체(마감자) 준비 중");
+
+    var allItems = [];
+    order.forEach(function(a) { allItems = allItems.concat(groups[a]); });
+
+    tempSheet = prepareTempSheetForRows_(ss, sheet, dataEndRow, allItems, false, "마감자", headerDate);
+    tempSheet.setName("__TEMP__" + runId + "_TOTAL");
+    appendCourseSummaryToTempSheet_(tempSheet);
+    // 전체 주소지는 코스별 주소지로 대체되어 불필요 → 현황지만 생성
+    addPairJobs_(ss, tempSheet, prefix + "_전체", folder, false, "전체", jobs, false);
+
+    var totalHeightPx = measureContentHeightPx_(tempSheet);
+    var totalStatusMerge = buildMergePageSheet_(ss, tempSheet, TOTAL_STATUS_START_COL, TOTAL_STATUS_END_COL, true, totalHeightPx);
+    totalStatusMerge.setName("__PRINT_S__" + runId + "_TOTAL");
+  } else {
+    progressStep_(unitIndex - 1, totalUnits, label + " - " + unit + " 코스 준비 중");
+
+    var items = groups[unit];
+    if (!items) throw new Error(unit + " 코스 데이터를 찾을 수 없습니다.");
+
+    var driverName = items.length ? items[0].driver : "";
+    tempSheet = prepareTempSheetForRows_(ss, sheet, dataEndRow, items, true, driverName, headerDate, unit);
+    tempSheet.setName("__TEMP__" + runId + "_" + unit);
+    addPairJobs_(ss, tempSheet, prefix + "_" + unit, folder, true, unit, jobs, true);
+
+    var courseHeightPx = measureContentHeightPx_(tempSheet);
+    var courseStatusMerge = buildMergePageSheet_(ss, tempSheet, ALPHA_STATUS_START_COL, ALPHA_STATUS_END_COL, true, courseHeightPx);
+    courseStatusMerge.setName("__PRINT_S__" + runId + "_" + unit);
+    var courseAddressMerge = buildMergePageSheet_(ss, tempSheet, ALPHA_ADDRESS_START_COL, ALPHA_ADDRESS_END_COL, false, courseHeightPx);
+    courseAddressMerge.setName("__PRINT_A__" + runId + "_" + unit);
+  }
+
+  SpreadsheetApp.flush();
+  var existingFileMap = buildExistingFileMap_(folder);
+  var urls = fetchPdfsInParallel_(jobs, existingFileMap);
+
+  var links = [];
+  for (var i = 0; i < jobs.length; i++) {
+    links.push(makeOutputItem_(label, weekday, jobs[i].course, jobs[i].fileType, jobs[i].fileName, urls[i]));
+  }
+
+  // 병합용 사본(__PRINT_S__/__PRINT_A__)은 exportFinalize까지 남겨둬야 하지만,
+  // 원본 임시시트(__TEMP__)는 그 사본을 만드는 데만 쓰이고 이후로는 필요 없다.
+  try { ss.deleteSheet(tempSheet); } catch (e) {}
+
+  progressStep_(unitIndex, totalUnits, label + " - " + (unit === "__TOTAL__" ? "전체(마감자)" : unit + " 코스") + " 준비 완료");
+
+  return links;
+}
+
+function exportFinalize_(ss, weekday, runId, label, totalUnits) {
+  var folder = getOutputFolderForToday_();
+  var prefix = weekday + "요일";
+
+  var statusMergeSheets = [];
+  var addressMergeSheets = [];
+  var statusPrefix = "__PRINT_S__" + runId + "_";
+  var addressPrefix = "__PRINT_A__" + runId + "_";
+
+  ss.getSheets().forEach(function(s) {
+    var name = s.getName();
+    if (name.indexOf(statusPrefix) === 0) statusMergeSheets.push(s);
+    if (name.indexOf(addressPrefix) === 0) addressMergeSheets.push(s);
+  });
+
+  var links = [];
+
+  try {
+    if (statusMergeSheets.length >= 2) {
+      progressStep_(totalUnits, totalUnits, label + " - 현황지 통합 PDF 생성 중...");
+      var statusMergedName = prefix + "_현황지_전체인쇄.pdf";
+      var statusUrl = exportMergedWorkbookPdf_(ss, statusMergeSheets, true, folder, statusMergedName);
+      links.unshift(makeOutputItem_(label, weekday, "통합", "현황지_통합인쇄", statusMergedName, statusUrl));
+    }
+
+    if (addressMergeSheets.length >= 2) {
+      progressStep_(totalUnits, totalUnits, label + " - 주소지 통합 PDF 생성 중...");
+      var addressMergedName = prefix + "_주소지_전체인쇄.pdf";
+      var addressUrl = exportMergedWorkbookPdf_(ss, addressMergeSheets, false, folder, addressMergedName);
+      links.unshift(makeOutputItem_(label, weekday, "통합", "주소지_통합인쇄", addressMergedName, addressUrl));
+    }
+  } finally {
+    statusMergeSheets.concat(addressMergeSheets).forEach(function(s) {
+      try { ss.deleteSheet(s); } catch (e) {}
+    });
+  }
+
+  return links;
+}
+
 function doPost(e) {
   var body = JSON.parse(e.postData.contents);
   var action = body.action;
@@ -1702,6 +1843,38 @@ function doPost(e) {
     var weekday = String(body.weekday || getTodayWeekday_()).trim();
     if (!WEEKDAY_FLAG_COL[weekday]) {
       return jsonOutput_({ status: "error", message: "요일 값이 올바르지 않습니다." });
+    }
+
+    // 코스 단위 분할 출력 — 6분 실행 제한을 피하려고 클라이언트가 여러 번 나눠 호출한다.
+    if (action === "exportGetOrder") {
+      var goLabel = String(body.label || "출력");
+      var result = exportGetOrder_(sheet, weekday, body.includeTotal !== false, body.includeCourses !== false, goLabel);
+      return jsonOutput_({ status: "ok", order: result.order, totalUnits: result.totalUnits });
+    }
+
+    if (action === "exportPrepareUnit") {
+      var puRunId = String(body.runId || "");
+      var puUnit = String(body.unit || "");
+      var puLabel = String(body.label || "출력");
+      if (!puRunId || !puUnit) {
+        return jsonOutput_({ status: "error", message: "runId/unit 값이 필요합니다." });
+      }
+      var puLinks = exportPrepareUnit_(ss, sheet, weekday, puRunId, puUnit, Number(body.unitIndex) || 1, Number(body.totalUnits) || 1, puLabel);
+      return jsonOutput_({ status: "ok", links: puLinks });
+    }
+
+    if (action === "exportFinalize") {
+      var fRunId = String(body.runId || "");
+      var fLabel = String(body.label || "출력");
+      if (!fRunId) {
+        return jsonOutput_({ status: "error", message: "runId 값이 필요합니다." });
+      }
+      var fLinks = exportFinalize_(ss, weekday, fRunId, fLabel, Number(body.totalUnits) || 1);
+      progressFinish_(fLabel + " 완료");
+      logOutputLinks_(fLinks || []);
+      var fFolderUrl = "";
+      try { fFolderUrl = getOutputFolderForToday_().getUrl(); } catch (e3) {}
+      return jsonOutput_({ status: "ok", links: fLinks || [], folderUrl: fFolderUrl });
     }
 
     var confMap = {

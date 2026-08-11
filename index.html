@@ -823,14 +823,15 @@
   }
 
   // ---------- GAS call ----------
-  function callGAS(action, weekday) {
+  // payload는 { action, weekday, ... } 객체 전체를 그대로 JSON으로 보낸다.
+  function callGAS(payload) {
     var url = getGasUrl();
     var controller = new AbortController();
     var timeoutId = setTimeout(function () { controller.abort(); }, FETCH_TIMEOUT_MS);
 
     return fetch(url, {
       method: 'POST',
-      body: JSON.stringify({ action: action, weekday: weekday }),
+      body: JSON.stringify(payload),
       signal: controller.signal
     }).then(function (res) {
       clearTimeout(timeoutId);
@@ -840,6 +841,76 @@
       return res.json();
     }).finally(function () {
       clearTimeout(timeoutId);
+    });
+  }
+
+  // exportTodayPackage 등은 코스 수가 많으면 한 번의 요청으로 처리할 때
+  // Apps Script 웹앱의 6분 실행 제한에 걸려 강제 종료된다(실행 로그로 확인됨).
+  // 그래서 "전체(마감자)"와 코스 하나하나를 각각 별도의 짧은 요청으로 순차
+  // 호출하고, 모든 준비가 끝난 뒤 마지막 요청에서만 통합 인쇄용 PDF를 만든다.
+  var EXPORT_CONF = {
+    exportTodayPackage: { includeTotal: true, includeCourses: true },
+    exportCloserByDate: { includeTotal: true, includeCourses: false },
+    exportByDateDriversOnly: { includeTotal: false, includeCourses: true }
+  };
+
+  function runChunkedExport(action, weekday) {
+    var conf = EXPORT_CONF[action];
+    var label = MENU_LABELS[action] || action;
+    var runId = weekday + '_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+
+    return callGAS({
+      action: 'exportGetOrder',
+      weekday: weekday,
+      label: label,
+      includeTotal: conf.includeTotal,
+      includeCourses: conf.includeCourses
+    }).then(function (orderResult) {
+      if (orderResult.status !== 'ok') {
+        throw new Error(orderResult.message || '요일 데이터를 불러오지 못했습니다.');
+      }
+
+      var units = [];
+      if (conf.includeTotal) units.push('__TOTAL__');
+      if (conf.includeCourses) units = units.concat(orderResult.order || []);
+
+      var totalUnits = units.length;
+      var allLinks = [];
+
+      var chain = Promise.resolve();
+      units.forEach(function (unit, idx) {
+        chain = chain.then(function () {
+          return callGAS({
+            action: 'exportPrepareUnit',
+            weekday: weekday,
+            label: label,
+            runId: runId,
+            unit: unit,
+            unitIndex: idx + 1,
+            totalUnits: totalUnits
+          }).then(function (r) {
+            if (r.status !== 'ok') {
+              throw new Error(r.message || (unit + ' 준비 중 오류가 발생했습니다.'));
+            }
+            allLinks = allLinks.concat(r.links || []);
+          });
+        });
+      });
+
+      return chain
+        .then(function () {
+          return callGAS({ action: 'exportFinalize', weekday: weekday, label: label, runId: runId, totalUnits: totalUnits });
+        })
+        .then(function (finalResult) {
+          if (finalResult.status !== 'ok') {
+            throw new Error(finalResult.message || '통합 PDF 생성 중 오류가 발생했습니다.');
+          }
+          return {
+            status: 'ok',
+            links: (finalResult.links || []).concat(allLinks),
+            folderUrl: finalResult.folderUrl
+          };
+        });
     });
   }
 
@@ -854,7 +925,11 @@
     var startTime = Date.now();
     setRunning(true);
 
-    callGAS(action, weekday)
+    var actionPromise = EXPORT_CONF[action]
+      ? runChunkedExport(action, weekday)
+      : callGAS({ action: action, weekday: weekday });
+
+    actionPromise
       .then(function (result) {
         setRunning(false);
         var elapsedSec = Math.round((Date.now() - startTime) / 1000);
@@ -880,6 +955,8 @@
         setRunning(false);
         if (err && err.name === 'AbortError') {
           showError('출력 시간이 너무 오래 걸려 중단되었어요. GAS 실행 상태를 확인해주세요.');
+        } else if (err && err.message && !/^HTTP \d+$/.test(err.message)) {
+          showError(err.message);
         } else {
           showError('출력에 실패했어요. GAS 연결을 확인해주세요.');
         }
