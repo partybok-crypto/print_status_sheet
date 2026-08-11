@@ -37,6 +37,13 @@ const ALPHA_STATUS_END_COL   = 15;   // O
 const ALPHA_ADDRESS_START_COL = 24;  // X
 const ALPHA_ADDRESS_END_COL   = 30;  // AD
 
+// 실제로 PDF에 쓰이는 열 범위(위 네 블록의 합집합). 열 너비 조정 등
+// 시트 전체를 훑을 필요가 없는 작업은 이 범위로 제한해 API 호출 수를 줄인다
+// (시트 전체 폭을 다 도는 것보다 훨씬 적은 왕복으로 끝남 — 스프레드시트 서비스
+// 과부하로 인한 "액세스 중 오류"를 줄이기 위한 조치).
+const EXPORT_MIN_COL = 8;   // H
+const EXPORT_MAX_COL = 34;  // AH
+
 /***** 요일 설정 *****
  * A~F열(헤더에 "OO요일" 문구가 있는 열)에 그 요일의 코스코드가 미리 입력되어 있고,
  * T~Z열은 그 행이 해당 요일에 나가는지를 나타내는 1/공백 플래그다.
@@ -70,6 +77,32 @@ function onOpen() {
 
 function resetViewModeMenu_() {
   resetViewMode();
+}
+
+// 실패한 출력 실행이 남긴 임시/병합용 시트(__TEMP__*, __PRINT__*)를 정리한다.
+// 정상 실행은 자체 finally에서 이 시트들을 지우지만, Apps Script 최대 실행
+// 시간(6분) 초과로 강제 종료되면 finally도 못 돌고 시트가 남을 수 있다.
+// 에디터에서 수동으로 실행하는 유지보수용 함수.
+function cleanupOrphanTempSheets_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var removed = [];
+
+  ss.getSheets().forEach(function(s) {
+    var name = s.getName();
+    if (name.indexOf("__TEMP__") === 0 || name.indexOf("__PRINT__") === 0) {
+      removed.push(name);
+      ss.deleteSheet(s);
+    }
+  });
+
+  Logger.log("정리된 시트(%s개): %s", removed.length, removed.join(", "));
+  return removed;
+}
+
+// cleanupOrphanTempSheets_는 이름 끝의 _ 때문에 에디터 실행 드롭다운에 안 뜬다.
+// 수동 실행용 노출 래퍼.
+function runCleanup() {
+  return cleanupOrphanTempSheets_();
 }
 
 // =============================================
@@ -382,14 +415,20 @@ function confirmValidationWarnings_(warnings) {
 
 // =============================================
 // PDF fetch (순차 재시도 — 병렬 fetch 실패분 재처리용)
+// 429(요청 과다)뿐 아니라 5xx(서버 일시 오류)도 재시도한다.
+// 임시/병합 시트가 늘어난 이후 내보내기 요청이 몰릴 때 Sheets 쪽에서
+// 일시적으로 500을 돌려주는 경우가 있는데, 이 역시 대기 후 재시도하면
+// 대부분 성공한다.
 // =============================================
-function fetchPdfWithRetry(url, token, fileName, folder) {
+function fetchWithRetry_(url, token, contextLabel) {
   var retryDelay = FETCH_RETRY_DELAY_MS;
 
   var opts = {
     headers: { Authorization: "Bearer " + token },
     muteHttpExceptions: true
   };
+
+  var lastCode, lastBodySnippet;
 
   for (var attempt = 1; attempt <= FETCH_MAX_RETRY; attempt++) {
     if (FETCH_BASE_DELAY_MS > 0) {
@@ -399,15 +438,19 @@ function fetchPdfWithRetry(url, token, fileName, folder) {
     var res = UrlFetchApp.fetch(url, opts);
     var code = res.getResponseCode();
 
-    if (code === 200) {
-      trashDuplicateFiles_(folder, fileName);
-      var blob = res.getBlob().setName(fileName);
-      return folder.createFile(blob).getUrl();
-    }
+    if (code === 200) return res;
 
-    if (code === 429) {
+    lastCode = code;
+    // 원인 파악용: Google이 돌려준 오류 본문 일부를 로그/오류 메시지에 남긴다
+    // (예: 잘못된 range, 시트 크기 제한 등은 여기에 이유가 적혀 있는 경우가 많다).
+    lastBodySnippet = res.getContentText().replace(/\s+/g, " ").trim().slice(0, 300);
+    Logger.log("PDF export failed [%s] %s\nurl=%s\nbody=%s", code, contextLabel, url, lastBodySnippet);
+
+    var retryable = code === 429 || (code >= 500 && code < 600);
+
+    if (retryable && attempt < FETCH_MAX_RETRY) {
       SpreadsheetApp.getActiveSpreadsheet().toast(
-        "⏳ 요청 과다 429 — " + retryDelay / 1000 + "초 대기 후 재시도 " +
+        "⏳ 요청 실패(HTTP " + code + ") — " + retryDelay / 1000 + "초 대기 후 재시도 " +
         attempt + "/" + FETCH_MAX_RETRY,
         "📋 현황지 출력",
         10
@@ -418,10 +461,17 @@ function fetchPdfWithRetry(url, token, fileName, folder) {
       continue;
     }
 
-    throw new Error("PDF 생성 실패 [HTTP " + code + "] " + fileName);
+    throw new Error("PDF 생성 실패 [HTTP " + code + "] " + contextLabel + " — " + lastBodySnippet);
   }
 
-  throw new Error("PDF 생성 실패 — 최대 재시도 초과: " + fileName);
+  throw new Error("PDF 생성 실패 — 최대 재시도 초과: " + contextLabel + " [HTTP " + lastCode + "] — " + lastBodySnippet);
+}
+
+function fetchPdfWithRetry(url, token, fileName, folder) {
+  var res = fetchWithRetry_(url, token, fileName);
+  trashDuplicateFiles_(folder, fileName);
+  var blob = res.getBlob().setName(fileName);
+  return folder.createFile(blob).getUrl();
 }
 
 // =============================================
@@ -439,7 +489,6 @@ function buildPdfExportUrl_(ss, sheet, rangeA1, portrait) {
     "/export?exportFormat=pdf&format=pdf" +
     "&size=A4" +
     "&portrait=" + (portrait ? "true" : "false") +
-    "&fitw=true" +
     "&sheetnames=false" +
     "&printtitle=false" +
     "&pagenumbers=false" +
@@ -516,7 +565,11 @@ function fetchPdfsInParallel_(jobs, existingFileMap) {
 // 그 시트들만 보이게 한 뒤 워크북 전체를 내보내면 여러 페이지짜리 PDF 1개가 된다.
 // (세로/가로 방향이 섞이면 한쪽이 깨지므로 현황지·주소지는 항상 따로 합친다)
 // =============================================
-function buildMergePageSheet_(ss, sourceTempSheet, startCol, endCol) {
+// sourceContentHeightPx: 호출부에서 미리 한 번 재둔 원본 시트의 내용 높이(px).
+// 같은 원본(courseTemp 등)에서 현황지·주소지 두 벌을 복제하는데, 행 높이는
+// 열 삭제와 무관해 두 복제본 모두 동일하다. 매번 다시 재는 대신 값을 넘겨받아
+// getRowHeight 왕복 횟수를 절반으로 줄인다.
+function buildMergePageSheet_(ss, sourceTempSheet, startCol, endCol, portrait, sourceContentHeightPx) {
   var pageSheet = sourceTempSheet.copyTo(ss);
   pageSheet.setName("__PRINT__" + Utilities.getUuid().slice(0, 8));
 
@@ -524,7 +577,58 @@ function buildMergePageSheet_(ss, sourceTempSheet, startCol, endCol) {
   if (endCol < lastCol) pageSheet.deleteColumns(endCol + 1, lastCol - endCol);
   if (startCol > 1) pageSheet.deleteColumns(1, startCol - 1);
 
+  centerContentVertically_(pageSheet, portrait, sourceContentHeightPx);
+
   return pageSheet;
+}
+
+// 시트의 사용된 행들의 높이 합(px). buildMergePageSheet_ 호출 전 원본 시트에서
+// 한 번만 구해 재사용한다.
+function measureContentHeightPx_(sheet) {
+  var lastRow = sheet.getLastRow();
+  var contentHeightPx = 0;
+  for (var r = 1; r <= lastRow; r++) {
+    contentHeightPx += sheet.getRowHeight(r);
+  }
+  return contentHeightPx;
+}
+
+// =============================================
+// 배송처가 적은 코스는 표 내용이 페이지 상단에만 짧게 찍히고 나머지가
+// 빈 여백으로 남아 인쇄했을 때 표가 작고 어색하게 몰려 보인다.
+// 실제 내용 높이를 재서 남는 세로 여백을 위/아래로 나눠, 표가 페이지
+// 세로 중앙에 오도록 위쪽에 빈 여백 행 하나를 끼워 넣는다.
+// (A4, top/bottom margin 0.25in — buildPdfExportUrl_/exportMergedWorkbookPdf_와 동일한 값)
+// =============================================
+var A4_PORTRAIT_HEIGHT_PT = 841.89;
+var A4_LANDSCAPE_HEIGHT_PT = 595.28;
+var PRINT_MARGIN_PT = 18; // 0.25in
+
+// 페이지 높이 추정치(px→pt 환산 등)에는 오차가 있을 수 있어, 그 오차 때문에
+// 이미 거의 다 찬 페이지가 패딩 한 줄 때문에 새 페이지로 넘쳐버리면 안 된다.
+// 그래서 여유 공간이 넉넉할 때만(=확실히 빈 페이지일 때만) 손대고,
+// 계산된 여유 공간도 다 쓰지 않고 일부는 안전 마진으로 남겨둔다.
+var MIN_LEFTOVER_TO_CENTER_PT = 80;
+var SAFETY_MARGIN_PT = 24;
+
+function centerContentVertically_(pageSheet, portrait, knownContentHeightPx) {
+  var lastRow = pageSheet.getLastRow();
+  if (lastRow <= 0) return;
+
+  var contentHeightPx = (knownContentHeightPx != null) ? knownContentHeightPx : measureContentHeightPx_(pageSheet);
+  var contentHeightPt = contentHeightPx * 0.75; // Sheets px → PDF pt
+
+  var pageHeightPt = portrait ? A4_PORTRAIT_HEIGHT_PT : A4_LANDSCAPE_HEIGHT_PT;
+  var usableHeightPt = pageHeightPt - PRINT_MARGIN_PT * 2;
+
+  var leftoverPt = usableHeightPt - contentHeightPt;
+  if (leftoverPt < MIN_LEFTOVER_TO_CENTER_PT) return; // 거의 다 찬 페이지는 넘침 방지를 위해 손대지 않음
+
+  var topPadPx = Math.round(((leftoverPt - SAFETY_MARGIN_PT) / 2) / 0.75);
+  if (topPadPx <= 0) return;
+
+  pageSheet.insertRowBefore(1);
+  pageSheet.setRowHeight(1, topPadPx);
 }
 
 function exportMergedWorkbookPdf_(ss, mergeSheets, portrait, folder, fileName) {
@@ -557,14 +661,7 @@ function exportMergedWorkbookPdf_(ss, mergeSheets, portrait, folder, fileName) {
       "&left_margin=0.25" +
       "&right_margin=0.25";
 
-    var res = UrlFetchApp.fetch(url, {
-      headers: { Authorization: "Bearer " + token },
-      muteHttpExceptions: true
-    });
-
-    if (res.getResponseCode() !== 200) {
-      throw new Error("통합 인쇄용 PDF 생성 실패 [HTTP " + res.getResponseCode() + "] " + fileName);
-    }
+    var res = fetchWithRetry_(url, token, "통합 인쇄용 " + fileName);
 
     trashDuplicateFiles_(folder, fileName);
     var blob = res.getBlob().setName(fileName);
@@ -609,6 +706,21 @@ function prepareTempSheetForRows_(ss, sourceSheet, dataEndRow, items, isAlpha, k
       usedRange.setFontSize(10);
       usedRange.setVerticalAlignment("middle");
       usedRange.setHorizontalAlignment("center");
+      usedRange.setWrap(true); // 컬럼 폭을 줄이므로 긴 텍스트가 잘리지 않고 줄바꿈되게
+
+      // PDF 내보내기에서 폭 맞춤(fitw) 축소를 없애고 실제 크기(100%)로 인쇄하기로 했다.
+      // 원본 컬럼 폭 그대로면 인쇄 범위가 A4 폭의 약 2배라 오른쪽 컬럼이 다음 페이지로
+      // 잘려나가므로, 여기서 폭을 절반으로 줄여 A4 폭에 맞춘다.
+      // (실제 내보내기에 쓰이는 열만 처리 — 시트 전체를 훑지 않음)
+      var widthColStart = Math.max(1, EXPORT_MIN_COL);
+      var widthColEnd = Math.min(usedLastCol, EXPORT_MAX_COL);
+      for (var col = widthColStart; col <= widthColEnd; col++) {
+        tempSheet.setColumnWidth(col, Math.round(tempSheet.getColumnWidth(col) * 0.5));
+      }
+
+      // 줄바꿈으로 늘어난 행 높이가 이후 복사본(centerContentVertically_ 등)에도
+      // 정확히 반영되도록, 여기서 한 번 반영을 확정짓는다.
+      SpreadsheetApp.flush();
     }
   }
 
@@ -900,7 +1012,8 @@ function buildExportJobs_(ss, sheet, weekday, options) {
       tempSheets.push(totalTemp);
       // 전체 주소지는 코스별 주소지로 대체되어 불필요 → 현황지만 생성
       addPairJobs_(ss, totalTemp, prefix + "_전체", folder, false, "전체", jobs, false);
-      statusMergeSheets.push(buildMergePageSheet_(ss, totalTemp, TOTAL_STATUS_START_COL, TOTAL_STATUS_END_COL));
+      var totalContentHeightPx = measureContentHeightPx_(totalTemp);
+      statusMergeSheets.push(buildMergePageSheet_(ss, totalTemp, TOTAL_STATUS_START_COL, TOTAL_STATUS_END_COL, true, totalContentHeightPx));
 
       doneUnits++;
       progressStep_(doneUnits, totalUnits, label + " - 전체(마감자) 준비 완료");
@@ -916,8 +1029,9 @@ function buildExportJobs_(ss, sheet, weekday, options) {
         var courseTemp = prepareTempSheetForRows_(ss, sheet, dataEndRow, items, true, driverName, headerDate, alpha);
         tempSheets.push(courseTemp);
         addPairJobs_(ss, courseTemp, prefix + "_" + alpha, folder, true, alpha, jobs, true);
-        statusMergeSheets.push(buildMergePageSheet_(ss, courseTemp, ALPHA_STATUS_START_COL, ALPHA_STATUS_END_COL));
-        addressMergeSheets.push(buildMergePageSheet_(ss, courseTemp, ALPHA_ADDRESS_START_COL, ALPHA_ADDRESS_END_COL));
+        var courseContentHeightPx = measureContentHeightPx_(courseTemp);
+        statusMergeSheets.push(buildMergePageSheet_(ss, courseTemp, ALPHA_STATUS_START_COL, ALPHA_STATUS_END_COL, true, courseContentHeightPx));
+        addressMergeSheets.push(buildMergePageSheet_(ss, courseTemp, ALPHA_ADDRESS_START_COL, ALPHA_ADDRESS_END_COL, false, courseContentHeightPx));
 
         doneUnits++;
         progressStep_(doneUnits, totalUnits, label + " - " + alpha + " 코스 준비 완료");
@@ -1519,6 +1633,33 @@ function getOutputProgress() {
  * WEB_SHEET_NAME으로 고정된 시트를 대상으로 하며,
  * 요일 기준으로 동작하는 것 외에는 사이드바와 동일한 로직을 재사용한다.
  *****************************************************/
+// buildExportJobs_는 실패해도 자체 finally에서 임시/병합 시트를 정리하므로
+// 통째로 재시도해도 안전하다. "스프레드시트 서비스에 오류가 발생했습니다" 류의
+// 메시지는 Google 쪽 일시적 과부하일 때가 많아 한 번 더 시도하면 대부분 성공한다.
+function isTransientSpreadsheetError_(message) {
+  message = String(message || "");
+  return message.indexOf("스프레드시트 서비스") !== -1 ||
+    message.indexOf("Service Spreadsheets failed") !== -1 ||
+    message.indexOf("Service invoked too many times") !== -1;
+}
+
+function buildExportJobsWithRetry_(ss, sheet, weekday, options) {
+  try {
+    return buildExportJobs_(ss, sheet, weekday, options);
+  } catch (e) {
+    if (!isTransientSpreadsheetError_(e.message)) throw e;
+
+    SpreadsheetApp.getActiveSpreadsheet().toast(
+      "⏳ 일시적 스프레드시트 오류 — 5초 대기 후 전체 재시도",
+      "📋 현황지 출력",
+      10
+    );
+    Utilities.sleep(5000);
+
+    return buildExportJobs_(ss, sheet, weekday, options);
+  }
+}
+
 function doPost(e) {
   var body = JSON.parse(e.postData.contents);
   var action = body.action;
@@ -1564,7 +1705,7 @@ function doPost(e) {
       return jsonOutput_({ status: "error", message: "알 수 없는 요청입니다: " + action });
     }
 
-    var links = buildExportJobs_(ss, sheet, weekday, {
+    var links = buildExportJobsWithRetry_(ss, sheet, weekday, {
       includeTotal: conf.includeTotal,
       includeCourses: conf.includeCourses,
       label: conf.label,

@@ -544,7 +544,7 @@
   };
   var DEFAULT_URL_PLACEHOLDER = '여기에_입력';
   var DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbx4L6ZiXjjKkQPo1vcGxp5iuP7MktAo30gn-fCRAQPCdrRb1VQ_yijQ6hvS21NoIrvM/exec';
-  var FETCH_TIMEOUT_MS = 300000; // 5 minutes
+  var FETCH_TIMEOUT_MS = 400000; // Apps Script 실행 자체가 6분 안에 끝나거나 에러로 끝나므로, 그보다 여유 있게 잡아 정상 완료를 "실패"로 잘못 표시하지 않게 한다.
   var PROGRESS_POLL_MS = 1500;
 
   var WEEKDAYS = ['월', '화', '수', '목', '금', '토', '일'];
