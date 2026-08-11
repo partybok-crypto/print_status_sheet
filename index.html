@@ -217,10 +217,8 @@
   .address-table td.col-nickname { font-weight: 700; }
   .address-table td.col-method { color: var(--blue); font-weight: 700; }
   .address-table td.col-phone { font-weight: 700; font-size: 15pt; }
-  .address-table td.col-comment {
-    background: #eafbea;
-    outline-offset: -2px;
-  }
+  .address-table td.col-comment { outline-offset: -2px; }
+  .address-table td.col-comment.has-comment { background: #eafbea; }
   .address-table td.col-comment[contenteditable="true"]:focus { outline: 2px solid var(--blue); background: #e0f2ff; }
   .address-table td.col-comment.edited { background: #fff3cd; }
   .address-table tr.missing-field { background: #fff1f1; }
@@ -241,17 +239,20 @@
   @media print {
     .no-print { display: none !important; }
     body { background: #fff; }
+
+    /* 업종/코멘트 배경색은 브라우저 "배경 그래픽" 인쇄 옵션이 꺼져 있으면
+       안 찍힌다 — 옵션과 무관하게 항상 인쇄되도록 강제한다. */
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
     .preview-wrap { padding: 0; overflow: visible; }
     .preview-shell { box-shadow: none; border: 0; padding: 0; width: auto !important; min-width: 0 !important; margin: 0; }
     .doc-status, .doc-address { display: none !important; }
 
     body.printing-status .doc-status { display: block !important; page: portraitPage; }
     body.printing-address .doc-address { display: block !important; page: landscapePage; }
-
-    table.doc-table, table.doc-table th, table.doc-table td,
-    .doc-head-table td { color: #000 !important; }
-    .status-table td.has-note { color: var(--red) !important; }
-    .address-table td.col-method { color: var(--blue) !important; }
 
     /* 인쇄 결과는 확대/축소 없이 CSS에 지정한 실제 pt 크기 그대로 나가야 한다 */
     table.doc-table, table.doc-table * { transform: none !important; zoom: 1 !important; }
@@ -727,7 +728,9 @@
       originTr.appendChild(td(origin.name || '유성(출발지)', 'col-nickname'));
       originTr.appendChild(td(origin.address, 'col-address'));
       originTr.appendChild(td('', 'col-method'));
-      originTr.appendChild(td(origin.comment, 'col-comment'));
+      var originCommentCell = td(origin.comment, 'col-comment');
+      if (origin.comment) originCommentCell.classList.add('has-comment');
+      originTr.appendChild(originCommentCell);
       originTr.appendChild(td('', 'col-phone'));
       addressTbody.appendChild(originTr);
     }
@@ -744,10 +747,12 @@
       tr.appendChild(td(it.collectionMethod, 'col-method'));
 
       var commentCell = td(it.deliveryComment, 'col-comment');
+      if (it.deliveryComment) commentCell.classList.add('has-comment');
       commentCell.contentEditable = 'true';
       commentCell.dataset.row = it.row;
       commentCell.addEventListener('input', function () {
         var newVal = commentCell.textContent;
+        commentCell.classList.toggle('has-comment', !!newVal);
         if (newVal === it.deliveryComment) {
           delete state.pendingEdits[it.row];
           commentCell.classList.remove('edited');
