@@ -577,6 +577,9 @@ function buildMergePageSheet_(ss, sourceTempSheet, startCol, endCol, portrait, s
   if (endCol < lastCol) pageSheet.deleteColumns(endCol + 1, lastCol - endCol);
   if (startCol > 1) pageSheet.deleteColumns(1, startCol - 1);
 
+  // 행 높이는 prepareTempSheetForRows_에서 이미 (현황지+주소지 열을 모두 포함한
+  // 상태로) 내용에 맞게 재계산해뒀다. 여기서 또 재계산하면 sourceContentHeightPx로
+  // 넘어온 측정값과 어긋나므로, 이 시점엔 손대지 않고 그대로 물려받는다.
   centerContentVertically_(pageSheet, portrait, sourceContentHeightPx);
 
   return pageSheet;
@@ -817,6 +820,13 @@ function prepareTempSheetForRows_(ss, sourceSheet, dataEndRow, items, isAlpha, k
         .setBorder(true, true, true, true, true, true);
     }
   }
+
+  // 열 너비를 절반으로 줄이면서 줄바꿈(wrap)이 늘었는데, 행 높이는 원본 시트의
+  // (화면 보기 편하라고 넉넉하게 잡힌) 값을 그대로 물려받아 글자가 셀 안에서
+  // 붕 뜬 것처럼 작아 보인다. 최종 열 구성이 정해진 지금 시점에 행 높이를
+  // 실제 내용에 맞게 다시 계산해 글자가 셀에 꽉 차 보이게 한다.
+  SpreadsheetApp.flush();
+  tempSheet.autoResizeRows(1, tempSheet.getLastRow());
 
   tempSheet.showColumns(1, tempSheet.getMaxColumns());
 
