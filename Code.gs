@@ -190,7 +190,19 @@ function buildDayData_(weekday) {
 
   order.forEach(function(alpha) {
     groups[alpha].sort(function(a, b) { return a.sortKey - b.sortKey; });
-    drivers[alpha] = groups[alpha].length ? groups[alpha][0].driver : "";
+
+    // 코스 대표 기사명은 그룹의 첫 행이 아니라 최빈값(가장 많이 등장하는 이름)으로 정한다.
+    // 첫 행의 기사명 칸이 비어 있으면(실제 발생 사례: 8/14 C코스 C-01행) 코스 전체가
+    // "기사 미배정"으로 잘못 표시되는 문제가 있었다.
+    var driverCounts = {};
+    groups[alpha].forEach(function(it) {
+      if (it.driver) driverCounts[it.driver] = (driverCounts[it.driver] || 0) + 1;
+    });
+    var bestDriver = "", bestCount = 0;
+    Object.keys(driverCounts).forEach(function(name) {
+      if (driverCounts[name] > bestCount) { bestDriver = name; bestCount = driverCounts[name]; }
+    });
+    drivers[alpha] = bestDriver;
 
     groups[alpha].forEach(function(item, idx) {
       shipSeq++;

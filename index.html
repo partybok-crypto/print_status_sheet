@@ -878,7 +878,7 @@
         if (!it.phone) issues.push({ cat: '전화번호 누락', course: c.course, msg: c.course + '코스 ' + (it.nickname || it.companyNumber || '업체') + ' 전화번호 누락' });
         if (it.address && it.address.length > 40) issues.push({ cat: '긴 주소', course: c.course, msg: c.course + '코스 ' + (it.nickname || '업체') + ' 주소가 깁니다.' });
         if (it.deliveryComment && it.deliveryComment.length > 30) issues.push({ cat: '긴 코멘트', course: c.course, msg: c.course + '코스 ' + (it.nickname || '업체') + ' 코멘트가 깁니다.' });
-        if (it.driver !== c.driver) issues.push({ cat: '코스-기사 연결 오류', course: c.course, msg: c.course + '코스 내 기사명이 일치하지 않습니다(' + it.driver + ').' });
+        if (it.driver && it.driver !== c.driver) issues.push({ cat: '코스-기사 연결 오류', course: c.course, msg: c.course + '코스 내 기사명이 일치하지 않습니다(' + it.driver + ').' });
       });
     });
     state.validation = { issues: issues, ready: issues.length === 0 };
