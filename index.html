@@ -293,7 +293,8 @@
   .single-actions-bar .big-btn { width: auto; padding: 0 22px; height: 48px; font-size: 16px; }
   .edit-count-text { font-size: 13px; color: var(--text-sub); }
 
-  .preview-scroll { margin-top: 16px; overflow-x: auto; padding-bottom: 12px; }
+  .preview-scroll { display: none; margin-top: 16px; overflow-x: auto; padding-bottom: 12px; }
+  .preview-scroll.is-visible { display: block; }
 
   /* ---------- 문서 공통 표 스타일 (화면/인쇄 공용, mm/pt 절대단위 — 미리보기 축소 없음) ---------- */
   .doc-page { background: #fff; margin: 0 auto 20px; }
@@ -408,6 +409,26 @@
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
       color-adjust: exact !important;
+    }
+
+    /* 부모 컨테이너(.preview-scroll)는 화면에서 접혀 있어도(.is-visible 없어도) 인쇄 모드일 때는
+       반드시 표시해야 한다 — 조상이 display:none이면 자식에 display:block !important를 걸어도
+       렌더링되지 않아 빈 페이지가 나온다. */
+    #bulkPreviewScroll, #singlePreviewScroll { display: none !important; }
+    body.printing-bulk-status #bulkPreviewScroll,
+    body.printing-bulk-address #bulkPreviewScroll,
+    body.printing-closer #bulkPreviewScroll {
+      display: block !important;
+      overflow: visible !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    body.printing-single-status #singlePreviewScroll,
+    body.printing-single-address #singlePreviewScroll {
+      display: block !important;
+      overflow: visible !important;
+      margin: 0 !important;
+      padding: 0 !important;
     }
 
     .bulk-doc, .single-doc { display: none !important; }
@@ -525,13 +546,14 @@
   <div class="status-footer no-print" id="statusFooter">불러온 적 없음</div>
 </div>
 
-<!-- 인쇄 대상 문서 컨테이너 — .no-print 조상 밖에 위치해야 인쇄 시 실제로 렌더링됨 -->
-<div class="preview-scroll" id="bulkPreviewScroll" style="display:none;">
+<!-- 인쇄 대상 문서 컨테이너 — .no-print 조상 밖에 위치해야 인쇄 시 실제로 렌더링됨.
+     화면 표시 여부는 inline style이 아니라 .is-visible 클래스로만 제어한다 (아래 CSS 참조). -->
+<div class="preview-scroll" id="bulkPreviewScroll">
   <div class="doc-page bulk-doc" id="bulkStatusPrint"></div>
   <div class="doc-page bulk-doc" id="bulkAddressPrint"></div>
   <div class="doc-page bulk-doc" id="closerPrint"></div>
 </div>
-<div class="preview-scroll" id="singlePreviewScroll" style="display:none;">
+<div class="preview-scroll" id="singlePreviewScroll">
   <div class="doc-page single-doc active" id="singleStatusPrint"></div>
   <div class="doc-page single-doc" id="singleAddressPrint"></div>
 </div>
@@ -1299,7 +1321,7 @@
   btnTogglePreview.addEventListener('click', function () {
     state.bulkPreviewOpen = !state.bulkPreviewOpen;
     document.body.classList.toggle('bulk-preview-open', state.bulkPreviewOpen);
-    bulkPreviewScroll.style.display = state.bulkPreviewOpen ? 'block' : 'none';
+    bulkPreviewScroll.classList.toggle('is-visible', state.bulkPreviewOpen);
     btnTogglePreview.textContent = state.bulkPreviewOpen ? '미리보기 접기' : '미리보기 펼치기';
   });
 
@@ -1317,29 +1339,75 @@
     confirmBar.style.display = 'flex';
   }
 
+  // 인쇄 직전 확인: 대상 컨테이너에 실제로 표/행이 렌더링됐는지 검사한다.
+  // (부모 컨테이너가 숨겨져 있거나 렌더링이 비어 있으면 인쇄창을 열지 않고 오류를 표시)
+  function hasPrintableContent(container) {
+    if (!container) return false;
+    var tbody = container.querySelector('table.doc-table tbody');
+    return !!(tbody && tbody.querySelector('tr'));
+  }
+
   function executeBulkPrint(kind, selected) {
     renderBulkDocs();
+    var containerId = kind === 'status' ? 'bulkStatusPrint' : kind === 'address' ? 'bulkAddressPrint' : 'closerPrint';
+    var container = document.getElementById(containerId);
+    if (!hasPrintableContent(container)) {
+      alert('인쇄할 내용이 없습니다. 코스 선택과 데이터를 다시 확인해주세요.');
+      return;
+    }
     var bodyClass = kind === 'status' ? 'printing-bulk-status' : kind === 'address' ? 'printing-bulk-address' : 'printing-closer';
     doPrint(bodyClass, function () {
       recordPrint(kind, selected.map(function (c) { return c.course; }));
     });
   }
 
+  // 인쇄 순서: ①인쇄용 body 클래스 부여 → ②폰트 로딩 대기 → ③레이아웃/페인트가 실제로
+  // 반영되도록 rAF 두 프레임 대기 → ④window.print() 호출. 클래스 해제는 window.print()
+  // 바로 다음 줄에서 하지 않고 afterprint 이벤트에서 처리한다 — 즉시 제거하면 일부
+  // 브라우저에서 인쇄 렌더링이 클래스 해제와 경쟁해 빈 페이지가 나올 수 있기 때문이다.
   function doPrint(bodyClass, afterFn) {
     if (state.isPrinting) return;
     state.isPrinting = true;
     document.body.classList.add(bodyClass);
-    var run = function () {
-      window.print();
+
+    var cleanupDone = false;
+    var fallbackTimer = null;
+    function cleanup() {
+      if (cleanupDone) return;
+      cleanupDone = true;
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+      window.removeEventListener('afterprint', cleanup);
       document.body.classList.remove(bodyClass);
       state.isPrinting = false;
       if (afterFn) afterFn();
-    };
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(run).catch(run);
-    } else {
-      run();
     }
+    window.addEventListener('afterprint', cleanup);
+    // afterprint를 지원하지 않는 예외적인 환경을 위한 안전망. 인쇄 렌더링을 방해하지
+    // 않도록 충분히 긴 지연 후에만 강제 정리한다.
+    fallbackTimer = setTimeout(cleanup, 60000);
+
+    // rAF는 탭이 배경(비가시) 상태면 브라우저가 조절/보류할 수 있어 그 경우 무한 대기로
+    // 이어질 위험이 있다 — 짧은 타임아웃과 경쟁시켜 어느 쪽이든 먼저 끝나면 진행한다.
+    var waitForRender = function () {
+      return Promise.race([
+        new Promise(function (resolve) {
+          requestAnimationFrame(function () {
+            requestAnimationFrame(resolve);
+          });
+        }),
+        new Promise(function (resolve) { setTimeout(resolve, 150); })
+      ]);
+    };
+    var fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready.catch(function () {}) : Promise.resolve();
+
+    fontsReady
+      .then(waitForRender)
+      .then(function () {
+        window.print();
+      })
+      .catch(function () {
+        cleanup();
+      });
   }
 
   btnBulkPrintStatus.addEventListener('click', function () { requestBulkPrint('status'); });
@@ -1366,7 +1434,7 @@
     btnModeSingle.classList.toggle('active', mode === 'single');
     dayModeArea.style.display = mode === 'day' ? 'block' : 'none';
     singleModeArea.style.display = mode === 'single' ? 'block' : 'none';
-    if (mode === 'single') { renderSingleDocs(); } else { singlePreviewScroll.style.display = 'none'; }
+    if (mode === 'single') { renderSingleDocs(); } else { singlePreviewScroll.classList.remove('is-visible'); }
   }
   btnModeDay.addEventListener('click', function () { setOutputMode('day'); });
   btnModeSingle.addEventListener('click', function () { setOutputMode('single'); });
@@ -1451,12 +1519,12 @@
     var courseObj = state.courseList.find(function (c) { return c.course === state.singleCourse; });
     if (!courseObj || !courseObj.items.length) {
       singleEmptyState.style.display = 'block';
-      singlePreviewScroll.style.display = 'none';
+      singlePreviewScroll.classList.remove('is-visible');
       updateEditCountText();
       return;
     }
     singleEmptyState.style.display = 'none';
-    singlePreviewScroll.style.display = state.outputMode === 'single' ? 'block' : 'none';
+    singlePreviewScroll.classList.toggle('is-visible', state.outputMode === 'single');
 
     singleStatusPrint.appendChild(buildStatusCourseBlock(courseObj, state.dayData));
     singleAddressPrint.appendChild(buildAddressCourseBlock(courseObj, state.dayData, { editable: true }));
@@ -1501,10 +1569,12 @@
 
   btnPrintSingleStatus.addEventListener('click', function () {
     if (!state.dayData || !state.singleCourse) { alert('먼저 코스를 선택해주세요.'); return; }
+    if (!hasPrintableContent(singleStatusPrint)) { alert('인쇄할 내용이 없습니다. 코스를 다시 선택해주세요.'); return; }
     doPrint('printing-single-status');
   });
   btnPrintSingleAddress.addEventListener('click', function () {
     if (!state.dayData || !state.singleCourse) { alert('먼저 코스를 선택해주세요.'); return; }
+    if (!hasPrintableContent(singleAddressPrint)) { alert('인쇄할 내용이 없습니다. 코스를 다시 선택해주세요.'); return; }
     doPrint('printing-single-address');
   });
 
