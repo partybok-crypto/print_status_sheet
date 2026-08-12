@@ -413,22 +413,39 @@
 
     /* 부모 컨테이너(.preview-scroll)는 화면에서 접혀 있어도(.is-visible 없어도) 인쇄 모드일 때는
        반드시 표시해야 한다 — 조상이 display:none이면 자식에 display:block !important를 걸어도
-       렌더링되지 않아 빈 페이지가 나온다. */
+       렌더링되지 않아 빈 페이지가 나온다.
+       또한 page 속성은 상속되는데, 부모에 page 값을 지정하지 않으면 "지정 안 됨(auto)"에서
+       자식의 named page(portraitPage/landscapePage)로 전환되는 것으로 취급되어 그 경계에서
+       빈 페이지가 하나 삽입된다 — 부모에도 자식과 동일한 page 값을 반드시 맞춰준다. */
     #bulkPreviewScroll, #singlePreviewScroll { display: none !important; }
     body.printing-bulk-status #bulkPreviewScroll,
-    body.printing-bulk-address #bulkPreviewScroll,
     body.printing-closer #bulkPreviewScroll {
       display: block !important;
       overflow: visible !important;
       margin: 0 !important;
       padding: 0 !important;
+      page: portraitPage;
     }
-    body.printing-single-status #singlePreviewScroll,
+    body.printing-bulk-address #bulkPreviewScroll {
+      display: block !important;
+      overflow: visible !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      page: landscapePage;
+    }
+    body.printing-single-status #singlePreviewScroll {
+      display: block !important;
+      overflow: visible !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      page: portraitPage;
+    }
     body.printing-single-address #singlePreviewScroll {
       display: block !important;
       overflow: visible !important;
       margin: 0 !important;
       padding: 0 !important;
+      page: landscapePage;
     }
 
     .bulk-doc, .single-doc { display: none !important; }
@@ -453,7 +470,7 @@
   <button class="icon-btn" id="btnSettings" title="설정">⚙</button>
 </header>
 
-<div class="app-shell">
+<div class="app-shell no-print">
 
   <div class="condition-card no-print">
     <div class="condition-row1">
