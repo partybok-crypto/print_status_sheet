@@ -493,12 +493,6 @@
     <div class="toggle-preview-row">
       <button class="link-btn" id="btnTogglePreview">미리보기 펼치기</button>
     </div>
-
-    <div class="preview-scroll" id="bulkPreviewScroll" style="display:none;">
-      <div class="doc-page bulk-doc" id="bulkStatusPrint"></div>
-      <div class="doc-page bulk-doc" id="bulkAddressPrint"></div>
-      <div class="doc-page bulk-doc" id="closerPrint"></div>
-    </div>
   </div>
 
   <!-- ================= 코스별 개별 출력 ================= -->
@@ -526,13 +520,20 @@
     </div>
 
     <div id="singleEmptyState" class="empty-state">코스를 선택해주세요.</div>
-    <div class="preview-scroll" id="singlePreviewScroll">
-      <div class="doc-page single-doc active" id="singleStatusPrint"></div>
-      <div class="doc-page single-doc" id="singleAddressPrint"></div>
-    </div>
   </div>
 
   <div class="status-footer no-print" id="statusFooter">불러온 적 없음</div>
+</div>
+
+<!-- 인쇄 대상 문서 컨테이너 — .no-print 조상 밖에 위치해야 인쇄 시 실제로 렌더링됨 -->
+<div class="preview-scroll" id="bulkPreviewScroll" style="display:none;">
+  <div class="doc-page bulk-doc" id="bulkStatusPrint"></div>
+  <div class="doc-page bulk-doc" id="bulkAddressPrint"></div>
+  <div class="doc-page bulk-doc" id="closerPrint"></div>
+</div>
+<div class="preview-scroll" id="singlePreviewScroll" style="display:none;">
+  <div class="doc-page single-doc active" id="singleStatusPrint"></div>
+  <div class="doc-page single-doc" id="singleAddressPrint"></div>
 </div>
 
 <!-- 설정 모달 -->
@@ -1365,6 +1366,7 @@
     btnModeSingle.classList.toggle('active', mode === 'single');
     dayModeArea.style.display = mode === 'day' ? 'block' : 'none';
     singleModeArea.style.display = mode === 'single' ? 'block' : 'none';
+    if (mode === 'single') { renderSingleDocs(); } else { singlePreviewScroll.style.display = 'none'; }
   }
   btnModeDay.addEventListener('click', function () { setOutputMode('day'); });
   btnModeSingle.addEventListener('click', function () { setOutputMode('single'); });
@@ -1454,7 +1456,7 @@
       return;
     }
     singleEmptyState.style.display = 'none';
-    singlePreviewScroll.style.display = 'block';
+    singlePreviewScroll.style.display = state.outputMode === 'single' ? 'block' : 'none';
 
     singleStatusPrint.appendChild(buildStatusCourseBlock(courseObj, state.dayData));
     singleAddressPrint.appendChild(buildAddressCourseBlock(courseObj, state.dayData, { editable: true }));
