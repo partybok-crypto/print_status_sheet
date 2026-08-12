@@ -197,6 +197,7 @@ function buildDayData_(weekday) {
       items.push({
         course: alpha,
         deliveryOrder: alpha + "-" + String(idx + 1).padStart(2, "0"),
+        orderSuffix: item.sortKey, // 원본 시트에 적힌 배송순서 번호(가공 전) — 누락/중복 검사용
         shippingNumber: shipSeq,
         row: item.sheetRow,
         driver: item.driver,

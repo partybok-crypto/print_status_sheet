@@ -3,234 +3,391 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>유성클리닝 현황지 출력 프로그램</title>
+<title>유성클리닝 현황지 출력</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --navy: #1a3a5c;
+    --navy: #16324a;
     --blue: #2563eb;
     --blue-dark: #1d4ed8;
-    --border: #d7dde5;
-    --bg: #f1f5f9;
+    --blue-bg: #eef4ff;
+    --border: #e2e6ec;
+    --bg: #f4f6f8;
+    --card-bg: #ffffff;
     --text: #1e293b;
     --text-sub: #64748b;
     --red: #dc2626;
-    --green-dot: #22c55e;
-    --red-dot: #ef4444;
+    --red-bg: #fef2f2;
+    --red-border: #fecaca;
+    --green: #16a34a;
+    --green-bg: #ecfdf3;
+    --green-border: #b7ebc6;
+    --amber-bg: #fff8e1;
   }
   * { box-sizing: border-box; }
+  html { font-size: 16px; }
   html, body {
     margin: 0;
-    min-width: 1080px;
     font-family: "Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
     background: var(--bg);
     color: var(--text);
   }
   button, select, input { font-family: inherit; }
+  .app-shell { max-width: 880px; margin: 0 auto; padding: 0 20px 40px; }
 
-  /* ---------- 화면 레이아웃 (인쇄 시에는 .no-print 전부 숨김) ---------- */
-  header {
-    background: #fff;
+  /* ---------- 상단 최소 헤더 ---------- */
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: var(--card-bg);
     border-bottom: 1px solid var(--border);
-    padding: 12px 20px;
+    max-width: 880px;
+    margin: 0 auto;
+  }
+  .app-title { font-size: 19px; font-weight: 700; color: var(--navy); }
+  .icon-btn {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text-sub);
+    font-size: 18px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .icon-btn:hover { background: #f1f5f9; }
+  .icon-btn.small { width: 34px; height: 34px; font-size: 15px; }
+
+  /* ---------- 작업 조건 카드 ---------- */
+  .condition-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-top: 18px;
+  }
+  .condition-row1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .condition-row1 input[type="date"] {
+    height: 46px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 16px;
+    background: #fff;
+    color: var(--text);
+  }
+  .chip-btn {
+    height: 46px;
+    padding: 0 16px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .chip-btn:hover { background: #f1f5f9; }
+  .weekday-week-display {
+    margin-left: auto;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--navy);
+    white-space: nowrap;
+  }
+  .weekday-week-display .dot { color: var(--text-sub); font-weight: 400; font-size: 15px; }
+  .weekday-week-display .week-part { font-size: 15px; font-weight: 600; color: var(--text-sub); }
+
+  .condition-row2 {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .mode-btn {
+    flex: 1;
+    height: 56px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .mode-btn:hover { border-color: #cbd5e1; }
+  .mode-btn.active { border-color: var(--blue); background: var(--blue-bg); color: var(--blue-dark); }
+
+  /* ---------- 상태 배너 ---------- */
+  .ready-banner {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: default;
+  }
+  .ready-banner.ok { background: var(--green-bg); border: 1px solid var(--green-border); color: #15803d; }
+  .ready-banner.warn { background: var(--red-bg); border: 1px solid var(--red-border); color: var(--red); cursor: pointer; }
+  .ready-banner.loading { background: #f1f5f9; border: 1px solid var(--border); color: var(--text-sub); }
+  .ready-banner .sub { font-weight: 500; font-size: 14px; }
+  .issue-detail {
+    margin-top: 8px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid var(--red-border);
+    font-size: 14px;
+    color: var(--text);
+  }
+  .issue-detail ul { margin: 0; padding-left: 18px; }
+  .issue-detail li { margin: 4px 0; }
+  .issue-detail .issue-course { font-weight: 700; color: var(--red); }
+
+  .error-banner {
+    display: none;
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: var(--red-bg);
+    border: 1px solid var(--red-border);
+    color: var(--red);
+    border-radius: 12px;
+    font-size: 15px;
+    align-items: center;
+    gap: 12px;
+  }
+  .error-banner.show { display: flex; }
+  .error-banner button { margin-left: auto; }
+
+  /* ---------- 코스 체크리스트 카드 ---------- */
+  .course-list-card {
+    margin-top: 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+  }
+  .course-list-header {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 10px;
+  }
+  .link-btn {
+    background: none;
+    border: none;
+    color: var(--blue);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 4px 0;
+  }
+  .course-list { display: flex; flex-direction: column; gap: 2px; }
+  .course-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 17px;
+  }
+  .course-row:hover { background: #f8fafc; }
+  .course-row input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue); cursor: pointer; }
+  .course-row .course-code { font-weight: 700; color: var(--navy); min-width: 52px; }
+  .course-row .course-driver { color: var(--text); }
+  .course-row .course-driver.unassigned { color: var(--red); font-weight: 700; }
+  .course-row .course-count { margin-left: auto; color: var(--text-sub); font-size: 15px; }
+  .empty-course-list { padding: 20px; text-align: center; color: var(--text-sub); font-size: 15px; }
+
+  /* ---------- 출력 버튼 ---------- */
+  .print-actions { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; }
+  .big-btn {
+    height: 56px;
+    border-radius: 12px;
+    border: 0;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+  }
+  .big-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .big-btn.primary { background: var(--blue); color: #fff; }
+  .big-btn.primary:hover:not(:disabled) { background: var(--blue-dark); }
+  .big-btn.secondary { background: #eef1f5; color: var(--navy); border: 1px solid var(--border); }
+  .big-btn.secondary:hover:not(:disabled) { background: #e2e6ec; }
+  .big-btn.small { height: 44px; font-size: 15px; width: auto; padding: 0 20px; }
+  .history-hint { font-size: 13px; color: var(--text-sub); padding: 0 4px 6px; min-height: 18px; }
+
+  .confirm-bar {
+    margin-top: 10px;
+    padding: 14px 16px;
+    background: var(--navy);
+    color: #fff;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     gap: 14px;
     flex-wrap: wrap;
   }
-  .brand { font-size: 18px; font-weight: 700; color: var(--navy); white-space: nowrap; }
-  .field-group { display: flex; align-items: center; gap: 6px; }
-  .field-group label { font-size: 12px; color: var(--text-sub); white-space: nowrap; }
-  header select, header input[type="date"] {
-    height: 40px;
-    padding: 0 10px;
+  .confirm-bar span { font-size: 15px; font-weight: 600; flex: 1; min-width: 200px; }
+  .confirm-bar .link-btn { color: #cbd5e1; }
+
+  .toggle-preview-row { margin-top: 14px; text-align: center; }
+
+  /* ---------- 코스별 개별 출력 ---------- */
+  .single-select-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .single-select-row .field-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 180px; }
+  .single-select-row label { font-size: 13px; color: var(--text-sub); font-weight: 600; }
+  .single-select-row select {
+    height: 46px;
+    padding: 0 12px;
     border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 15px;
+    border-radius: 10px;
+    font-size: 16px;
     background: #fff;
     color: var(--text);
   }
-  .weekday-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 40px;
-    height: 40px;
-    padding: 0 10px;
-    border-radius: 8px;
-    background: var(--navy);
-    color: #fff;
-    font-weight: 700;
-    font-size: 15px;
-  }
-  .btn {
-    height: 40px;
-    padding: 0 16px;
-    border: 0;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-  .btn:disabled { opacity: .5; cursor: not-allowed; }
-  .btn-blue { background: var(--blue); color: #fff; }
-  .btn-blue:hover:not(:disabled) { background: var(--blue-dark); }
-  .btn-gray { background: #eef1f5; color: var(--text); }
-  .btn-gray:hover:not(:disabled) { background: #e2e6ec; }
-  .btn-outline { background: #fff; color: var(--blue); border: 1px solid var(--blue); }
-
-  .meta-text { font-size: 12px; color: var(--text-sub); white-space: nowrap; }
-  .spacer { flex: 1; }
-
-  .status-line {
-    padding: 8px 20px;
-    font-size: 13px;
-    color: var(--text-sub);
-    background: #fff;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; }
-  .status-dot.ok { background: var(--green-dot); }
-  .status-dot.err { background: var(--red-dot); }
-
-  .error-banner {
-    display: none;
-    margin: 10px 20px 0;
-    padding: 10px 14px;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: var(--red);
-    border-radius: 8px;
-    font-size: 14px;
-    align-items: center;
-    gap: 10px;
-  }
-  .error-banner.show { display: flex; }
-  .error-banner button { margin-left: auto; }
-
-  .tabs {
-    display: flex;
-    gap: 8px;
-    padding: 12px 20px 0;
-  }
+  .tabs { display: flex; gap: 8px; margin-top: 16px; }
   .tab-btn {
-    height: 40px;
+    height: 44px;
     padding: 0 18px;
     border: 1px solid var(--border);
     background: #fff;
     color: var(--text);
-    border-radius: 8px 8px 0 0;
+    border-radius: 10px 10px 0 0;
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
     border-bottom: 0;
   }
   .tab-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
-
-  .actions-bar {
+  .single-actions-bar {
     display: flex;
     gap: 10px;
-    padding: 12px 20px;
-    background: #fff;
-    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
     align-items: center;
     flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+  }
+  .single-actions-bar .big-btn { width: auto; padding: 0 22px; height: 48px; font-size: 16px; }
+  .edit-count-text { font-size: 13px; color: var(--text-sub); }
+
+  .preview-scroll { margin-top: 16px; overflow-x: auto; padding-bottom: 12px; }
+
+  /* ---------- 문서 공통 표 스타일 (화면/인쇄 공용, mm/pt 절대단위 — 미리보기 축소 없음) ---------- */
+  .doc-page { background: #fff; margin: 0 auto 20px; }
+  .print-course + .print-course { margin-top: 10mm; }
+  table.doc-table { width: 210mm; border-collapse: collapse; table-layout: fixed; }
+  .address-table.doc-table { width: 297mm; }
+  .closer-table.doc-table { width: 210mm; }
+  table.doc-table thead { display: table-header-group; }
+  table.doc-table th, table.doc-table td {
+    border: 1px solid #000;
+    padding: 5px 7px;
+    text-align: center;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  table.doc-table tbody tr { break-inside: avoid; page-break-inside: avoid; }
+
+  tr.doc-title-row th { background: var(--navy); color: #fff; font-size: 13pt; padding: 7px; }
+  tr.doc-title-row .title-main { font-size: 17pt; font-weight: 900; letter-spacing: .5px; }
+  tr.doc-title-row .title-course { font-size: 13pt; font-weight: 700; }
+  tr.doc-title-row .title-date { font-size: 13pt; font-weight: 700; }
+  tr.doc-col-row th { background: #f3f4f6; font-weight: 700; font-size: 12pt; }
+
+  /* 현황지 전용 */
+  .status-table td { font-size: 14pt; }
+  .status-table td.col-companyno,
+  .status-table td.col-nickname { font-weight: 700; font-size: 14pt; }
+  .status-table td.col-shipno { font-weight: 700; font-size: 20pt; }
+  .status-table td.col-qty { border: 2px solid #1d4ed8; }
+  .status-table td.has-note { background: #fff59d; color: var(--red); font-weight: 700; }
+  .status-table tr.missing-row td.col-nickname,
+  .status-table tr.missing-row td.col-companyno { background: var(--red-bg); }
+
+  /* 주소지 전용 */
+  .address-table td, .address-table th { font-size: 12.5pt; }
+  .address-table td.col-order { background: #f2eaff; }
+  .address-table td.col-companyno,
+  .address-table td.col-nickname { font-weight: 700; }
+  .address-table td.col-address { text-align: left; }
+  .address-table td.col-method { color: var(--blue); font-weight: 700; }
+  .address-table td.col-comment { text-align: left; }
+  .address-table td.col-comment.has-comment { background: #eafbea; }
+  .address-table td.col-comment[contenteditable="true"]:focus { outline: 2px solid var(--blue); background: #e0f2ff; }
+  .address-table td.col-comment.edited { background: #fff3cd; }
+  .address-table td.col-phone { font-weight: 700; font-size: 13pt; white-space: normal; }
+  .address-table tr.missing-field td.col-address { background: var(--red-bg); }
+  .address-table tr.origin-row td { background: #fff8e1; font-weight: 700; }
+
+  .address-footnote {
+    width: 297mm;
+    margin: 0 auto;
+    text-align: center;
+    font-size: 12pt;
+    font-weight: 700;
+    border: 1px solid #000;
+    border-top: 0;
+    padding: 8px;
+    break-inside: avoid;
   }
 
-  .preview-wrap {
-    padding: 20px;
-    overflow-x: auto;
-  }
-  .preview-shell {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.08);
-    padding: 14mm;
+  /* 마감자용 종합표 */
+  .closer-table th, .closer-table td { font-size: 11.5pt; }
+  .closer-table td.chk-cell { padding: 4px; }
+  .chk-box { display: inline-block; width: 20px; height: 20px; border: 2px solid #000; }
+  .closer-footer {
+    width: 210mm;
     margin: 0 auto;
+    border: 1px solid #000;
+    border-top: 0;
+    padding: 12px 16px;
+    font-size: 12pt;
+    break-inside: avoid;
   }
-  .doc-status .preview-shell { width: 210mm; min-width: 210mm; }
-  .doc-address .preview-shell { width: 297mm; min-width: 297mm; }
+  .closer-footer .row { display: flex; gap: 24px; padding: 3px 0; flex-wrap: wrap; }
+  .closer-footer .row span { white-space: nowrap; }
+  .closer-footer .label { color: #333; font-weight: 700; margin-right: 6px; }
+  .closer-sign-row { display: flex; gap: 40px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed #999; }
+  .closer-sign-row .sign-field { flex: 1; }
+  .closer-sign-row .sign-line { display: inline-block; border-bottom: 1px solid #000; min-width: 140px; height: 22px; margin-left: 8px; }
+  .closer-sign-row .sign-line.wide { min-width: 260px; }
+
+  /* ---------- 상태 푸터 ---------- */
+  .status-footer {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-sub);
+  }
 
   .empty-state {
     text-align: center;
     padding: 60px 20px;
     color: var(--text-sub);
-    font-size: 15px;
+    font-size: 16px;
   }
 
-  /* ---------- 문서 공통 표 스타일 (화면/인쇄 공용) ---------- */
-  .doc-head-table { width: 100%; border-collapse: collapse; margin-bottom: 0; }
-  .doc-head-table td {
-    border: 1px solid #000;
-    padding: 6px 10px;
-    font-size: 13pt;
-    vertical-align: middle;
-  }
-  .doc-head-table .label-cell { background: #ffe000; font-weight: 700; text-align: center; width: 60px; }
-  .doc-head-table .title-cell { font-weight: 700; text-align: center; font-size: 16pt; }
-
-  table.doc-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-  table.doc-table thead { display: table-header-group; }
-  table.doc-table th, table.doc-table td {
-    border: 1px solid #000;
-    padding: 6px 8px;
-    text-align: center;
-    overflow-wrap: break-word;
-  }
-  table.doc-table th { background: #f3f4f6; font-weight: 700; }
-  table.doc-table tr { break-inside: avoid; page-break-inside: avoid; }
-
-  /* 현황지 전용 */
-  .status-table .col-order { width: 11%; }
-  .status-table .col-companyno { width: 10%; }
-  .status-table .col-nickname { width: 14%; }
-  .status-table .col-biztype { width: 12%; }
-  .status-table .col-bag { width: 16%; }
-  .status-table .col-towel { width: 16%; }
-  .status-table .col-qty { width: 9%; }
-  .status-table .col-shipno { width: 12%; }
-
-  .status-table td.col-companyno,
-  .status-table td.col-nickname { font-weight: 700; font-size: 13pt; }
-  .status-table td.col-shipno { font-weight: 700; font-size: 20pt; }
-  .status-table td, .status-table th { font-size: 14pt; }
-  .status-table td.col-qty { border: 2px solid #1d4ed8; }
-  .status-table td.has-note { background: #fff59d; color: var(--red); font-weight: 700; }
-
-  /* 주소지 전용 */
-  .address-table .col-order { width: 8%; background: #f2eaff; }
-  .address-table .col-companyno { width: 8%; }
-  .address-table .col-nickname { width: 10%; }
-  .address-table .col-address { width: 34%; text-align: left; }
-  .address-table .col-method { width: 12%; }
-  .address-table .col-comment { width: 20%; text-align: left; }
-  .address-table .col-phone { width: 8%; }
-
-  .address-table td, .address-table th { font-size: 12.5pt; }
-  .address-table td.col-companyno,
-  .address-table td.col-nickname { font-weight: 700; }
-  .address-table td.col-method { color: var(--blue); font-weight: 700; }
-  .address-table td.col-phone { font-weight: 700; font-size: 15pt; }
-  .address-table td.col-comment { outline-offset: -2px; }
-  .address-table td.col-comment.has-comment { background: #eafbea; }
-  .address-table td.col-comment[contenteditable="true"]:focus { outline: 2px solid var(--blue); background: #e0f2ff; }
-  .address-table td.col-comment.edited { background: #fff3cd; }
-  .address-table tr.missing-field { background: #fff1f1; }
-
-  .address-footnote {
-    margin-top: 10px;
-    text-align: center;
-    font-size: 12pt;
-    font-weight: 700;
-    border: 1px solid #000;
-    padding: 8px;
-  }
+  /* ---------- 인쇄용 문서 표시 제어 ---------- */
+  .bulk-doc { display: none; }
+  body.bulk-preview-open .bulk-doc { display: block; }
+  .single-doc { display: none; }
+  .single-doc.active { display: block; }
 
   /* ---------- 인쇄 전용 ---------- */
   @page portraitPage { size: A4 portrait; margin: 8mm; }
@@ -238,152 +395,147 @@
 
   @media print {
     .no-print { display: none !important; }
-    body { background: #fff; }
+    html, body { background: #fff !important; }
 
-    /* 업종/코멘트 배경색은 브라우저 "배경 그래픽" 인쇄 옵션이 꺼져 있으면
-       안 찍힌다 — 옵션과 무관하게 항상 인쇄되도록 강제한다. */
     * {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
       color-adjust: exact !important;
     }
-    .preview-wrap { padding: 0; overflow: visible; }
-    .preview-shell { box-shadow: none; border: 0; padding: 0; width: auto !important; min-width: 0 !important; margin: 0; }
-    .doc-status, .doc-address { display: none !important; }
 
-    body.printing-status .doc-status { display: block !important; page: portraitPage; }
-    body.printing-address .doc-address { display: block !important; page: landscapePage; }
+    .bulk-doc, .single-doc { display: none !important; }
+    body.printing-bulk-status #bulkStatusPrint { display: block !important; page: portraitPage; }
+    body.printing-bulk-address #bulkAddressPrint { display: block !important; page: landscapePage; }
+    body.printing-closer #closerPrint { display: block !important; page: portraitPage; }
+    body.printing-single-status #singleStatusPrint { display: block !important; page: portraitPage; }
+    body.printing-single-address #singleAddressPrint { display: block !important; page: landscapePage; }
 
-    /* 인쇄 결과는 확대/축소 없이 CSS에 지정한 실제 pt 크기 그대로 나가야 한다 */
+    .print-course { break-before: page; page-break-before: always; }
+    .print-course:first-child { break-before: auto; page-break-before: auto; }
+
     table.doc-table, table.doc-table * { transform: none !important; zoom: 1 !important; }
+    .doc-page, table.doc-table, .address-footnote, .closer-footer { width: auto !important; }
   }
 </style>
 </head>
 <body>
 
-<header class="no-print">
-  <div class="brand">유성클리닝 | 현황지 출력 프로그램</div>
-
-  <div class="field-group">
-    <label for="datePicker">날짜</label>
-    <input type="date" id="datePicker">
-  </div>
-
-  <div class="weekday-badge" id="weekdayBadge">-</div>
-
-  <div class="field-group">
-    <label for="driverSelect">기사</label>
-    <select id="driverSelect"><option value="">-</option></select>
-  </div>
-
-  <div class="field-group">
-    <label for="courseSelect">코스</label>
-    <select id="courseSelect"><option value="">-</option></select>
-  </div>
-
-  <button class="btn btn-blue" id="btnLoad">데이터 불러오기</button>
-  <button class="btn btn-gray" id="btnRefresh" title="원본 데이터 다시 불러오기">새로고침</button>
-
-  <div class="spacer"></div>
-
-  <span class="meta-text" id="lastFetchedText">불러온 적 없음</span>
-  <button class="btn btn-outline" id="btnSettings" style="height:32px;padding:0 10px;font-size:12px;">설정</button>
+<header class="app-header no-print">
+  <div class="app-title">유성클리닝 현황지 출력</div>
+  <button class="icon-btn" id="btnSettings" title="설정">⚙</button>
 </header>
 
-<div class="status-line no-print">
-  <span class="status-dot" id="statusDot"></span>
-  <span id="statusText">준비됨</span>
-  <span class="spacer"></span>
-  <span class="meta-text" id="companyCountText"></span>
-</div>
+<div class="app-shell">
 
-<div class="error-banner no-print" id="errorBanner">
-  <span id="errorText"></span>
-  <button class="btn btn-gray" id="btnRetry" style="height:30px;">재시도</button>
-</div>
-
-<div class="tabs no-print" id="tabBar">
-  <button class="tab-btn active" data-tab="status">배송 현황지 (A4 세로)</button>
-  <button class="tab-btn" data-tab="address">주소지 (A4 가로)</button>
-</div>
-
-<div class="actions-bar no-print">
-  <button class="btn btn-blue" id="btnPrintStatus">배송 현황지 인쇄</button>
-  <button class="btn btn-blue" id="btnPrintAddress">주소지 인쇄</button>
-  <button class="btn btn-gray" id="btnSaveComments">배송 코멘트 저장</button>
-  <span class="meta-text" id="editCountText"></span>
-</div>
-
-<div class="preview-wrap">
-  <div id="emptyState" class="empty-state">날짜·코스를 선택하고 "데이터 불러오기"를 눌러주세요.</div>
-
-  <div class="doc-status" id="docStatus" style="display:none;">
-    <div class="preview-shell">
-      <table class="doc-head-table">
-        <tr>
-          <td class="label-cell">주차</td>
-          <td id="hdStatusDriver"></td>
-          <td class="title-cell" colspan="2" id="hdStatusWeekday"></td>
-        </tr>
-        <tr>
-          <td class="label-cell">&nbsp;</td>
-          <td id="hdStatusDate"></td>
-          <td colspan="2" style="text-align:center;font-weight:700;">세탁물 현황</td>
-        </tr>
-      </table>
-      <table class="doc-table status-table">
-        <thead>
-          <tr>
-            <th class="col-order">배송순서</th>
-            <th class="col-companyno">업체번호</th>
-            <th class="col-nickname">약칭</th>
-            <th class="col-biztype">업종</th>
-            <th class="col-bag">포대 배송</th>
-            <th class="col-towel">수건 배송</th>
-            <th class="col-qty">수거량<br>(중요!)</th>
-            <th class="col-shipno">출고</th>
-          </tr>
-        </thead>
-        <tbody id="statusTbody"></tbody>
-      </table>
+  <div class="condition-card no-print">
+    <div class="condition-row1">
+      <input type="date" id="datePicker">
+      <button class="chip-btn" id="btnToday">오늘</button>
+      <button class="chip-btn" id="btnNextBizDay">다음 영업일</button>
+      <div class="weekday-week-display">
+        <span id="weekdayDisplay">-</span>
+        <span class="dot">·</span>
+        <span class="week-part" id="weekDisplay"></span>
+      </div>
+      <button class="icon-btn small" id="btnRefresh" title="원본 데이터 다시 불러오기">⟳</button>
+    </div>
+    <div class="condition-row2">
+      <button class="mode-btn active" id="btnModeDay" data-mode="day">요일 전체 출력</button>
+      <button class="mode-btn" id="btnModeSingle" data-mode="single">코스별 개별 출력</button>
     </div>
   </div>
 
-  <div class="doc-address" id="docAddress" style="display:none;">
-    <div class="preview-shell">
-      <table class="doc-head-table">
-        <tr>
-          <td class="label-cell" id="hdAddressDate" style="width:110px;"></td>
-          <td class="title-cell" colspan="2">배송코스 (사용 후 폐기)</td>
-        </tr>
-      </table>
-      <table class="doc-table address-table">
-        <thead>
-          <tr>
-            <th class="col-order">배송순서</th>
-            <th class="col-companyno">업체번호</th>
-            <th class="col-nickname">약칭</th>
-            <th class="col-address">배송 주소</th>
-            <th class="col-method">수거방식</th>
-            <th class="col-comment">배송 코멘트</th>
-            <th class="col-phone">거래처 번호</th>
-          </tr>
-        </thead>
-        <tbody id="addressTbody"></tbody>
-      </table>
-      <div class="address-footnote">【메모란】 위치 꿀팁(주차/비번 등) · 배송코멘트를 남겨주시면 차주 현황지에 반영됩니다.</div>
+  <div class="error-banner no-print" id="errorBanner">
+    <span id="errorText"></span>
+    <button class="chip-btn" id="btnRetry" style="height:36px;">재시도</button>
+  </div>
+
+  <!-- ================= 요일 전체 출력 ================= -->
+  <div class="no-print" id="dayModeArea">
+
+    <div class="ready-banner loading" id="readyBanner">
+      <span id="readyBannerText">데이터를 불러오는 중...</span>
+    </div>
+    <div class="issue-detail" id="issueDetail" style="display:none;"></div>
+
+    <div class="course-list-card">
+      <div class="course-list-header">
+        <button class="link-btn" id="btnSelectAll">전체 선택</button>
+        <button class="link-btn" id="btnSelectNone">전체 해제</button>
+      </div>
+      <div class="course-list" id="courseList">
+        <div class="empty-course-list">데이터를 불러오는 중입니다...</div>
+      </div>
+    </div>
+
+    <div class="print-actions">
+      <button class="big-btn primary" id="btnBulkPrintStatus" disabled>현황지 전체 인쇄</button>
+      <div class="history-hint" id="hintBulkStatus"></div>
+      <button class="big-btn primary" id="btnBulkPrintAddress" disabled>주소지 전체 인쇄</button>
+      <div class="history-hint" id="hintBulkAddress"></div>
+      <button class="big-btn secondary" id="btnBulkPrintCloser" disabled>마감자용 인쇄</button>
+      <div class="history-hint" id="hintBulkCloser"></div>
+    </div>
+
+    <div class="confirm-bar" id="confirmBar" style="display:none;">
+      <span id="confirmText"></span>
+      <button class="big-btn primary small" id="btnConfirmPrint">인쇄하기</button>
+      <button class="link-btn" id="btnConfirmCancel">취소</button>
+    </div>
+
+    <div class="toggle-preview-row">
+      <button class="link-btn" id="btnTogglePreview">미리보기 펼치기</button>
+    </div>
+
+    <div class="preview-scroll" id="bulkPreviewScroll" style="display:none;">
+      <div class="doc-page bulk-doc" id="bulkStatusPrint"></div>
+      <div class="doc-page bulk-doc" id="bulkAddressPrint"></div>
+      <div class="doc-page bulk-doc" id="closerPrint"></div>
     </div>
   </div>
+
+  <!-- ================= 코스별 개별 출력 ================= -->
+  <div class="no-print" id="singleModeArea" style="display:none;">
+    <div class="single-select-row">
+      <div class="field-group">
+        <label for="driverSelect">기사</label>
+        <select id="driverSelect"><option value="">-</option></select>
+      </div>
+      <div class="field-group">
+        <label for="courseSelect">코스</label>
+        <select id="courseSelect"><option value="">-</option></select>
+      </div>
+    </div>
+
+    <div class="tabs" id="tabBar">
+      <button class="tab-btn active" data-tab="status">배송 현황지 미리보기</button>
+      <button class="tab-btn" data-tab="address">주소지 미리보기</button>
+    </div>
+    <div class="single-actions-bar">
+      <button class="big-btn primary" id="btnPrintSingleStatus">배송 현황지 인쇄</button>
+      <button class="big-btn primary" id="btnPrintSingleAddress">주소지 인쇄</button>
+      <button class="big-btn secondary" id="btnSaveComments">배송 코멘트 저장</button>
+      <span class="edit-count-text" id="editCountText"></span>
+    </div>
+
+    <div id="singleEmptyState" class="empty-state">코스를 선택해주세요.</div>
+    <div class="preview-scroll" id="singlePreviewScroll">
+      <div class="doc-page single-doc active" id="singleStatusPrint"></div>
+      <div class="doc-page single-doc" id="singleAddressPrint"></div>
+    </div>
+  </div>
+
+  <div class="status-footer no-print" id="statusFooter">불러온 적 없음</div>
 </div>
 
 <!-- 설정 모달 -->
 <div id="settingsOverlay" class="no-print" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); align-items:center; justify-content:center; z-index:50;">
-  <div style="background:#fff; border-radius:12px; padding:20px; width:480px; max-width:92vw;">
-    <div style="font-weight:700; font-size:16px; margin-bottom:10px;">GAS 배포 URL 설정</div>
-    <input id="gasUrlInput" type="text" style="width:100%; height:40px; padding:0 10px; border:1px solid var(--border); border-radius:8px; font-size:14px;">
-    <div style="display:flex; gap:8px; margin-top:14px; justify-content:flex-end;">
-      <button class="btn btn-gray" id="btnSettingsCancel">취소</button>
-      <button class="btn btn-blue" id="btnSettingsSave">저장</button>
+  <div style="background:#fff; border-radius:14px; padding:22px; width:480px; max-width:92vw;">
+    <div style="font-weight:700; font-size:17px; margin-bottom:12px;">GAS 배포 URL 설정</div>
+    <input id="gasUrlInput" type="text" style="width:100%; height:44px; padding:0 12px; border:1px solid var(--border); border-radius:10px; font-size:15px;">
+    <div style="display:flex; gap:8px; margin-top:16px; justify-content:flex-end;">
+      <button class="chip-btn" id="btnSettingsCancel">취소</button>
+      <button class="big-btn primary" id="btnSettingsSave" style="width:auto; padding:0 20px; height:44px;">저장</button>
     </div>
   </div>
 </div>
@@ -392,15 +544,19 @@
 (function () {
   'use strict';
 
-  // ---------- 설정 ----------
-  var STORAGE_KEYS = { gasUrl: 'ysc_gas_url_v2' };
+  // ================= 설정 =================
+  var STORAGE_KEYS = {
+    gasUrl: 'ysc_gas_url_v2',
+    printHistory: 'ysc_print_history_v1',
+    prefs: 'ysc_last_prefs_v1'
+  };
   var DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbx4L6ZiXjjKkQPo1vcGxp5iuP7MktAo30gn-fCRAQPCdrRb1VQ_yijQ6hvS21NoIrvM/exec';
-  var FETCH_TIMEOUT_MS = 30000; // 순수 JSON 조회이므로 몇 초면 끝남 — 30초면 충분히 넉넉함
+  var FETCH_TIMEOUT_MS = 30000;
 
   var WEEKDAY_FROM_JS_DAY = ['일', '월', '화', '수', '목', '금', '토'];
-  var WEEKDAYS = ['월', '화', '수', '목', '금', '토', '일'];
+  var WEEKDAY_FULL = { '월':'월요일','화':'화요일','수':'수요일','목':'목요일','금':'금요일','토':'토요일','일':'일요일' };
+  var BUSINESS_CLOSED_WEEKDAY = '일'; // 다음 영업일 계산 시 건너뛰는 요일(일요일 휴무 가정)
 
-  // 업종별 색상 (요청사항: 미용실=주황, 헬스장=연주황/빨강, 병원=파랑, 그 외 구분)
   var BIZ_TYPE_STYLE = {
     '미용실':   { bg: '#ffb74d', color: '#4a2600' },
     '헬스장':   { bg: '#ffe0b2', color: '#c62828' },
@@ -410,63 +566,93 @@
     '마사지':   { bg: '#f48fb1', color: '#880e4f' },
     '만화책방': { bg: '#212121', color: '#ff4081' }
   };
-  function bizTypeStyle(t) {
-    return BIZ_TYPE_STYLE[t] || { bg: '#e0e0e0', color: '#333' };
-  }
+  function bizTypeStyle(t) { return BIZ_TYPE_STYLE[t] || { bg: '#e0e0e0', color: '#333' }; }
 
-  // ---------- 상태 ----------
+  // ================= 상태 =================
   var state = {
-    weekday: WEEKDAY_FROM_JS_DAY[new Date().getDay()],
-    dayData: null,       // 서버에서 받은 그날 전체 데이터 (요일 하나 = 1회 조회, 이후 재사용)
-    selectedCourse: '',
-    activeTab: 'status',
+    selectedDate: new Date(),
+    weekday: '',
+    outputMode: 'day',
+    cache: {},          // { '월': dayDataObj, ... } — 요일별 1회 조회 캐시
+    dayData: null,       // 현재 요일의 dayData
+    courseList: [],       // [{course, driver, items:[]}]
+    selectedCourses: {},  // { B:true, C:false, ... }
+    validation: { issues: [], ready: true },
     isLoading: false,
     isPrinting: false,
-    pendingEdits: {},    // { row: newComment }
-    lastFetchedAt: null
+    pendingPrintConfirm: null,
+    bulkPreviewOpen: false,
+
+    // 코스별 개별 출력
+    singleCourse: '',
+    singleTab: 'status',
+    pendingEdits: {}
   };
 
-  // ---------- DOM refs ----------
-  var datePicker = document.getElementById('datePicker');
-  var weekdayBadge = document.getElementById('weekdayBadge');
-  var driverSelect = document.getElementById('driverSelect');
-  var courseSelect = document.getElementById('courseSelect');
-  var btnLoad = document.getElementById('btnLoad');
-  var btnRefresh = document.getElementById('btnRefresh');
-  var lastFetchedText = document.getElementById('lastFetchedText');
-  var statusDot = document.getElementById('statusDot');
-  var statusText = document.getElementById('statusText');
-  var companyCountText = document.getElementById('companyCountText');
-  var errorBanner = document.getElementById('errorBanner');
-  var errorText = document.getElementById('errorText');
-  var btnRetry = document.getElementById('btnRetry');
-  var tabBar = document.getElementById('tabBar');
-  var btnPrintStatus = document.getElementById('btnPrintStatus');
-  var btnPrintAddress = document.getElementById('btnPrintAddress');
-  var btnSaveComments = document.getElementById('btnSaveComments');
-  var editCountText = document.getElementById('editCountText');
-  var emptyState = document.getElementById('emptyState');
-  var docStatus = document.getElementById('docStatus');
-  var docAddress = document.getElementById('docAddress');
-  var statusTbody = document.getElementById('statusTbody');
-  var addressTbody = document.getElementById('addressTbody');
-  var hdStatusDriver = document.getElementById('hdStatusDriver');
-  var hdStatusWeekday = document.getElementById('hdStatusWeekday');
-  var hdStatusDate = document.getElementById('hdStatusDate');
-  var hdAddressDate = document.getElementById('hdAddressDate');
-  var settingsOverlay = document.getElementById('settingsOverlay');
-  var gasUrlInput = document.getElementById('gasUrlInput');
-  var btnSettings = document.getElementById('btnSettings');
-  var btnSettingsCancel = document.getElementById('btnSettingsCancel');
-  var btnSettingsSave = document.getElementById('btnSettingsSave');
+  // ================= DOM refs =================
+  var $ = function (id) { return document.getElementById(id); };
+  var datePicker = $('datePicker');
+  var btnToday = $('btnToday');
+  var btnNextBizDay = $('btnNextBizDay');
+  var weekdayDisplay = $('weekdayDisplay');
+  var weekDisplay = $('weekDisplay');
+  var btnRefresh = $('btnRefresh');
+  var btnModeDay = $('btnModeDay');
+  var btnModeSingle = $('btnModeSingle');
+  var dayModeArea = $('dayModeArea');
+  var singleModeArea = $('singleModeArea');
+  var errorBanner = $('errorBanner');
+  var errorText = $('errorText');
+  var btnRetry = $('btnRetry');
 
-  // ---------- 설정 저장소 ----------
-  function getGasUrl() {
-    return localStorage.getItem(STORAGE_KEYS.gasUrl) || DEFAULT_GAS_URL;
-  }
-  function setGasUrl(url) {
-    localStorage.setItem(STORAGE_KEYS.gasUrl, url);
-  }
+  var readyBanner = $('readyBanner');
+  var readyBannerText = $('readyBannerText');
+  var issueDetail = $('issueDetail');
+  var courseList = $('courseList');
+  var btnSelectAll = $('btnSelectAll');
+  var btnSelectNone = $('btnSelectNone');
+
+  var btnBulkPrintStatus = $('btnBulkPrintStatus');
+  var btnBulkPrintAddress = $('btnBulkPrintAddress');
+  var btnBulkPrintCloser = $('btnBulkPrintCloser');
+  var hintBulkStatus = $('hintBulkStatus');
+  var hintBulkAddress = $('hintBulkAddress');
+  var hintBulkCloser = $('hintBulkCloser');
+
+  var confirmBar = $('confirmBar');
+  var confirmText = $('confirmText');
+  var btnConfirmPrint = $('btnConfirmPrint');
+  var btnConfirmCancel = $('btnConfirmCancel');
+
+  var btnTogglePreview = $('btnTogglePreview');
+  var bulkPreviewScroll = $('bulkPreviewScroll');
+  var bulkStatusPrint = $('bulkStatusPrint');
+  var bulkAddressPrint = $('bulkAddressPrint');
+  var closerPrint = $('closerPrint');
+
+  var driverSelect = $('driverSelect');
+  var courseSelect = $('courseSelect');
+  var tabBar = $('tabBar');
+  var btnPrintSingleStatus = $('btnPrintSingleStatus');
+  var btnPrintSingleAddress = $('btnPrintSingleAddress');
+  var btnSaveComments = $('btnSaveComments');
+  var editCountText = $('editCountText');
+  var singleEmptyState = $('singleEmptyState');
+  var singlePreviewScroll = $('singlePreviewScroll');
+  var singleStatusPrint = $('singleStatusPrint');
+  var singleAddressPrint = $('singleAddressPrint');
+
+  var statusFooter = $('statusFooter');
+
+  var settingsOverlay = $('settingsOverlay');
+  var gasUrlInput = $('gasUrlInput');
+  var btnSettings = $('btnSettings');
+  var btnSettingsCancel = $('btnSettingsCancel');
+  var btnSettingsSave = $('btnSettingsSave');
+
+  // ================= 설정 저장소 =================
+  function getGasUrl() { return localStorage.getItem(STORAGE_KEYS.gasUrl) || DEFAULT_GAS_URL; }
+  function setGasUrl(url) { localStorage.setItem(STORAGE_KEYS.gasUrl, url); }
 
   btnSettings.addEventListener('click', function () {
     gasUrlInput.value = getGasUrl();
@@ -479,28 +665,101 @@
     settingsOverlay.style.display = 'none';
   });
 
-  // ---------- 날짜/요일 ----------
+  // ================= 최근 선택 기억 =================
+  function loadPrefs() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.prefs) || '{}'); } catch (e) { return {}; }
+  }
+  function savePrefs(patch) {
+    var cur = loadPrefs();
+    Object.keys(patch).forEach(function (k) { cur[k] = patch[k]; });
+    localStorage.setItem(STORAGE_KEYS.prefs, JSON.stringify(cur));
+  }
+
+  // ================= 인쇄 기록 =================
+  function loadPrintHistory() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.printHistory) || '[]'); } catch (e) { return []; }
+  }
+  function recordPrint(kind, courses) {
+    var list = loadPrintHistory();
+    list.push({ date: isoDate(state.selectedDate), kind: kind, courses: courses, at: new Date().toISOString() });
+    if (list.length > 200) list = list.slice(list.length - 200);
+    localStorage.setItem(STORAGE_KEYS.printHistory, JSON.stringify(list));
+    updateHistoryHints();
+  }
+  function findLastPrint(dateIso, kind) {
+    var list = loadPrintHistory();
+    var found = null;
+    list.forEach(function (r) { if (r.date === dateIso && r.kind === kind) found = r; });
+    return found;
+  }
+  function fmtHistoryHint(record) {
+    if (!record) return '';
+    var at = new Date(record.at);
+    var todayIso = isoDate(new Date());
+    var dayLabel = record.date === todayIso ? '오늘' : (at.getMonth() + 1) + '월 ' + at.getDate() + '일';
+    var timeLabel = at.toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' });
+    var n = (record.courses || []).length;
+    return dayLabel + ' ' + timeLabel + '에 인쇄함 (' + n + '개 코스)';
+  }
+  function updateHistoryHints() {
+    var dateIso = isoDate(state.selectedDate);
+    hintBulkStatus.textContent = fmtHistoryHint(findLastPrint(dateIso, 'status'));
+    hintBulkAddress.textContent = fmtHistoryHint(findLastPrint(dateIso, 'address'));
+    hintBulkCloser.textContent = fmtHistoryHint(findLastPrint(dateIso, 'closer'));
+  }
+
+  // ================= 날짜/요일/주차 =================
   function isoDate(d) {
     var y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
     return y + '-' + m + '-' + day;
   }
   function weekdayFromDate(d) { return WEEKDAY_FROM_JS_DAY[d.getDay()]; }
+  function isoWeekNumber(dateObj) {
+    var date = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
+    var dayNum = date.getUTCDay() || 7;
+    date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+    var yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+  }
+  function fmtDisplayDate(d) {
+    return (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + isoWeekNumber(d) + '주차)';
+  }
+  function addDays(d, n) {
+    var r = new Date(d);
+    r.setDate(r.getDate() + n);
+    return r;
+  }
+  function nextBusinessDayFrom(d) {
+    var r = addDays(d, 1);
+    while (weekdayFromDate(r) === BUSINESS_CLOSED_WEEKDAY) r = addDays(r, 1);
+    return r;
+  }
 
-  function initDatePicker() {
-    var today = new Date();
-    datePicker.value = isoDate(today);
-    state.weekday = weekdayFromDate(today);
-    weekdayBadge.textContent = state.weekday;
+  function refreshDateDisplay() {
+    state.weekday = weekdayFromDate(state.selectedDate);
+    weekdayDisplay.textContent = WEEKDAY_FULL[state.weekday] || '-';
+    weekDisplay.textContent = isoWeekNumber(state.selectedDate) + '주차';
+    datePicker.value = isoDate(state.selectedDate);
+  }
+
+  function setSelectedDate(d) {
+    state.selectedDate = d;
+    refreshDateDisplay();
+    updateHistoryHints();
+    loadDayData(false);
   }
 
   datePicker.addEventListener('change', function () {
     var d = new Date(datePicker.value + 'T00:00:00');
     if (isNaN(d.getTime())) return;
-    state.weekday = weekdayFromDate(d);
-    weekdayBadge.textContent = state.weekday;
+    setSelectedDate(d);
   });
+  btnToday.addEventListener('click', function () { setSelectedDate(new Date()); });
+  btnNextBizDay.addEventListener('click', function () { setSelectedDate(nextBusinessDayFrom(new Date())); });
+  btnRefresh.addEventListener('click', function () { loadDayData(true); });
+  btnRetry.addEventListener('click', function () { loadDayData(true); });
 
-  // ---------- GAS 호출 ----------
+  // ================= GAS 호출 =================
   function callGAS(payload) {
     var url = getGasUrl();
     var controller = new AbortController();
@@ -517,141 +776,279 @@
     }).finally(function () { clearTimeout(timeoutId); });
   }
 
-  // ---------- 상태 표시 ----------
-  function setStatus(kind, text) {
-    statusDot.className = 'status-dot' + (kind === 'ok' ? ' ok' : kind === 'err' ? ' err' : '');
-    statusText.textContent = text;
-  }
-  function showError(msg) {
-    errorText.textContent = msg;
-    errorBanner.classList.add('show');
-  }
   function hideError() { errorBanner.classList.remove('show'); }
+  function showError(msg) { errorText.textContent = msg; errorBanner.classList.add('show'); }
 
-  // ---------- 데이터 불러오기 ----------
-  function hasUnsavedEdits() { return Object.keys(state.pendingEdits).length > 0; }
-
-  function confirmDiscardEditsIfNeeded() {
-    if (!hasUnsavedEdits()) return true;
-    return confirm('저장하지 않은 배송 코멘트 수정 내용이 있습니다. 다시 불러오면 사라집니다. 계속할까요?');
+  // ================= 데이터 불러오기 =================
+  function groupByCourse(data) {
+    var byCourse = {};
+    data.items.forEach(function (it) {
+      if (!byCourse[it.course]) byCourse[it.course] = [];
+      byCourse[it.course].push(it);
+    });
+    return data.courses.map(function (c) {
+      return { course: c, driver: data.drivers[c] || '', items: byCourse[c] || [] };
+    });
   }
 
-  function loadData(force) {
+  function loadDayData(force) {
+    var weekday = state.weekday;
+    if (!force && state.cache[weekday]) {
+      applyDayData(state.cache[weekday], true);
+      return;
+    }
     if (state.isLoading) return;
-    if (!force && !confirmDiscardEditsIfNeeded()) return;
 
     state.isLoading = true;
-    btnLoad.disabled = true;
     btnRefresh.disabled = true;
-    setStatus('', '불러오는 중...');
     hideError();
+    setReadyBanner('loading', '데이터를 불러오는 중...');
 
     var startedAt = Date.now();
 
-    callGAS({ action: 'getData', weekday: state.weekday })
+    callGAS({ action: 'getData', weekday: weekday })
       .then(function (data) {
-        if (!data || !data.success) {
-          throw new Error((data && data.message) || '데이터를 불러오지 못했습니다.');
-        }
-        state.dayData = data;
-        state.pendingEdits = {};
-        state.lastFetchedAt = new Date();
-
-        rebuildCourseAndDriverSelects();
-        renderDocuments();
-
+        if (!data || !data.success) throw new Error((data && data.message) || '데이터를 불러오지 못했습니다.');
+        state.cache[weekday] = data;
+        applyDayData(data, false);
         var elapsedSec = ((Date.now() - startedAt) / 1000).toFixed(1);
-        setStatus('ok', '데이터 로드 완료 (' + elapsedSec + '초)');
-        lastFetchedText.textContent = '마지막 불러온 시간: ' + state.lastFetchedAt.toLocaleTimeString('ko-KR');
-        companyCountText.textContent = '불러온 업체 수: ' + data.count + '개';
+        statusFooter.textContent = '마지막 불러온 시간: ' + new Date().toLocaleTimeString('ko-KR') + ' (' + elapsedSec + '초)';
       })
       .catch(function (err) {
-        setStatus('err', '불러오기 실패');
+        setReadyBanner('warn', '데이터를 불러오지 못했습니다');
         var msg = (err && err.name === 'AbortError')
           ? '요청이 너무 오래 걸려 중단됐어요. 다시 시도해주세요.'
           : (err && err.message) ? err.message : 'GAS 연결을 확인해주세요.';
         showError(msg);
-        // 실패 시 기존 화면 데이터는 그대로 유지 (덮어쓰지 않음)
       })
       .finally(function () {
         state.isLoading = false;
-        btnLoad.disabled = false;
         btnRefresh.disabled = false;
       });
   }
 
-  btnLoad.addEventListener('click', function () { loadData(false); });
-  btnRefresh.addEventListener('click', function () { loadData(true); });
-  btnRetry.addEventListener('click', function () { loadData(true); });
+  function applyDayData(data, fromCache) {
+    state.dayData = data;
+    state.courseList = groupByCourse(data);
+    state.pendingEdits = {};
 
-  // ---------- 코스/기사 선택 ----------
-  function rebuildCourseAndDriverSelects() {
-    var data = state.dayData;
-    if (!data) return;
-
-    var prevCourse = state.selectedCourse;
-
-    courseSelect.innerHTML = '';
-    driverSelect.innerHTML = '';
-
-    var driverSeen = {};
-
-    data.courses.forEach(function (c) {
-      var opt = document.createElement('option');
-      opt.value = c;
-      opt.textContent = c + '코스';
-      courseSelect.appendChild(opt);
-
-      var driver = data.drivers[c] || '';
-      var key = driver || ('__' + c);
-      if (!driverSeen[key]) {
-        driverSeen[key] = true;
-        var dOpt = document.createElement('option');
-        dOpt.value = c; // 기사 선택도 결국 해당 코스를 선택하는 것과 동일
-        dOpt.textContent = driver ? (driver + ' (' + c + '코스)') : (c + '코스');
-        driverSelect.appendChild(dOpt);
-      }
+    // 코스 체크박스: 항상 전체 선택으로 시작 (기존 선택 중 여전히 존재하는 코스만 유지)
+    var prevSelected = state.selectedCourses;
+    var nextSelected = {};
+    state.courseList.forEach(function (c) {
+      nextSelected[c.course] = prevSelected.hasOwnProperty(c.course) ? prevSelected[c.course] : true;
     });
+    state.selectedCourses = nextSelected;
 
-    var courseToUse = data.courses.indexOf(prevCourse) !== -1 ? prevCourse : (data.courses[0] || '');
-    state.selectedCourse = courseToUse;
-    courseSelect.value = courseToUse;
-    driverSelect.value = courseToUse;
+    runValidation();
+    renderCourseList();
+    renderBulkDocs();
+    updateBulkButtons();
+    updateHistoryHints();
+
+    rebuildSingleSelects();
+    renderSingleDocs();
+
+    if (!fromCache) {
+      statusFooter.textContent = '마지막 불러온 시간: ' + new Date().toLocaleTimeString('ko-KR');
+    }
   }
 
-  courseSelect.addEventListener('change', function () {
-    if (!confirmDiscardEditsIfNeeded()) { courseSelect.value = state.selectedCourse; return; }
-    state.selectedCourse = courseSelect.value;
-    driverSelect.value = courseSelect.value;
-    state.pendingEdits = {};
-    renderDocuments();
-  });
+  // ================= 출력 전 자동검사 =================
+  function runValidation() {
+    var issues = [];
+    state.courseList.forEach(function (c) {
+      if (!c.driver) issues.push({ cat: '기사 미배정', course: c.course, msg: c.course + '코스에 기사가 배정되지 않았습니다.' });
+      if (!c.items.length) issues.push({ cat: '업체 없음', course: c.course, msg: c.course + '코스에 업체가 없습니다.' });
 
-  driverSelect.addEventListener('change', function () {
-    if (!confirmDiscardEditsIfNeeded()) { driverSelect.value = state.selectedCourse; return; }
-    state.selectedCourse = driverSelect.value;
-    courseSelect.value = driverSelect.value;
-    state.pendingEdits = {};
-    renderDocuments();
-  });
+      var seenCompanyNo = {}, seenOrderSuffix = {}, seenShipNo = {};
+      c.items.forEach(function (it) {
+        if (!it.companyNumber) issues.push({ cat: '업체번호 누락', course: c.course, msg: c.course + '코스 ' + it.deliveryOrder + ' 업체번호 누락' });
+        else if (seenCompanyNo[it.companyNumber]) issues.push({ cat: '업체번호 중복', course: c.course, msg: c.course + '코스 업체번호 "' + it.companyNumber + '" 중복' });
+        seenCompanyNo[it.companyNumber] = true;
 
-  // ---------- 탭 ----------
-  tabBar.addEventListener('click', function (e) {
-    var btn = e.target.closest('.tab-btn');
-    if (!btn) return;
-    state.activeTab = btn.dataset.tab;
-    Array.prototype.forEach.call(tabBar.querySelectorAll('.tab-btn'), function (b) {
-      b.classList.toggle('active', b === btn);
+        if (!it.orderSuffix) issues.push({ cat: '배송순서 누락', course: c.course, msg: c.course + '코스 ' + (it.nickname || it.companyNumber || '업체') + ' 배송순서 값이 없습니다.' });
+        else if (seenOrderSuffix[it.orderSuffix]) issues.push({ cat: '배송순서 중복', course: c.course, msg: c.course + '코스 배송순서 "' + it.orderSuffix + '" 중복' });
+        seenOrderSuffix[it.orderSuffix] = true;
+
+        if (seenShipNo[it.shippingNumber]) issues.push({ cat: '출고번호 중복', course: c.course, msg: c.course + '코스 출고번호 "' + it.shippingNumber + '" 중복' });
+        seenShipNo[it.shippingNumber] = true;
+
+        if (!it.address) issues.push({ cat: '주소 누락', course: c.course, msg: c.course + '코스 ' + (it.nickname || it.companyNumber || '업체') + ' 주소 누락' });
+        if (!it.phone) issues.push({ cat: '전화번호 누락', course: c.course, msg: c.course + '코스 ' + (it.nickname || it.companyNumber || '업체') + ' 전화번호 누락' });
+        if (it.address && it.address.length > 40) issues.push({ cat: '긴 주소', course: c.course, msg: c.course + '코스 ' + (it.nickname || '업체') + ' 주소가 깁니다.' });
+        if (it.deliveryComment && it.deliveryComment.length > 30) issues.push({ cat: '긴 코멘트', course: c.course, msg: c.course + '코스 ' + (it.nickname || '업체') + ' 코멘트가 깁니다.' });
+        if (it.driver !== c.driver) issues.push({ cat: '코스-기사 연결 오류', course: c.course, msg: c.course + '코스 내 기사명이 일치하지 않습니다(' + it.driver + ').' });
+      });
     });
-    updateTabVisibility();
-  });
-
-  function updateTabVisibility() {
-    docStatus.style.display = state.activeTab === 'status' ? 'block' : 'none';
-    docAddress.style.display = state.activeTab === 'address' ? 'block' : 'none';
+    state.validation = { issues: issues, ready: issues.length === 0 };
+    renderReadyBanner();
   }
 
-  // ---------- 렌더링 (XSS 방지: textContent만 사용, innerHTML로 데이터 삽입 안 함) ----------
+  function setReadyBanner(kind, text) {
+    readyBanner.className = 'ready-banner ' + kind;
+    readyBannerText.textContent = text;
+    issueDetail.style.display = 'none';
+  }
+
+  function renderReadyBanner() {
+    var totalCourses = state.courseList.length;
+    var totalItems = state.courseList.reduce(function (s, c) { return s + c.items.length; }, 0);
+    if (state.validation.ready) {
+      readyBanner.className = 'ready-banner ok';
+      readyBanner.style.cursor = 'default';
+      readyBannerText.innerHTML = '';
+      var okLine1 = document.createElement('div');
+      okLine1.textContent = '출력 준비 완료';
+      var okLine2 = document.createElement('div');
+      okLine2.className = 'sub';
+      okLine2.textContent = totalCourses + '개 코스 · 총 ' + totalItems + '개 업체';
+      readyBannerText.appendChild(okLine1);
+      readyBannerText.appendChild(okLine2);
+      issueDetail.style.display = 'none';
+    } else {
+      readyBanner.className = 'ready-banner warn';
+      readyBannerText.innerHTML = '';
+      var warnLine1 = document.createElement('div');
+      warnLine1.textContent = '출력 전 확인이 필요한 항목 ' + state.validation.issues.length + '건';
+      var warnLine2 = document.createElement('div');
+      warnLine2.className = 'sub';
+      warnLine2.textContent = '클릭하면 상세 내용을 볼 수 있습니다. (강제 인쇄 가능)';
+      readyBannerText.appendChild(warnLine1);
+      readyBannerText.appendChild(warnLine2);
+    }
+  }
+
+  readyBanner.addEventListener('click', function () {
+    if (state.validation.ready || !state.validation.issues.length) return;
+    var open = issueDetail.style.display !== 'none';
+    if (open) { issueDetail.style.display = 'none'; return; }
+    issueDetail.innerHTML = '';
+    var ul = document.createElement('ul');
+    state.validation.issues.slice(0, 60).forEach(function (iss) {
+      var li = document.createElement('li');
+      var tag = document.createElement('span');
+      tag.className = 'issue-course';
+      tag.textContent = '[' + iss.cat + '] ';
+      li.appendChild(tag);
+      li.appendChild(document.createTextNode(iss.msg));
+      ul.appendChild(li);
+    });
+    issueDetail.appendChild(ul);
+    if (state.validation.issues.length > 60) {
+      var more = document.createElement('div');
+      more.style.marginTop = '6px';
+      more.style.color = 'var(--text-sub)';
+      more.textContent = '외 ' + (state.validation.issues.length - 60) + '건 더 있음';
+      issueDetail.appendChild(more);
+    }
+    issueDetail.style.display = 'block';
+  });
+
+  // ================= 코스 체크리스트 =================
+  function renderCourseList() {
+    courseList.innerHTML = '';
+    if (!state.courseList.length) {
+      var empty = document.createElement('div');
+      empty.className = 'empty-course-list';
+      empty.textContent = '해당 요일에 배정된 코스가 없습니다.';
+      courseList.appendChild(empty);
+      return;
+    }
+    state.courseList.forEach(function (c) {
+      var row = document.createElement('label');
+      row.className = 'course-row';
+
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !!state.selectedCourses[c.course];
+      cb.addEventListener('change', function () {
+        state.selectedCourses[c.course] = cb.checked;
+        renderBulkDocs();
+        updateBulkButtons();
+      });
+      row.appendChild(cb);
+
+      var code = document.createElement('span');
+      code.className = 'course-code';
+      code.textContent = c.course + '코스';
+      row.appendChild(code);
+
+      var driver = document.createElement('span');
+      driver.className = 'course-driver' + (c.driver ? '' : ' unassigned');
+      driver.textContent = c.driver || '기사 미배정';
+      row.appendChild(driver);
+
+      var count = document.createElement('span');
+      count.className = 'course-count';
+      count.textContent = c.items.length + '곳';
+      row.appendChild(count);
+
+      courseList.appendChild(row);
+    });
+  }
+
+  btnSelectAll.addEventListener('click', function () {
+    state.courseList.forEach(function (c) { state.selectedCourses[c.course] = true; });
+    renderCourseList();
+    renderBulkDocs();
+    updateBulkButtons();
+  });
+  btnSelectNone.addEventListener('click', function () {
+    state.courseList.forEach(function (c) { state.selectedCourses[c.course] = false; });
+    renderCourseList();
+    renderBulkDocs();
+    updateBulkButtons();
+  });
+
+  function getSelectedCourseObjs() {
+    return state.courseList.filter(function (c) { return !!state.selectedCourses[c.course]; });
+  }
+
+  function updateBulkButtons() {
+    var n = getSelectedCourseObjs().length;
+    var disabled = !state.dayData || n === 0;
+    btnBulkPrintStatus.disabled = disabled;
+    btnBulkPrintAddress.disabled = disabled;
+    btnBulkPrintCloser.disabled = disabled;
+  }
+
+  // ================= 문서 템플릿 =================
+  var STATUS_COL_WIDTHS = [11, 10, 14, 12, 16, 16, 9, 12];
+  var STATUS_TEMPLATE =
+    '<table class="doc-table status-table">' +
+      '<colgroup>' + STATUS_COL_WIDTHS.map(function (w) { return '<col style="width:' + w + '%">'; }).join('') + '</colgroup>' +
+      '<thead>' +
+        '<tr class="doc-title-row">' +
+          '<th colspan="2" class="title-course" data-slot="course"></th>' +
+          '<th colspan="2" class="title-date" data-slot="date"></th>' +
+          '<th colspan="4" class="title-main" data-slot="main"></th>' +
+        '</tr>' +
+        '<tr class="doc-col-row">' +
+          '<th>배송순서</th><th>업체번호</th><th>약칭</th><th>업종</th><th>포대 배송</th><th>수건 배송</th><th>수거량<br>(중요!)</th><th>출고</th>' +
+        '</tr>' +
+      '</thead>' +
+      '<tbody></tbody>' +
+    '</table>';
+
+  var ADDRESS_COL_WIDTHS = [8, 8, 10, 34, 12, 20, 8];
+  var ADDRESS_TEMPLATE =
+    '<table class="doc-table address-table">' +
+      '<colgroup>' + ADDRESS_COL_WIDTHS.map(function (w) { return '<col style="width:' + w + '%">'; }).join('') + '</colgroup>' +
+      '<thead>' +
+        '<tr class="doc-title-row">' +
+          '<th colspan="2" class="title-course" data-slot="course"></th>' +
+          '<th colspan="2" class="title-date" data-slot="date"></th>' +
+          '<th colspan="3" class="title-main" data-slot="main">배송코스 (사용 후 폐기)</th>' +
+        '</tr>' +
+        '<tr class="doc-col-row">' +
+          '<th>배송순서</th><th>업체번호</th><th>약칭</th><th>배송 주소</th><th>수거방식</th><th>배송 코멘트</th><th>거래처 번호</th>' +
+        '</tr>' +
+      '</thead>' +
+      '<tbody></tbody>' +
+    '</table>' +
+    '<div class="address-footnote">【메모란】 위치 꿀팁(주차/비번 등) · 배송코멘트를 남겨주시면 차주 현황지에 반영됩니다.</div>';
+
   function td(text, className) {
     var cell = document.createElement('td');
     if (className) cell.className = className;
@@ -659,38 +1056,11 @@
     return cell;
   }
 
-  function renderDocuments() {
-    var data = state.dayData;
-    if (!data) { emptyState.style.display = 'block'; docStatus.style.display = 'none'; docAddress.style.display = 'none'; return; }
-
-    var items = data.items.filter(function (it) { return it.course === state.selectedCourse; });
-
-    emptyState.style.display = items.length ? 'none' : 'block';
-    if (!items.length) { docStatus.style.display = 'none'; docAddress.style.display = 'none'; return; }
-
-    updateTabVisibility();
-
-    var driverName = data.drivers[state.selectedCourse] || '';
-
-    // 현황지 헤더
-    hdStatusDriver.textContent = driverName;
-    hdStatusWeekday.textContent = data.dayOfWeek + ' 세탁물 현황';
-    hdStatusDate.textContent = data.requestedDate + ' (' + data.weekNumber + ')';
-
-    // 주소지 헤더
-    hdAddressDate.textContent = data.requestedDate.slice(5).replace('-', '월 ') + '일 ' + data.dayOfWeek;
-
-    renderStatusTable(items);
-    renderAddressTable(items, data.origin);
-    updateEditCountText();
-  }
-
-  function renderStatusTable(items) {
-    statusTbody.innerHTML = '';
+  function renderStatusRows(tbody, items) {
+    tbody.innerHTML = '';
     items.forEach(function (it) {
       var tr = document.createElement('tr');
-      var missing = !it.nickname || !it.companyNumber;
-      if (missing) tr.classList.add('missing-field');
+      if (!it.nickname || !it.companyNumber) tr.classList.add('missing-row');
 
       tr.appendChild(td(it.deliveryOrder, 'col-order'));
       tr.appendChild(td(it.companyNumber, 'col-companyno'));
@@ -714,31 +1084,30 @@
       tr.appendChild(td(it.collectionQuantity, 'col-qty'));
       tr.appendChild(td(it.shippingNumber, 'col-shipno'));
 
-      statusTbody.appendChild(tr);
+      tbody.appendChild(tr);
     });
   }
 
-  function renderAddressTable(items, origin) {
-    addressTbody.innerHTML = '';
+  function renderAddressRows(tbody, items, origin, opts) {
+    tbody.innerHTML = '';
+    opts = opts || {};
 
     if (origin && (origin.name || origin.address)) {
       var originTr = document.createElement('tr');
+      originTr.className = 'origin-row';
       originTr.appendChild(td('출발', 'col-order'));
       originTr.appendChild(td('', 'col-companyno'));
       originTr.appendChild(td(origin.name || '유성(출발지)', 'col-nickname'));
       originTr.appendChild(td(origin.address, 'col-address'));
       originTr.appendChild(td('', 'col-method'));
-      var originCommentCell = td(origin.comment, 'col-comment');
-      if (origin.comment) originCommentCell.classList.add('has-comment');
-      originTr.appendChild(originCommentCell);
+      originTr.appendChild(td(origin.comment, 'col-comment'));
       originTr.appendChild(td('', 'col-phone'));
-      addressTbody.appendChild(originTr);
+      tbody.appendChild(originTr);
     }
 
     items.forEach(function (it) {
       var tr = document.createElement('tr');
-      var missing = !it.address;
-      if (missing) tr.classList.add('missing-field');
+      if (!it.address) tr.classList.add('missing-field');
 
       tr.appendChild(td(it.deliveryOrder, 'col-order'));
       tr.appendChild(td(it.companyNumber, 'col-companyno'));
@@ -748,26 +1117,342 @@
 
       var commentCell = td(it.deliveryComment, 'col-comment');
       if (it.deliveryComment) commentCell.classList.add('has-comment');
-      commentCell.contentEditable = 'true';
-      commentCell.dataset.row = it.row;
-      commentCell.addEventListener('input', function () {
-        var newVal = commentCell.textContent;
-        commentCell.classList.toggle('has-comment', !!newVal);
-        if (newVal === it.deliveryComment) {
-          delete state.pendingEdits[it.row];
-          commentCell.classList.remove('edited');
-        } else {
-          state.pendingEdits[it.row] = newVal;
-          commentCell.classList.add('edited');
-        }
-        updateEditCountText();
-      });
+      if (opts.editable) {
+        commentCell.contentEditable = 'true';
+        commentCell.dataset.row = it.row;
+        commentCell.addEventListener('input', function () {
+          var newVal = commentCell.textContent;
+          commentCell.classList.toggle('has-comment', !!newVal);
+          if (newVal === it.deliveryComment) {
+            delete state.pendingEdits[it.row];
+            commentCell.classList.remove('edited');
+          } else {
+            state.pendingEdits[it.row] = newVal;
+            commentCell.classList.add('edited');
+          }
+          updateEditCountText();
+        });
+      }
       tr.appendChild(commentCell);
 
       tr.appendChild(td(it.phone, 'col-phone'));
 
-      addressTbody.appendChild(tr);
+      tbody.appendChild(tr);
     });
+  }
+
+  function buildStatusCourseBlock(courseObj, dayData) {
+    var wrap = document.createElement('div');
+    wrap.className = 'print-course';
+    wrap.innerHTML = STATUS_TEMPLATE;
+    wrap.querySelector('[data-slot="course"]').textContent = courseObj.course + '코스 · ' + (courseObj.driver || '기사 미배정');
+    wrap.querySelector('[data-slot="date"]').textContent = fmtDisplayDate(state.selectedDate);
+    wrap.querySelector('[data-slot="main"]').textContent = dayData.dayOfWeek + ' 세탁물 현황';
+    renderStatusRows(wrap.querySelector('tbody'), courseObj.items);
+    return wrap;
+  }
+
+  function buildAddressCourseBlock(courseObj, dayData, opts) {
+    var wrap = document.createElement('div');
+    wrap.className = 'print-course';
+    wrap.innerHTML = ADDRESS_TEMPLATE;
+    wrap.querySelector('[data-slot="course"]').textContent = courseObj.course + '코스 · ' + (courseObj.driver || '기사 미배정');
+    wrap.querySelector('[data-slot="date"]').textContent = fmtDisplayDate(state.selectedDate) + ' ' + dayData.dayOfWeek;
+    renderAddressRows(wrap.querySelector('tbody'), courseObj.items, dayData.origin, opts);
+    return wrap;
+  }
+
+  // ---------- 마감자용 종합표 ----------
+  var CLOSER_COL_WIDTHS = [8, 12, 8, 12, 10, 10, 10, 10, 10, 10];
+  var CLOSER_TEMPLATE =
+    '<table class="doc-table closer-table">' +
+      '<colgroup>' + CLOSER_COL_WIDTHS.map(function (w) { return '<col style="width:' + w + '%">'; }).join('') + '</colgroup>' +
+      '<thead>' +
+        '<tr class="doc-title-row"><th colspan="10" class="title-main" data-slot="title">마감자용 배송 출고 확인표</th></tr>' +
+        '<tr class="doc-title-row"><th colspan="10" class="title-date" data-slot="sub" style="font-size:11.5pt;font-weight:600;"></th></tr>' +
+        '<tr class="doc-col-row"><th>코스</th><th>기사명</th><th>업체 수</th><th>출고번호</th><th>현황지</th><th>주소지</th><th>수거량</th><th>특이사항</th><th>기사전달</th><th>마감확인</th></tr>' +
+      '</thead>' +
+      '<tbody></tbody>' +
+    '</table>';
+
+  function buildCloserDoc(selectedCourses, dayData) {
+    var wrap = document.createElement('div');
+    wrap.className = 'print-course';
+    wrap.innerHTML = CLOSER_TEMPLATE;
+    wrap.querySelector('[data-slot="sub"]').textContent =
+      '날짜: ' + fmtDisplayDate(state.selectedDate) + ' · 요일: ' + dayData.dayOfWeek;
+
+    var tbody = wrap.querySelector('tbody');
+    var totalItems = 0;
+    var unassigned = [];
+    var missingList = [];
+    var noteCount = 0;
+    var shipNoSeen = {};
+    var dupShipNo = [];
+
+    selectedCourses.forEach(function (c) {
+      totalItems += c.items.length;
+      if (!c.driver) unassigned.push(c.course);
+
+      var first = c.items[0], last = c.items[c.items.length - 1];
+      var range = c.items.length ? (first.shippingNumber + '~' + last.shippingNumber) : '-';
+
+      var tr = document.createElement('tr');
+      tr.appendChild(td(c.course + '코스', 'col-course'));
+      tr.appendChild(td(c.driver || '미배정', 'col-driver'));
+      tr.appendChild(td(c.items.length + '곳', 'col-count'));
+      tr.appendChild(td(range, 'col-range'));
+      ['현황지','주소지','수거량','특이사항','전달','마감'].forEach(function () {
+        var cell = document.createElement('td');
+        cell.className = 'chk-cell';
+        var box = document.createElement('span');
+        box.className = 'chk-box';
+        cell.appendChild(box);
+        tr.appendChild(cell);
+      });
+      tbody.appendChild(tr);
+
+      c.items.forEach(function (it) {
+        if (!it.nickname || !it.address || !it.companyNumber) missingList.push(c.course + '-' + it.deliveryOrder);
+        if (it.bagDelivery || it.towelDelivery || it.deliveryComment) noteCount++;
+        if (shipNoSeen[it.shippingNumber]) dupShipNo.push(it.shippingNumber);
+        shipNoSeen[it.shippingNumber] = true;
+      });
+    });
+
+    var footer = document.createElement('div');
+    footer.className = 'closer-footer';
+
+    function statRow(pairs) {
+      var row = document.createElement('div');
+      row.className = 'row';
+      pairs.forEach(function (p) {
+        var span = document.createElement('span');
+        var label = document.createElement('span');
+        label.className = 'label';
+        label.textContent = p[0] + ':';
+        span.appendChild(label);
+        span.appendChild(document.createTextNode(p[1]));
+        row.appendChild(span);
+      });
+      return row;
+    }
+
+    footer.appendChild(statRow([
+      ['전체 코스 수', selectedCourses.length + '개'],
+      ['전체 배송업체 수', totalItems + '개']
+    ]));
+    footer.appendChild(statRow([
+      ['미배정 기사', unassigned.length ? unassigned.map(function (c) { return c + '코스'; }).join(', ') : '없음'],
+      ['중복 출고번호', dupShipNo.length ? dupShipNo.join(', ') : '없음']
+    ]));
+    footer.appendChild(statRow([
+      ['누락된 업체', missingList.length ? (missingList.slice(0, 8).join(', ') + (missingList.length > 8 ? ' 외 ' + (missingList.length - 8) + '건' : '')) : '없음']
+    ]));
+    footer.appendChild(statRow([
+      ['특이사항', noteCount ? (noteCount + '건 (포대/수건 배송, 코멘트 있는 업체)') : '없음']
+    ]));
+
+    var signRow = document.createElement('div');
+    signRow.className = 'closer-sign-row';
+    var f1 = document.createElement('div'); f1.className = 'sign-field';
+    f1.innerHTML = '<span class="label" style="color:#333;font-weight:700;">마감자 이름</span><span class="sign-line"></span>';
+    var f2 = document.createElement('div'); f2.className = 'sign-field';
+    f2.innerHTML = '<span class="label" style="color:#333;font-weight:700;">마감 시간</span><span class="sign-line"></span>';
+    var f3 = document.createElement('div'); f3.className = 'sign-field';
+    f3.innerHTML = '<span class="label" style="color:#333;font-weight:700;">서명</span><span class="sign-line wide"></span>';
+    signRow.appendChild(f1); signRow.appendChild(f2); signRow.appendChild(f3);
+    footer.appendChild(signRow);
+
+    var container = document.createElement('div');
+    container.appendChild(wrap);
+    container.appendChild(footer);
+    return container;
+  }
+
+  // ================= 벌크 문서 렌더링 =================
+  function renderBulkDocs() {
+    if (!state.dayData) return;
+    var selected = getSelectedCourseObjs();
+
+    bulkStatusPrint.innerHTML = '';
+    bulkAddressPrint.innerHTML = '';
+    closerPrint.innerHTML = '';
+
+    selected.forEach(function (c) {
+      bulkStatusPrint.appendChild(buildStatusCourseBlock(c, state.dayData));
+      bulkAddressPrint.appendChild(buildAddressCourseBlock(c, state.dayData, { editable: false }));
+    });
+    if (selected.length) {
+      closerPrint.appendChild(buildCloserDoc(selected, state.dayData));
+    }
+  }
+
+  btnTogglePreview.addEventListener('click', function () {
+    state.bulkPreviewOpen = !state.bulkPreviewOpen;
+    document.body.classList.toggle('bulk-preview-open', state.bulkPreviewOpen);
+    bulkPreviewScroll.style.display = state.bulkPreviewOpen ? 'block' : 'none';
+    btnTogglePreview.textContent = state.bulkPreviewOpen ? '미리보기 접기' : '미리보기 펼치기';
+  });
+
+  // ================= 인쇄 확인/실행 =================
+  function requestBulkPrint(kind) {
+    if (!state.dayData) return;
+    var selected = getSelectedCourseObjs();
+    if (!selected.length) { alert('선택된 코스가 없습니다.'); return; }
+
+    var label = kind === 'status' ? '현황지' : kind === 'address' ? '주소지' : '마감자용 종합표';
+    var companyCount = selected.reduce(function (s, c) { return s + c.items.length; }, 0);
+
+    state.pendingPrintConfirm = { kind: kind, selected: selected };
+    confirmText.textContent = state.dayData.dayOfWeek + ' · ' + selected.length + '개 코스 · ' + companyCount + '개 업체의 ' + label + '를 인쇄합니다.';
+    confirmBar.style.display = 'flex';
+  }
+
+  function executeBulkPrint(kind, selected) {
+    renderBulkDocs();
+    var bodyClass = kind === 'status' ? 'printing-bulk-status' : kind === 'address' ? 'printing-bulk-address' : 'printing-closer';
+    doPrint(bodyClass, function () {
+      recordPrint(kind, selected.map(function (c) { return c.course; }));
+    });
+  }
+
+  function doPrint(bodyClass, afterFn) {
+    if (state.isPrinting) return;
+    state.isPrinting = true;
+    document.body.classList.add(bodyClass);
+    var run = function () {
+      window.print();
+      document.body.classList.remove(bodyClass);
+      state.isPrinting = false;
+      if (afterFn) afterFn();
+    };
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(run).catch(run);
+    } else {
+      run();
+    }
+  }
+
+  btnBulkPrintStatus.addEventListener('click', function () { requestBulkPrint('status'); });
+  btnBulkPrintAddress.addEventListener('click', function () { requestBulkPrint('address'); });
+  btnBulkPrintCloser.addEventListener('click', function () { requestBulkPrint('closer'); });
+
+  btnConfirmPrint.addEventListener('click', function () {
+    var p = state.pendingPrintConfirm;
+    confirmBar.style.display = 'none';
+    if (!p) return;
+    executeBulkPrint(p.kind, p.selected);
+    state.pendingPrintConfirm = null;
+  });
+  btnConfirmCancel.addEventListener('click', function () {
+    confirmBar.style.display = 'none';
+    state.pendingPrintConfirm = null;
+  });
+
+  // ================= 출력 범위 전환 =================
+  function setOutputMode(mode) {
+    state.outputMode = mode;
+    savePrefs({ outputMode: mode });
+    btnModeDay.classList.toggle('active', mode === 'day');
+    btnModeSingle.classList.toggle('active', mode === 'single');
+    dayModeArea.style.display = mode === 'day' ? 'block' : 'none';
+    singleModeArea.style.display = mode === 'single' ? 'block' : 'none';
+  }
+  btnModeDay.addEventListener('click', function () { setOutputMode('day'); });
+  btnModeSingle.addEventListener('click', function () { setOutputMode('single'); });
+
+  // ================= 코스별 개별 출력 =================
+  function rebuildSingleSelects() {
+    var data = state.dayData;
+    if (!data) return;
+
+    var prevCourse = state.singleCourse;
+    courseSelect.innerHTML = '';
+    driverSelect.innerHTML = '';
+
+    var driverSeen = {};
+    state.courseList.forEach(function (c) {
+      var opt = document.createElement('option');
+      opt.value = c.course;
+      opt.textContent = c.course + '코스';
+      courseSelect.appendChild(opt);
+
+      var key = c.driver || ('__' + c.course);
+      if (!driverSeen[key]) {
+        driverSeen[key] = true;
+        var dOpt = document.createElement('option');
+        dOpt.value = c.course;
+        dOpt.textContent = c.driver ? (c.driver + ' (' + c.course + '코스)') : (c.course + '코스');
+        driverSelect.appendChild(dOpt);
+      }
+    });
+
+    var prefs = loadPrefs();
+    var candidate = state.courseList.some(function (c) { return c.course === prevCourse; }) ? prevCourse
+      : state.courseList.some(function (c) { return c.course === prefs.singleCourse; }) ? prefs.singleCourse
+      : (state.courseList[0] && state.courseList[0].course) || '';
+
+    state.singleCourse = candidate;
+    courseSelect.value = candidate;
+    driverSelect.value = candidate;
+  }
+
+  function confirmDiscardEditsIfNeeded() {
+    if (!Object.keys(state.pendingEdits).length) return true;
+    return confirm('저장하지 않은 배송 코멘트 수정 내용이 있습니다. 이동하면 사라집니다. 계속할까요?');
+  }
+
+  courseSelect.addEventListener('change', function () {
+    if (!confirmDiscardEditsIfNeeded()) { courseSelect.value = state.singleCourse; return; }
+    state.singleCourse = courseSelect.value;
+    driverSelect.value = courseSelect.value;
+    state.pendingEdits = {};
+    savePrefs({ singleCourse: state.singleCourse });
+    renderSingleDocs();
+  });
+  driverSelect.addEventListener('change', function () {
+    if (!confirmDiscardEditsIfNeeded()) { driverSelect.value = state.singleCourse; return; }
+    state.singleCourse = driverSelect.value;
+    courseSelect.value = driverSelect.value;
+    state.pendingEdits = {};
+    savePrefs({ singleCourse: state.singleCourse });
+    renderSingleDocs();
+  });
+
+  tabBar.addEventListener('click', function (e) {
+    var btn = e.target.closest('.tab-btn');
+    if (!btn) return;
+    state.singleTab = btn.dataset.tab;
+    Array.prototype.forEach.call(tabBar.querySelectorAll('.tab-btn'), function (b) {
+      b.classList.toggle('active', b === btn);
+    });
+    updateSingleTabVisibility();
+  });
+
+  function updateSingleTabVisibility() {
+    singleStatusPrint.classList.toggle('active', state.singleTab === 'status');
+    singleAddressPrint.classList.toggle('active', state.singleTab === 'address');
+  }
+
+  function renderSingleDocs() {
+    singleStatusPrint.innerHTML = '';
+    singleAddressPrint.innerHTML = '';
+
+    var courseObj = state.courseList.find(function (c) { return c.course === state.singleCourse; });
+    if (!courseObj || !courseObj.items.length) {
+      singleEmptyState.style.display = 'block';
+      singlePreviewScroll.style.display = 'none';
+      updateEditCountText();
+      return;
+    }
+    singleEmptyState.style.display = 'none';
+    singlePreviewScroll.style.display = 'block';
+
+    singleStatusPrint.appendChild(buildStatusCourseBlock(courseObj, state.dayData));
+    singleAddressPrint.appendChild(buildAddressCourseBlock(courseObj, state.dayData, { editable: true }));
+    updateSingleTabVisibility();
+    updateEditCountText();
   }
 
   function updateEditCountText() {
@@ -775,7 +1460,6 @@
     editCountText.textContent = n > 0 ? ('저장 안 된 코멘트 수정: ' + n + '건') : '';
   }
 
-  // ---------- 배송 코멘트 저장 ----------
   btnSaveComments.addEventListener('click', function () {
     var rows = Object.keys(state.pendingEdits);
     if (!rows.length) { alert('저장할 변경사항이 없습니다.'); return; }
@@ -788,18 +1472,14 @@
     callGAS({ action: 'saveComments', updates: updates })
       .then(function (res) {
         if (!res || !res.success) throw new Error((res && res.message) || '저장에 실패했습니다.');
-
-        // 로컬 데이터에도 반영해서 재조회 없이 최신 상태 유지
         updates.forEach(function (u) {
           var item = state.dayData.items.find(function (it) { return it.row === u.row; });
           if (item) item.deliveryComment = u.deliveryComment;
         });
         state.pendingEdits = {};
-        Array.prototype.forEach.call(addressTbody.querySelectorAll('.col-comment.edited'), function (c) {
-          c.classList.remove('edited');
-        });
-        updateEditCountText();
-        setStatus('ok', res.updated + '건 저장 완료');
+        state.courseList = groupByCourse(state.dayData);
+        renderSingleDocs();
+        alert(res.updated + '건 저장 완료');
       })
       .catch(function (err) {
         alert('저장 실패: ' + (err && err.message ? err.message : '알 수 없는 오류'));
@@ -810,34 +1490,36 @@
       });
   });
 
-  // ---------- 인쇄 ----------
-  function printDoc(kind) {
-    if (state.isPrinting) return;
-    if (!state.dayData || !state.selectedCourse) { alert('먼저 데이터를 불러와주세요.'); return; }
+  btnPrintSingleStatus.addEventListener('click', function () {
+    if (!state.dayData || !state.singleCourse) { alert('먼저 코스를 선택해주세요.'); return; }
+    doPrint('printing-single-status');
+  });
+  btnPrintSingleAddress.addEventListener('click', function () {
+    if (!state.dayData || !state.singleCourse) { alert('먼저 코스를 선택해주세요.'); return; }
+    doPrint('printing-single-address');
+  });
 
-    state.isPrinting = true;
-    document.body.classList.add(kind === 'status' ? 'printing-status' : 'printing-address');
+  // ================= 키보드 단축키 =================
+  document.addEventListener('keydown', function (e) {
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    var isEditable = tag === 'input' || tag === 'select' || tag === 'textarea' || (e.target && e.target.isContentEditable);
+    if (isEditable) return;
 
-    var run = function () {
-      window.print();
-      document.body.classList.remove('printing-status', 'printing-address');
-      state.isPrinting = false;
-    };
+    if (e.key === 'F2') { e.preventDefault(); requestBulkPrint('status'); }
+    else if (e.key === 'F3') { e.preventDefault(); requestBulkPrint('address'); }
+    else if (e.key === 'F4') { e.preventDefault(); requestBulkPrint('closer'); }
+  });
 
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(run).catch(run);
-    } else {
-      run();
-    }
+  // ================= 초기화 =================
+  function init() {
+    var prefs = loadPrefs();
+    refreshDateDisplay();
+    setOutputMode(prefs.outputMode === 'single' ? 'single' : 'day');
+    updateHistoryHints();
+    loadDayData(false);
   }
 
-  btnPrintStatus.addEventListener('click', function () { printDoc('status'); });
-  btnPrintAddress.addEventListener('click', function () { printDoc('address'); });
-
-  // ---------- 초기화 ----------
-  initDatePicker();
-  updateTabVisibility();
-  loadData(true);
+  init();
 })();
 </script>
 </body>
