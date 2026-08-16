@@ -55,7 +55,7 @@
   /* ================= 왼쪽 패널 ================= */
   .left-panel {
     flex: 0 0 var(--left-w); width: var(--left-w); background: #fff; border-right: 1px solid var(--border);
-    padding: 12px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 9px;
+    padding: 10px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;
   }
   @media (max-width: 1100px) { :root { --left-w: 360px; } }
 
@@ -92,18 +92,18 @@
   .course-btn.selected { background: var(--blue); border-color: var(--blue); color: #fff; }
 
   .info-card {
-    margin-top: 8px; padding: 10px 14px; background: var(--blue-bg); border: 1px solid #cfe0ff; border-radius: 10px;
+    margin-top: 6px; padding: 9px 14px; background: var(--blue-bg); border: 1px solid #cfe0ff; border-radius: 10px;
     font-size: 14.5px; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 8px;
   }
 
-  .doc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; }
   .doc-card {
-    position: relative; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 2px; border: 1.5px solid var(--border); border-radius: 12px; background: #fff; font-size: 12.5px; font-weight: 700;
-    line-height: 1.15; text-align: center; color: var(--text); padding: 3px 4px;
+    position: relative; min-height: 40px; display: flex; flex-direction: row; align-items: center; justify-content: center;
+    gap: 6px; border: 1.5px solid var(--border); border-radius: 12px; background: #fff; font-size: 12.5px; font-weight: 700;
+    line-height: 1.15; text-align: center; color: var(--text); padding: 2px 6px; white-space: nowrap;
   }
-  .doc-card[data-doc="addressAll"] { grid-column: 1 / -1; flex-direction: row; }
-  .doc-card .doc-ic { font-size: 17px; }
+  .doc-card[data-doc="addressAll"] { grid-column: 1 / -1; }
+  .doc-card .doc-ic { font-size: 16px; }
   .doc-card .doc-check {
     position: absolute; top: 7px; right: 7px; width: 18px; height: 18px; border-radius: 50%; background: var(--blue);
     color: #fff; font-size: 11px; display: flex; align-items: center; justify-content: center; opacity: 0;
@@ -118,11 +118,11 @@
   }
   .print-btn:hover:not(:disabled) { background: var(--blue-dark); }
   .print-btn:disabled { opacity: .45; cursor: not-allowed; }
-  .print-sub-row { display: flex; gap: 8px; margin-top: 6px; }
-  .print-caption { text-align: center; font-size: 11.5px; color: var(--text-sub); margin-top: 4px; }
+  .print-sub-row { display: flex; gap: 8px; margin-top: 5px; }
+  .print-caption { text-align: center; font-size: 11.5px; color: var(--text-sub); margin-top: 3px; }
 
   .admin-open-btn {
-    width: 100%; min-height: 42px; margin-top: 8px; border: 1.5px solid var(--blue); background: #fff;
+    width: 100%; min-height: 40px; margin-top: 6px; border: 1.5px solid var(--blue); background: #fff;
     color: var(--blue); border-radius: 12px; font-weight: 700; font-size: 14px;
   }
   .admin-open-btn:hover { background: var(--blue-bg); }
@@ -223,9 +223,9 @@
   .closer-table .badge-mini.add { background: #dcfce7; color: #15803d; }
   .closer-table .badge-mini.edit { background: #fef3c7; color: #92400e; }
   .chk-box { display: inline-block; width: 20px; height: 20px; border: 2px solid #000; vertical-align: middle; }
-  .closer-summary { width: 210mm; border: 1px solid #000; border-top: 0; padding: 10px 16px; font-size: 11.5pt; break-inside: avoid; background: #fff; }
-  .closer-summary .row { display: flex; gap: 22px; padding: 3px 0; flex-wrap: wrap; align-items: center; }
-  .closer-summary .row.closer-footer span { font-weight: 700; }
+  .closer-summary { width: 210mm; border: 1px solid #000; border-top: 0; padding: 10px 16px; font-size: 11.5pt; break-inside: avoid; break-before: avoid; background: #fff; }
+  .closer-summary .row { padding: 3px 0; break-inside: avoid; }
+  .closer-summary .row.closer-footer span { font-weight: 700; margin-right: 26px; display: inline-block; }
   .closer-summary .label { color: #333; font-weight: 700; margin-right: 6px; }
 
   /* ================= 모달 ================= */
@@ -317,10 +317,10 @@
       <div class="field-section">
         <div class="section-label">3. 문서 선택</div>
         <div class="doc-grid" id="docGrid">
-          <button class="doc-card" data-doc="address"><span class="doc-check">✓</span><span class="doc-ic">📄</span><span>주소지<br>A4 가로</span></button>
-          <button class="doc-card" data-doc="status"><span class="doc-check">✓</span><span class="doc-ic">📄</span><span>현황지<br>A4 세로</span></button>
-          <button class="doc-card" data-doc="both"><span class="doc-check">✓</span><span class="doc-ic">📄</span><span>현황지<br>+ 주소지</span></button>
-          <button class="doc-card" data-doc="closerQty"><span class="doc-check">✓</span><span class="doc-ic">📄</span><span>마감자용<br>수량표</span></button>
+          <button class="doc-card" data-doc="address"><span class="doc-check">✓</span><span class="doc-ic">📄</span><span>주소지 A4 가로</span></button>
+          <button class="doc-card" data-doc="status"><span class="doc-check">✓</span><span class="doc-ic">📄</span><span>현황지 A4 세로</span></button>
+          <button class="doc-card" data-doc="both"><span class="doc-check">✓</span><span class="doc-ic">📄</span><span>현황지+주소지</span></button>
+          <button class="doc-card" data-doc="closerQty"><span class="doc-check">✓</span><span class="doc-ic">📄</span><span>마감자용 수량표</span></button>
           <button class="doc-card" data-doc="addressAll"><span class="doc-check">✓</span><span class="doc-ic">📄</span><span>전체 주소지</span></button>
         </div>
       </div>
@@ -330,7 +330,6 @@
         <button class="print-btn" id="btnPrintMain" disabled><span>🖨</span><span id="printBtnLabel">인쇄</span></button>
         <div class="print-sub-row">
           <button class="sub-btn" id="btnEdit"><span>✏</span>내용 수정</button>
-          <button class="sub-btn" id="btnCloserPrint"><span>🖨</span>마감자용 전체 인쇄</button>
         </div>
         <div class="print-caption">미리보기와 동일하게 출력됩니다</div>
       </div>
@@ -462,7 +461,6 @@
   var btnPrintMain = $('btnPrintMain');
   var printBtnLabel = $('printBtnLabel');
   var btnEdit = $('btnEdit');
-  var btnCloserPrint = $('btnCloserPrint');
   var btnOpenAdmin = $('btnOpenAdmin');
 
   var previewBadges = $('previewBadges');
@@ -878,7 +876,6 @@
     }
     var ok = canPrint();
     btnPrintMain.disabled = !ok;
-    btnCloserPrint.disabled = !state.merged || state.merged.closedDay;
   }
 
   function renderBadges() {
@@ -1357,8 +1354,6 @@
     if (!hasPrintableContent(printAddressAll)) { alert('인쇄할 내용이 없습니다.'); return; }
     doPrint('printing-address-all', function () { recordPrint('addressAll', state.merged.courses); });
   }
-
-  btnCloserPrint.addEventListener('click', printCloserDoc);
 
   // ================= 관리·편집 화면 이동 =================
   function openAdmin() { window.location.href = 'admin.html?date=' + isoDate(state.selectedDate); }
