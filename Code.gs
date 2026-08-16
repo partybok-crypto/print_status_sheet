@@ -36,6 +36,7 @@ const COL_BIZ_TYPE = 13;   // M
 const COL_BAG = 14;        // N  포대 배송
 const COL_TOWEL = 15;      // O  수건 배송
 const COL_QTY = 16;        // P  수거량(중요!)
+const COL_BAGSIZE = 17;    // Q  사이즈(포대 규격)
 const COL_ADDRESS = 30;    // AD
 const COL_METHOD = 31;     // AE 수거방식
 const COL_COMMENT = 32;    // AF 배송 코멘트
@@ -266,6 +267,7 @@ function buildDayData_(weekday, explicitDate) {
         bagDelivery: cellStr_(row[COL_BAG - 1]),
         towelDelivery: cellStr_(row[COL_TOWEL - 1]),
         collectionQuantity: cellStr_(row[COL_QTY - 1]),
+        bagSize: cellStr_(row[COL_BAGSIZE - 1]),
         region: cellStr_(row[COL_REGION - 1]),
         address: cellStr_(row[COL_ADDRESS - 1]),
         collectionMethod: cellStr_(row[COL_METHOD - 1]),
@@ -321,6 +323,7 @@ function buildDayData_(weekday, explicitDate) {
         bagDelivery: item.bagDelivery,
         towelDelivery: item.towelDelivery,
         collectionQuantity: item.collectionQuantity,
+        bagSize: item.bagSize,
         region: item.region,
         address: item.address,
         collectionMethod: item.collectionMethod,
