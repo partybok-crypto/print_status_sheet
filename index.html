@@ -213,12 +213,17 @@
   .addressall-table tr.missing-field td.col-address { background: #fef2f2; }
   .addressall-table tr.cart-row td { background: #eafbea; }
 
-  /* 코스별 상단 구분색 — 코스 제목 바 + 표 머리글에 공통 적용 (JS에서 course 색상을 인라인 style로 지정) */
-  .addressall-table tr.addressall-title-row th {
-    font-weight: 900; font-size: 13pt; text-align: left; padding: 8px 10px; border-top: 4px solid #000;
+  /* 전체 주소지의 코스별 제목 바 — 색상은 공통 courseColor()가 인라인 style로 지정, 여기서는 레이아웃만 */
+  .addressall-table tr.doc-title-row th { font-size: 13pt; text-align: left; padding: 8px 10px; }
+  .addressall-table tr.doc-col-row th { font-weight: 800; }
+
+  /* 마감자용 수량표 — 코스별 구역(별도 table)마다 코스색 제목 바가 반복됨 */
+  .closer-doc-header {
+    width: 210mm; border: 1px solid #000; border-bottom: 0; background: var(--navy); color: #fff; break-inside: avoid;
   }
-  .addressall-table tr.addressall-col-row th { font-weight: 800; }
-  .addressall-table .course-default { background: #334155; color: #ffffff; }
+  .closer-doc-header .closer-doc-title { font-size: 13pt; font-weight: 900; padding: 8px 8px 2px; }
+  .closer-doc-header .closer-doc-sub { font-size: 11pt; font-weight: 600; padding: 0 8px 8px; }
+  .closer-course-block + .closer-course-block { margin-top: 6mm; }
 
   .closer-table th, .closer-table td { font-size: 12.5pt; }
   .closer-table tbody tr { height: 11mm; }
@@ -832,8 +837,13 @@
     courseGrid.appendChild(allBtn);
     state.merged.courses.forEach(function (course) {
       var btn = document.createElement('button');
-      btn.className = 'course-btn' + (state.selectedCourse === course ? ' selected' : '');
+      var isSelected = state.selectedCourse === course;
+      btn.className = 'course-btn' + (isSelected ? ' selected' : '');
       btn.textContent = course + '코스';
+      if (isSelected) {
+        var c = courseColor(course);
+        btn.style.background = c; btn.style.borderColor = c; btn.style.color = '#fff';
+      }
       btn.addEventListener('click', function () { selectCourse(course); });
       courseGrid.appendChild(btn);
     });
@@ -900,7 +910,8 @@
       items.push({ text: '전체 주소지', cls: 'b-soft' });
       items.push({ text: 'A4 세로', cls: '' });
     } else {
-      items.push({ text: courseLabel(), cls: 'b-solid' });
+      var singleCourse = (state.selectedCourse && state.selectedCourse !== ALL_SENTINEL) ? state.selectedCourse : null;
+      items.push({ text: courseLabel(), cls: 'b-solid', course: singleCourse });
       if (state.docType === 'address') { items.push({ text: '주소지', cls: 'b-soft' }); items.push({ text: 'A4 가로', cls: '' }); }
       else if (state.docType === 'status') { items.push({ text: '현황지', cls: 'b-soft' }); items.push({ text: 'A4 세로', cls: '' }); }
       else { items.push({ text: '현황지+주소지', cls: 'b-soft' }); items.push({ text: '세로+가로', cls: '' }); }
@@ -910,6 +921,7 @@
       var b = document.createElement('span');
       b.className = 'preview-badge' + (o.cls ? ' ' + o.cls : '');
       b.textContent = o.text;
+      if (o.course) { var c = courseColor(o.course); b.style.background = c; b.style.color = '#fff'; }
       previewBadges.appendChild(b);
     });
   }
@@ -951,6 +963,31 @@
     return parts.length ? parts.join(' / ') : '-';
   }
   function noteHasEmphasis(text) { return NOTE_EMPHASIS_RE.test(text || ''); }
+
+  // ================= 코스별 공통 색상 (모든 문서에서 재사용하는 단일 매핑) =================
+  var COURSE_COLORS = {
+    B: '#2563EB', C: '#16A34A', D: '#7C3AED', E: '#EA580C',
+    F: '#0891B2', G: '#DB2777', Z: '#475569'
+  };
+  var COURSE_DEFAULT_COLOR = '#334155';
+  function courseColor(course) { return COURSE_COLORS.hasOwnProperty(course) ? COURSE_COLORS[course] : COURSE_DEFAULT_COLOR; }
+
+  // 제목 바(titleRow)와 표 머리글(colRow)에 코스색을 함께 적용 — 흑백 인쇄 대비용 굵은 상단 테두리 포함
+  function applyCourseColorBlock(titleRow, colRow, course) {
+    var color = courseColor(course);
+    [titleRow, colRow].forEach(function (row) {
+      if (!row) return;
+      Array.prototype.forEach.call(row.querySelectorAll('th,td'), function (cell) {
+        cell.style.background = color;
+        cell.style.color = '#ffffff';
+      });
+    });
+    if (titleRow) {
+      Array.prototype.forEach.call(titleRow.querySelectorAll('th,td'), function (cell) {
+        cell.style.borderTop = '4px solid #000';
+      });
+    }
+  }
 
   var STATUS_COL_WIDTHS = [11, 10, 14, 12, 16, 16, 9, 12];
   var STATUS_TEMPLATE =
@@ -1031,6 +1068,7 @@
     wrap.innerHTML = STATUS_TEMPLATE;
     wrap.querySelector('[data-slot="title"]').textContent =
       fmtTitleDate(state.selectedDate, merged.dayOfWeek) + '　' + course + '코스 · ' + (cleanDriverName(driver) || '기사 미배정') + ' 세탁물 현황';
+    applyCourseColorBlock(wrap.querySelector('tr.doc-title-row'), wrap.querySelector('tr.doc-col-row'), course);
     renderStatusRows(wrap.querySelector('tbody'), items);
     return wrap;
   }
@@ -1040,36 +1078,35 @@
     wrap.innerHTML = ADDRESS_TEMPLATE;
     wrap.querySelector('[data-slot="title"]').textContent =
       fmtTitleDate(state.selectedDate, merged.dayOfWeek) + '　' + course + '코스 배송주소 (사용 후 폐기)';
+    applyCourseColorBlock(wrap.querySelector('tr.doc-title-row'), wrap.querySelector('tr.doc-col-row'), course);
     renderAddressRows(wrap.querySelector('tbody'), items, merged.origin);
     return wrap;
   }
 
   var CLOSER_COL_WIDTHS = [9, 12, 10, 12, 10, 15, 15, 17];
-  var CLOSER_TEMPLATE =
+  var CLOSER_DOC_HEADER_TEMPLATE =
+    '<div class="closer-doc-title" data-slot="title">마감자용 세탁 수량 확인표</div>' +
+    '<div class="closer-doc-sub" data-slot="sub"></div>';
+  var CLOSER_COURSE_TEMPLATE =
     '<table class="doc-table closer-table">' +
       '<colgroup>' + CLOSER_COL_WIDTHS.map(function (w) { return '<col style="width:' + w + '%">'; }).join('') + '</colgroup>' +
       '<thead>' +
-        '<tr class="doc-title-row"><th colspan="8" class="title-main" data-slot="title">마감자용 세탁 수량 확인표</th></tr>' +
-        '<tr class="doc-title-row"><th colspan="8" class="title-date" data-slot="sub" style="font-size:11pt;font-weight:600;"></th></tr>' +
+        '<tr class="doc-title-row"><th colspan="8" class="title-main" data-slot="courseTitle"></th></tr>' +
         '<tr class="doc-col-row"><th>배송순서</th><th>출고번호</th><th>업체번호</th><th>약칭</th><th>포대사이즈</th><th>포대배송</th><th>수건배송</th><th>특이사항</th></tr>' +
       '</thead>' +
       '<tbody></tbody>' +
     '</table>';
 
-  function buildCloserDoc(allCourses, merged) {
+  // 코스 구역 하나(코스색 제목 바 + 표 머리글 + 해당 코스 업체 행) — 페이지가 남으면 다음 코스와 같은 페이지에 이어짐(강제 분리 없음)
+  function buildCloserCourseBlock(course, items) {
     var wrap = document.createElement('div');
-    wrap.className = 'print-course';
-    wrap.innerHTML = CLOSER_TEMPLATE;
-
-    var allItems = [];
-    allCourses.forEach(function (course) { allItems = allItems.concat(merged.byCourse[course]); });
-
-    wrap.querySelector('[data-slot="sub"]').textContent =
-      fmtBigDate(state.selectedDate) + ' · 전체 업체 수: ' + allItems.length + '개 · 인쇄 시각: ' + fmtPrintTime(new Date());
+    wrap.className = 'closer-course-block';
+    wrap.innerHTML = CLOSER_COURSE_TEMPLATE;
+    wrap.querySelector('[data-slot="courseTitle"]').textContent = course + '코스';
+    applyCourseColorBlock(wrap.querySelector('tr.doc-title-row'), wrap.querySelector('tr.doc-col-row'), course);
 
     var tbody = wrap.querySelector('tbody');
-    tbody.innerHTML = '';
-    allItems.forEach(function (it) {
+    items.forEach(function (it) {
       var tr = document.createElement('tr');
       tr.appendChild(td(it.deliveryOrder, 'col-order'));
       tr.appendChild(td(it.shippingNumber, 'col-shipno'));
@@ -1092,6 +1129,26 @@
 
       tbody.appendChild(tr);
     });
+    return wrap;
+  }
+
+  function buildCloserDoc(allCourses, merged) {
+    var container = document.createElement('div');
+    container.className = 'closer-doc';
+
+    var allItems = [];
+    allCourses.forEach(function (course) { allItems = allItems.concat(merged.byCourse[course]); });
+
+    var header = document.createElement('div');
+    header.className = 'closer-doc-header';
+    header.innerHTML = CLOSER_DOC_HEADER_TEMPLATE;
+    header.querySelector('[data-slot="sub"]').textContent =
+      fmtBigDate(state.selectedDate) + ' · 전체 업체 수: ' + allItems.length + '개 · 인쇄 시각: ' + fmtPrintTime(new Date());
+    container.appendChild(header);
+
+    allCourses.forEach(function (course) {
+      container.appendChild(buildCloserCourseBlock(course, merged.byCourse[course] || []));
+    });
 
     var summary = document.createElement('div');
     summary.className = 'closer-summary';
@@ -1108,8 +1165,6 @@
     footerRow.appendChild(s1); footerRow.appendChild(s2); footerRow.appendChild(s3);
     summary.appendChild(footerRow);
 
-    var container = document.createElement('div');
-    container.appendChild(wrap);
     container.appendChild(summary);
     return container;
   }
@@ -1119,36 +1174,19 @@
     '<table class="doc-table addressall-table">' +
       '<colgroup>' + ADDRESSALL_COL_WIDTHS.map(function (w) { return '<col style="width:' + w + '%">'; }).join('') + '</colgroup>' +
       '<thead>' +
-        '<tr class="addressall-title-row"><th colspan="8" class="title-main" data-slot="title"></th></tr>' +
-        '<tr class="addressall-col-row"><th>코스</th><th>배송순서</th><th>업체번호</th><th>약칭</th><th>배송주소</th><th>수거방식</th><th>배송 코멘트</th><th>거래처 번호</th></tr>' +
+        '<tr class="doc-title-row"><th colspan="8" class="title-main" data-slot="title"></th></tr>' +
+        '<tr class="doc-col-row"><th>코스</th><th>배송순서</th><th>업체번호</th><th>약칭</th><th>배송주소</th><th>수거방식</th><th>배송 코멘트</th><th>거래처 번호</th></tr>' +
       '</thead>' +
       '<tbody></tbody>' +
     '</table>';
 
-  // 코스별 상단 구분색 — 실제 데이터에 존재하는 코스만 렌더링되므로 여기 없는 코스는 자동으로 생략됨
-  var COURSE_COLORS = {
-    'B': '#2563EB', 'C': '#16A34A', 'D': '#7C3AED', 'E': '#EA580C',
-    'F': '#0891B2', 'G': '#DB2777', 'Z': '#475569', '미분류': '#92400E'
-  };
-  var COURSE_DEFAULT_COLOR = '#334155';
-  function courseColor(course) { return COURSE_COLORS.hasOwnProperty(course) ? COURSE_COLORS[course] : COURSE_DEFAULT_COLOR; }
-
+  // 실제 데이터에 존재하는 코스만 렌더링되므로 여기 없는 코스는 자동으로 생략됨
   function buildAddressAllCourseBlock(course, items, merged) {
     var wrap = document.createElement('div');
     wrap.className = 'print-course';
     wrap.innerHTML = ADDRESSALL_TEMPLATE;
 
-    var titleRow = wrap.querySelector('tr.addressall-title-row');
-    var colRow = wrap.querySelector('tr.addressall-col-row');
-    var isKnownCourse = COURSE_COLORS.hasOwnProperty(course);
-    var color = courseColor(course);
-    [titleRow, colRow].forEach(function (row) {
-      row.classList.toggle('course-default', !isKnownCourse);
-      Array.prototype.forEach.call(row.querySelectorAll('th'), function (th) {
-        th.style.background = color;
-        th.style.color = '#ffffff';
-      });
-    });
+    applyCourseColorBlock(wrap.querySelector('tr.doc-title-row'), wrap.querySelector('tr.doc-col-row'), course);
 
     wrap.querySelector('[data-slot="title"]').textContent =
       fmtTitleDate(state.selectedDate, merged.dayOfWeek) + '　' + course + '코스 · 전체 주소지 (사용 후 폐기)';
