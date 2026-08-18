@@ -194,22 +194,31 @@
     border: 1px solid #000; border-top: 0; padding: 8px; break-inside: avoid; background: #fff;
   }
 
-  .addressall-table.doc-table { width: 297mm; }
-  .addressall-table td, .addressall-table th { font-size: 12pt; }
+  /* 전체 주소지 전용 — A4 세로(portrait) 표. 다른 문서(코스별 주소지 등)의 스타일과 독립적으로 관리 */
+  .addressall-table.doc-table { width: 210mm; }
+  .addressall-table td, .addressall-table th { font-size: 9pt; }
+  .addressall-table thead th { font-size: 9.5pt; }
   .addressall-table td.col-course { font-weight: 700; }
   .addressall-table td.col-companyno, .addressall-table td.col-nickname { font-weight: 700; }
-  .addressall-table td.col-address { text-align: left; }
+  .addressall-table td.col-address {
+    text-align: left; white-space: normal; overflow-wrap: anywhere; word-break: keep-all; line-height: 1.25;
+  }
   .addressall-table td.col-method { color: var(--blue); font-weight: 700; }
-  .addressall-table td.col-comment { text-align: left; }
+  .addressall-table td.col-comment {
+    text-align: left; white-space: normal; overflow-wrap: anywhere; word-break: keep-all; line-height: 1.25;
+  }
   .addressall-table td.col-comment.has-comment { background: #eafbea; }
   .addressall-table td.col-comment.has-note { background: #fff59d; color: var(--red); font-weight: 700; }
-  .addressall-table td.col-phone { font-weight: 700; font-size: 13pt; color: var(--red); white-space: normal; }
+  .addressall-table td.col-phone { font-weight: 700; color: var(--red); white-space: normal; overflow-wrap: anywhere; }
   .addressall-table tr.missing-field td.col-address { background: #fef2f2; }
   .addressall-table tr.cart-row td { background: #eafbea; }
-  .addressall-table tr.course-sep-row td {
-    background: var(--blue-bg); color: var(--navy); font-weight: 900; font-size: 13pt; text-align: left;
-    border-top: 3px solid var(--navy); padding: 7px 10px;
+
+  /* 코스별 상단 구분색 — 코스 제목 바 + 표 머리글에 공통 적용 (JS에서 course 색상을 인라인 style로 지정) */
+  .addressall-table tr.addressall-title-row th {
+    font-weight: 900; font-size: 13pt; text-align: left; padding: 8px 10px; border-top: 4px solid #000;
   }
+  .addressall-table tr.addressall-col-row th { font-weight: 800; }
+  .addressall-table .course-default { background: #334155; color: #ffffff; }
 
   .closer-table th, .closer-table td { font-size: 12.5pt; }
   .closer-table tbody tr { height: 11mm; }
@@ -269,7 +278,7 @@
     body.printing-status #printStatus { display: block !important; page: portraitPage; }
     body.printing-address #printAddress { display: block !important; page: landscapePage; }
     body.printing-closer #printCloser { display: block !important; page: portraitPage; }
-    body.printing-address-all #printAddressAll { display: block !important; page: landscapePage; }
+    body.printing-address-all #printAddressAll { display: block !important; page: portraitPage; }
 
     .print-course { break-before: page; page-break-before: always; }
     .print-course:first-child { break-before: auto; page-break-before: auto; }
@@ -889,7 +898,7 @@
     } else if (state.docType === 'addressAll') {
       items.push({ text: '전체 코스', cls: 'b-solid' });
       items.push({ text: '전체 주소지', cls: 'b-soft' });
-      items.push({ text: 'A4 가로', cls: '' });
+      items.push({ text: 'A4 세로', cls: '' });
     } else {
       items.push({ text: courseLabel(), cls: 'b-solid' });
       if (state.docType === 'address') { items.push({ text: '주소지', cls: 'b-soft' }); items.push({ text: 'A4 가로', cls: '' }); }
@@ -1105,50 +1114,73 @@
     return container;
   }
 
-  var ADDRESSALL_COL_WIDTHS = [6, 8, 8, 10, 32, 10, 18, 8];
+  var ADDRESSALL_COL_WIDTHS = [7, 8, 8, 11, 32, 10, 16, 8];
   var ADDRESSALL_TEMPLATE =
     '<table class="doc-table addressall-table">' +
       '<colgroup>' + ADDRESSALL_COL_WIDTHS.map(function (w) { return '<col style="width:' + w + '%">'; }).join('') + '</colgroup>' +
       '<thead>' +
-        '<tr class="doc-title-row"><th colspan="8" class="title-main" data-slot="title"></th></tr>' +
-        '<tr class="doc-col-row"><th>코스</th><th>배송순서</th><th>업체번호</th><th>약칭</th><th>배송주소</th><th>수거방식</th><th>배송 코멘트</th><th>거래처 번호</th></tr>' +
+        '<tr class="addressall-title-row"><th colspan="8" class="title-main" data-slot="title"></th></tr>' +
+        '<tr class="addressall-col-row"><th>코스</th><th>배송순서</th><th>업체번호</th><th>약칭</th><th>배송주소</th><th>수거방식</th><th>배송 코멘트</th><th>거래처 번호</th></tr>' +
       '</thead>' +
       '<tbody></tbody>' +
     '</table>';
 
-  function buildAddressAllDoc(merged) {
+  // 코스별 상단 구분색 — 실제 데이터에 존재하는 코스만 렌더링되므로 여기 없는 코스는 자동으로 생략됨
+  var COURSE_COLORS = {
+    'B': '#2563EB', 'C': '#16A34A', 'D': '#7C3AED', 'E': '#EA580C',
+    'F': '#0891B2', 'G': '#DB2777', 'Z': '#475569', '미분류': '#92400E'
+  };
+  var COURSE_DEFAULT_COLOR = '#334155';
+  function courseColor(course) { return COURSE_COLORS.hasOwnProperty(course) ? COURSE_COLORS[course] : COURSE_DEFAULT_COLOR; }
+
+  function buildAddressAllCourseBlock(course, items, merged) {
     var wrap = document.createElement('div');
     wrap.className = 'print-course';
     wrap.innerHTML = ADDRESSALL_TEMPLATE;
+
+    var titleRow = wrap.querySelector('tr.addressall-title-row');
+    var colRow = wrap.querySelector('tr.addressall-col-row');
+    var isKnownCourse = COURSE_COLORS.hasOwnProperty(course);
+    var color = courseColor(course);
+    [titleRow, colRow].forEach(function (row) {
+      row.classList.toggle('course-default', !isKnownCourse);
+      Array.prototype.forEach.call(row.querySelectorAll('th'), function (th) {
+        th.style.background = color;
+        th.style.color = '#ffffff';
+      });
+    });
+
     wrap.querySelector('[data-slot="title"]').textContent =
-      fmtTitleDate(state.selectedDate, merged.dayOfWeek) + '　전체 코스 배송주소 (사용 후 폐기)';
+      fmtTitleDate(state.selectedDate, merged.dayOfWeek) + '　' + course + '코스 · 전체 주소지 (사용 후 폐기)';
 
     var tbody = wrap.querySelector('tbody');
     tbody.innerHTML = '';
-    merged.courses.forEach(function (course) {
-      var sepTr = document.createElement('tr'); sepTr.className = 'course-sep-row';
-      var sepTd = document.createElement('td'); sepTd.colSpan = 8; sepTd.textContent = course + '코스';
-      sepTr.appendChild(sepTd);
-      tbody.appendChild(sepTr);
-
-      (merged.byCourse[course] || []).forEach(function (it) {
-        var tr = document.createElement('tr');
-        if (!it.address) tr.classList.add('missing-field');
-        if (isCartMethod(it.collectionMethod)) tr.classList.add('cart-row');
-        tr.appendChild(td(it.course + '코스', 'col-course'));
-        tr.appendChild(td(it.deliveryOrder, 'col-order'));
-        tr.appendChild(td(it.companyNumber, 'col-companyno'));
-        tr.appendChild(td(it.nickname, 'col-nickname'));
-        tr.appendChild(td(it.address, 'col-address'));
-        tr.appendChild(td(it.collectionMethod, 'col-method'));
-        var commentCell = td(it.deliveryComment, 'col-comment');
-        if (it.deliveryComment) commentCell.classList.add(isCodeComment(it.deliveryComment) ? 'has-note' : 'has-comment');
-        tr.appendChild(commentCell);
-        tr.appendChild(td(it.phone, 'col-phone'));
-        tbody.appendChild(tr);
-      });
+    items.forEach(function (it) {
+      var tr = document.createElement('tr');
+      if (!it.address) tr.classList.add('missing-field');
+      if (isCartMethod(it.collectionMethod)) tr.classList.add('cart-row');
+      tr.appendChild(td(it.course + '코스', 'col-course'));
+      tr.appendChild(td(it.deliveryOrder, 'col-order'));
+      tr.appendChild(td(it.companyNumber, 'col-companyno'));
+      tr.appendChild(td(it.nickname, 'col-nickname'));
+      tr.appendChild(td(it.address, 'col-address'));
+      tr.appendChild(td(it.collectionMethod, 'col-method'));
+      var commentCell = td(it.deliveryComment, 'col-comment');
+      if (it.deliveryComment) commentCell.classList.add(isCodeComment(it.deliveryComment) ? 'has-note' : 'has-comment');
+      tr.appendChild(commentCell);
+      tr.appendChild(td(it.phone, 'col-phone'));
+      tbody.appendChild(tr);
     });
     return wrap;
+  }
+
+  function buildAddressAllDoc(merged) {
+    var container = document.createElement('div');
+    container.className = 'addressall-doc';
+    merged.courses.forEach(function (course) {
+      container.appendChild(buildAddressAllCourseBlock(course, merged.byCourse[course] || [], merged));
+    });
+    return container;
   }
 
   // ================= 화면 미리보기 (실제 인쇄와 동일한 DOM을 별도로 렌더링, 화면 축소는 이 컨테이너에만 적용) =================
@@ -1346,7 +1378,7 @@
     if (!state.merged || state.merged.closedDay) return;
     renderPrintDoc('addressAll');
     var expected = state.merged.totalCount;
-    var actual = printAddressAll.querySelectorAll('table.addressall-table tbody tr:not(.course-sep-row)').length;
+    var actual = printAddressAll.querySelectorAll('table.addressall-table tbody tr').length;
     if (expected !== actual) {
       alert('전체 주소지 인쇄 오류: 화면 데이터 건수(' + expected + ')와 실제 인쇄될 행 수(' + actual + ')가 일치하지 않습니다. 인쇄를 중단했습니다.');
       return;
