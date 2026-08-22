@@ -55,11 +55,11 @@
   /* ================= 왼쪽 패널 ================= */
   .left-panel {
     flex: 0 0 var(--left-w); width: var(--left-w); background: #fff; border-right: 1px solid var(--border);
-    padding: 10px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;
+    padding: 7px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px;
   }
   @media (max-width: 1100px) { :root { --left-w: 360px; } }
 
-  .section-label { font-size: 12.5px; font-weight: 800; color: var(--text-sub); margin-bottom: 6px; letter-spacing: .2px; }
+  .section-label { font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 4px; letter-spacing: .2px; }
 
   .inline-error {
     display: none; align-items: center; gap: 10px; background: #fef2f2; border: 1px solid #fecaca;
@@ -69,61 +69,73 @@
   .inline-error button { margin-left: auto; height: 30px; padding: 0 10px; border-radius: 7px; border: 1px solid #fecaca; background: #fff; color: var(--red); font-weight: 700; font-size: 12.5px; }
 
   .date-box {
-    width: 100%; min-height: 52px; display: flex; align-items: center; gap: 10px; padding: 0 16px;
-    border: 1.5px solid var(--border); border-radius: 12px; background: #fff; font-size: 17.5px; font-weight: 800;
+    width: 100%; min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 16px;
+    border: 1.5px solid var(--border); border-radius: 12px; background: #fff; font-size: 17px; font-weight: 800;
     color: var(--navy); text-align: left;
   }
   .date-box:hover { border-color: var(--blue); }
-  .date-box .ic { font-size: 19px; }
-  .date-sub-row { display: flex; gap: 8px; margin-top: 6px; }
+  .date-box .ic { font-size: 18px; }
+  .date-sub-row { display: flex; gap: 8px; margin-top: 4px; }
   .sub-btn {
-    flex: 1; min-height: 42px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg);
-    font-size: 14px; font-weight: 700; color: var(--navy); display: flex; align-items: center; justify-content: center; gap: 6px;
+    flex: 1; min-height: 34px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg);
+    font-size: 13.5px; font-weight: 700; color: var(--navy); display: flex; align-items: center; justify-content: center; gap: 6px;
   }
   .sub-btn:hover:not(:disabled) { background: #e9edf2; }
   .sub-btn:disabled { opacity: .5; cursor: not-allowed; }
 
-  .course-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .course-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
   .course-btn {
-    min-height: 42px; border-radius: 10px; border: 1.5px solid var(--border); background: #fff;
-    font-size: 15.5px; font-weight: 800; color: var(--navy); white-space: nowrap;
+    min-height: 34px; border-radius: 10px; border: 1.5px solid var(--border); background: #fff;
+    font-size: 14.5px; font-weight: 800; color: var(--navy); white-space: nowrap;
   }
   .course-btn:hover { border-color: var(--blue); }
   .course-btn.selected { background: var(--blue); border-color: var(--blue); color: #fff; }
 
   .info-card {
-    margin-top: 6px; padding: 9px 14px; background: var(--blue-bg); border: 1px solid #cfe0ff; border-radius: 10px;
-    font-size: 14.5px; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 8px;
+    margin-top: 5px; padding: 6px 14px; background: var(--blue-bg); border: 1px solid #cfe0ff; border-radius: 10px;
+    font-size: 13.5px; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 8px;
   }
 
-  .doc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; }
-  .doc-card {
-    position: relative; min-height: 40px; display: flex; flex-direction: row; align-items: center; justify-content: center;
-    gap: 6px; border: 1.5px solid var(--border); border-radius: 12px; background: #fff; font-size: 12.5px; font-weight: 700;
-    line-height: 1.15; text-align: center; color: var(--text); padding: 2px 6px; white-space: nowrap;
+  /* 자주 사용하는 출력 — 큰 주요 버튼 2개 */
+  .primary-doc-list { display: flex; flex-direction: column; gap: 8px; }
+  .primary-doc-btn {
+    width: 100%; min-height: 64px; border: 1.5px solid var(--blue); border-radius: 14px; background: #fff;
+    color: var(--blue); text-align: left; padding: 8px 16px; display: flex; flex-direction: column;
+    justify-content: center; gap: 2px;
   }
-  .doc-card[data-doc="addressAll"] { grid-column: 1 / -1; }
-  .doc-card .doc-ic { font-size: 16px; }
-  .doc-card .doc-check {
-    position: absolute; top: 7px; right: 7px; width: 18px; height: 18px; border-radius: 50%; background: var(--blue);
-    color: #fff; font-size: 11px; display: flex; align-items: center; justify-content: center; opacity: 0;
+  .primary-doc-btn .pdb-title { font-size: 17.5px; font-weight: 800; color: inherit; }
+  .primary-doc-btn .pdb-sub { font-size: 12.5px; font-weight: 600; color: var(--text-sub); }
+  .primary-doc-btn:hover { background: var(--blue-bg); }
+  .primary-doc-btn.selected { background: var(--blue-dark); border-color: var(--blue-dark); color: #fff; }
+  .primary-doc-btn.selected .pdb-sub { color: rgba(255,255,255,.85); }
+  .primary-doc-btn.selected:hover { background: var(--blue-dark); }
+
+  /* 기타 출력 — 작은 단독 출력 버튼 4개 */
+  .other-doc-head { display: flex; align-items: baseline; gap: 8px; margin-top: 3px; }
+  .other-doc-title { font-size: 12.5px; font-weight: 800; color: var(--text-sub); }
+  .other-doc-sub { font-size: 11px; font-weight: 600; color: #94a3b8; }
+  .other-doc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-top: 4px; }
+  .other-doc-btn {
+    min-height: 38px; display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border); border-radius: 10px; background: #fafbfc; font-size: 13px; font-weight: 700;
+    line-height: 1.15; text-align: center; color: var(--text-sub); padding: 2px 6px; white-space: nowrap;
   }
-  .doc-card.selected { border-color: var(--blue); background: var(--blue-bg); color: var(--navy); }
-  .doc-card.selected .doc-check { opacity: 1; }
+  .other-doc-btn:hover { background: #f1f5f9; }
+  .other-doc-btn.selected { border-color: var(--blue); background: var(--blue-bg); color: var(--navy); }
 
   .print-section { margin-top: auto; padding-top: 2px; }
   .print-btn {
-    width: 100%; min-height: 54px; background: var(--blue); color: #fff; border: 0; border-radius: 14px;
-    font-size: 18px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; min-height: 48px; background: var(--blue); color: #fff; border: 0; border-radius: 14px;
+    font-size: 17px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px;
   }
   .print-btn:hover:not(:disabled) { background: var(--blue-dark); }
   .print-btn:disabled { opacity: .45; cursor: not-allowed; }
-  .print-sub-row { display: flex; gap: 8px; margin-top: 5px; }
-  .print-caption { text-align: center; font-size: 11.5px; color: var(--text-sub); margin-top: 3px; }
+  .print-sub-row { display: flex; gap: 8px; margin-top: 4px; }
+  .print-caption { text-align: center; font-size: 11px; color: var(--text-sub); margin-top: 2px; }
 
   .admin-open-btn {
-    width: 100%; min-height: 40px; margin-top: 6px; border: 1.5px solid var(--blue); background: #fff;
-    color: var(--blue); border-radius: 12px; font-weight: 700; font-size: 14px;
+    width: 100%; min-height: 34px; margin-top: 4px; border: 1.5px solid var(--blue); background: #fff;
+    color: var(--blue); border-radius: 12px; font-weight: 700; font-size: 13.5px;
   }
   .admin-open-btn:hover { background: var(--blue-bg); }
 
@@ -217,16 +229,20 @@
   .addressall-table tr.doc-title-row th { font-size: 13pt; text-align: left; padding: 8px 10px; }
   .addressall-table tr.doc-col-row th { font-weight: 800; }
 
-  /* 마감자용 수량표 — 코스별 구역(별도 table)마다 코스색 제목 바가 반복됨 */
-  .closer-doc-header {
-    width: 210mm; border: 1px solid #000; border-bottom: 0; background: var(--navy); color: #fff; break-inside: avoid;
+  /* 마감자용 수량표 — 배송기사용 문서와 혼동되지 않는 대형 제목 + 단일 연속 표 */
+  .closer-header-box {
+    width: 210mm; background: #fffef5; border-top: 4px solid #000; border-bottom: 4px solid #000; break-inside: avoid;
   }
-  .closer-doc-header .closer-doc-title { font-size: 13pt; font-weight: 900; padding: 8px 8px 2px; }
-  .closer-doc-header .closer-doc-sub { font-size: 11pt; font-weight: 600; padding: 0 8px 8px; }
-  .closer-course-block + .closer-course-block { margin-top: 6mm; }
+  .closer-kicker { text-align: center; font-size: 11pt; font-weight: 800; letter-spacing: 2px; color: #111827; padding-top: 4mm; }
+  .closer-main-title {
+    font-size: 28pt; font-weight: 900; line-height: 1.15; text-align: center; letter-spacing: -0.5px; padding: 7mm 0 4mm;
+  }
+  .closer-meta-line { text-align: center; font-size: 12pt; font-weight: 600; color: #374151; padding-bottom: 5mm; }
 
+  .closer-table thead th { background: #111827; color: #fff; font-weight: 800; }
   .closer-table th, .closer-table td { font-size: 12.5pt; }
   .closer-table tbody tr { height: 11mm; }
+  .closer-table tbody tr.course-start td { border-top: 2px solid #000; }
   .closer-table td.col-companyno, .closer-table td.col-nickname { font-weight: 800; }
   .closer-table td.col-nickname { text-align: left; }
   .closer-table td.col-bagsize { font-weight: 700; }
@@ -289,7 +305,7 @@
     .print-course:first-child { break-before: auto; page-break-before: auto; }
 
     table.doc-table, table.doc-table * { transform: none !important; zoom: 1 !important; }
-    .doc-page, table.doc-table, .address-footnote, .closer-summary { width: auto !important; }
+    .doc-page, table.doc-table, .address-footnote, .closer-summary, .closer-header-box { width: auto !important; }
   }
 </style>
 </head>
@@ -329,13 +345,27 @@
       </div>
 
       <div class="field-section">
-        <div class="section-label">3. 문서 선택</div>
-        <div class="doc-grid" id="docGrid">
-          <button class="doc-card" data-doc="address"><span class="doc-check">✓</span><span class="doc-ic">📄</span><span>주소지 A4 가로</span></button>
-          <button class="doc-card" data-doc="status"><span class="doc-check">✓</span><span class="doc-ic">📄</span><span>현황지 A4 세로</span></button>
-          <button class="doc-card" data-doc="both"><span class="doc-check">✓</span><span class="doc-ic">📄</span><span>현황지+주소지</span></button>
-          <button class="doc-card" data-doc="closerQty"><span class="doc-check">✓</span><span class="doc-ic">📄</span><span>마감자용 수량표</span></button>
-          <button class="doc-card" data-doc="addressAll"><span class="doc-check">✓</span><span class="doc-ic">📄</span><span>전체 주소지</span></button>
+        <div class="section-label">3. 자주 사용하는 출력</div>
+        <div class="primary-doc-list" id="primaryDocList">
+          <button class="primary-doc-btn" data-doc="status_address">
+            <span class="pdb-title">현황지 + 주소지</span>
+            <span class="pdb-sub">배송기사용 · 2개 문서 연속 출력</span>
+          </button>
+          <button class="primary-doc-btn" data-doc="closer_all_address">
+            <span class="pdb-title">마감자용 수량표 + 전체주소지</span>
+            <span class="pdb-sub">세탁 마감용 · 2개 문서 연속 출력</span>
+          </button>
+        </div>
+
+        <div class="other-doc-head">
+          <span class="other-doc-title">기타 출력</span>
+          <span class="other-doc-sub">필요할 때만 선택하세요</span>
+        </div>
+        <div class="other-doc-grid" id="otherDocGrid">
+          <button class="other-doc-btn" data-doc="address">주소지만</button>
+          <button class="other-doc-btn" data-doc="status">현황지만</button>
+          <button class="other-doc-btn" data-doc="closer">마감자용 수량표만</button>
+          <button class="other-doc-btn" data-doc="all_address">전체주소지만</button>
         </div>
       </div>
 
@@ -406,6 +436,21 @@
   </div>
 </div>
 
+<!-- 마감자용 수량표+전체주소지 인쇄 순서 안내 모달 -->
+<div class="modal-overlay no-print" id="closerAllGuideModal">
+  <div class="modal-box">
+    <div class="modal-title">세탁 마감용 문서 출력</div>
+    <div class="modal-body">1. 마감자용 수량표<br>2. 전체주소지<br><br>두 문서를 순서대로 출력해주세요.</div>
+    <div class="guide-steps">
+      <button id="closerAllStep1Btn">1. 마감자용 수량표 인쇄</button>
+      <button id="closerAllStep2Btn">2. 전체주소지 인쇄</button>
+    </div>
+    <div class="modal-actions">
+      <button class="confirm" id="closerAllDone">출력 완료</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function () {
   'use strict';
@@ -445,7 +490,7 @@
     draft: null,
     merged: null,
     selectedCourse: null,
-    docType: 'address',
+    docType: 'status_address',
     zoomPct: 100,
     isLoading: false,
     isPrinting: false,
@@ -469,8 +514,7 @@
 
   var courseGrid = $('courseGrid');
   var courseInfoCard = $('courseInfoCard');
-  var docGrid = $('docGrid');
-  var docCards = Array.prototype.slice.call(document.querySelectorAll('.doc-card'));
+  var docCards = Array.prototype.slice.call(document.querySelectorAll('.primary-doc-btn, .other-doc-btn'));
 
   var btnPrintMain = $('btnPrintMain');
   var printBtnLabel = $('printBtnLabel');
@@ -498,6 +542,11 @@
   var guideStatusBtn = $('guideStatusBtn');
   var guideAddressBtn = $('guideAddressBtn');
   var guideClose = $('guideClose');
+
+  var closerAllGuideModal = $('closerAllGuideModal');
+  var closerAllStep1Btn = $('closerAllStep1Btn');
+  var closerAllStep2Btn = $('closerAllStep2Btn');
+  var closerAllDone = $('closerAllDone');
 
   // ================= 설정 저장소 =================
   function getGasUrl() { return localStorage.getItem(STORAGE_KEYS.gasUrl) || DEFAULT_GAS_URL; }
@@ -806,7 +855,7 @@
     if (state.selectedCourse && state.merged.courses.indexOf(state.selectedCourse) !== -1) return [state.selectedCourse];
     return [];
   }
-  var ALWAYS_ALL_DOC_TYPES = { closerQty: true, addressAll: true };
+  var ALWAYS_ALL_DOC_TYPES = { closer: true, all_address: true, closer_all_address: true };
 
   function selectDocType(type) { state.docType = type; renderAll(); }
 
@@ -874,7 +923,7 @@
     return '';
   }
   function docLabel(type) {
-    return type === 'address' ? '주소지' : type === 'status' ? '현황지' : type === 'closerQty' ? '마감자용 수량표' : type === 'addressAll' ? '전체 주소지' : '현황지+주소지';
+    return type === 'address' ? '주소지' : type === 'status' ? '현황지' : type === 'closer' ? '마감자용 수량표' : type === 'all_address' ? '전체 주소지' : type === 'closer_all_address' ? '마감자용 수량표+전체주소지' : '현황지+주소지';
   }
 
   function canPrint() {
@@ -884,10 +933,15 @@
   }
 
   function updatePrintButton() {
-    if (state.docType === 'closerQty') {
+    if (state.docType === 'closer') {
       printBtnLabel.textContent = '마감자용 전체 수량표 인쇄';
-    } else if (state.docType === 'addressAll') {
+    } else if (state.docType === 'all_address') {
       printBtnLabel.textContent = '전체 주소지 인쇄';
+    } else if (state.docType === 'closer_all_address') {
+      printBtnLabel.textContent = '마감자용 + 전체주소지 출력';
+    } else if (state.docType === 'status_address') {
+      var cl0 = courseLabel();
+      printBtnLabel.textContent = (cl0 ? cl0 + ' ' : '') + '현황지 + 주소지 출력';
     } else {
       var cl = courseLabel();
       var dl = docLabel(state.docType);
@@ -901,14 +955,18 @@
     previewBadges.innerHTML = '';
     if (!state.merged || state.merged.closedDay) return;
     var items = [];
-    if (state.docType === 'closerQty') {
+    if (state.docType === 'closer') {
       items.push({ text: '전체 업체', cls: 'b-solid' });
       items.push({ text: '마감자용 수량표', cls: 'b-soft' });
       items.push({ text: 'A4 세로', cls: '' });
-    } else if (state.docType === 'addressAll') {
+    } else if (state.docType === 'all_address') {
       items.push({ text: '전체 코스', cls: 'b-solid' });
       items.push({ text: '전체 주소지', cls: 'b-soft' });
       items.push({ text: 'A4 세로', cls: '' });
+    } else if (state.docType === 'closer_all_address') {
+      items.push({ text: '전체 업체', cls: 'b-solid' });
+      items.push({ text: '마감자용 + 전체주소지', cls: 'b-soft' });
+      items.push({ text: 'A4 세로 2종', cls: '' });
     } else {
       var singleCourse = (state.selectedCourse && state.selectedCourse !== ALL_SENTINEL) ? state.selectedCourse : null;
       items.push({ text: courseLabel(), cls: 'b-solid', course: singleCourse });
@@ -1084,71 +1142,68 @@
   }
 
   var CLOSER_COL_WIDTHS = [9, 12, 10, 12, 10, 15, 15, 17];
-  var CLOSER_DOC_HEADER_TEMPLATE =
-    '<div class="closer-doc-title" data-slot="title">마감자용 세탁 수량 확인표</div>' +
-    '<div class="closer-doc-sub" data-slot="sub"></div>';
-  var CLOSER_COURSE_TEMPLATE =
+  var CLOSER_TABLE_TEMPLATE =
     '<table class="doc-table closer-table">' +
       '<colgroup>' + CLOSER_COL_WIDTHS.map(function (w) { return '<col style="width:' + w + '%">'; }).join('') + '</colgroup>' +
       '<thead>' +
-        '<tr class="doc-title-row"><th colspan="8" class="title-main" data-slot="courseTitle"></th></tr>' +
-        '<tr class="doc-col-row"><th>배송순서</th><th>출고번호</th><th>업체번호</th><th>약칭</th><th>포대사이즈</th><th>포대배송</th><th>수건배송</th><th>특이사항</th></tr>' +
+        '<tr class="closer-col-row"><th>배송순서</th><th>출고번호</th><th>업체번호</th><th>약칭</th><th>포대사이즈</th><th>포대배송</th><th>수건배송</th><th>특이사항</th></tr>' +
       '</thead>' +
       '<tbody></tbody>' +
     '</table>';
 
-  // 코스 구역 하나(코스색 제목 바 + 표 머리글 + 해당 코스 업체 행) — 페이지가 남으면 다음 코스와 같은 페이지에 이어짐(강제 분리 없음)
-  function buildCloserCourseBlock(course, items) {
-    var wrap = document.createElement('div');
-    wrap.className = 'closer-course-block';
-    wrap.innerHTML = CLOSER_COURSE_TEMPLATE;
-    wrap.querySelector('[data-slot="courseTitle"]').textContent = course + '코스';
-    applyCourseColorBlock(wrap.querySelector('tr.doc-title-row'), wrap.querySelector('tr.doc-col-row'), course);
+  // 업체 1행 — 코스가 바뀌는 첫 행에만 상단 굵은 테두리로 구분(별도 제목 행/강제 페이지 분리 없음)
+  function buildCloserRow(it, isCourseStart) {
+    var tr = document.createElement('tr');
+    if (isCourseStart) tr.classList.add('course-start');
+    tr.appendChild(td(it.deliveryOrder, 'col-order'));
+    tr.appendChild(td(it.shippingNumber, 'col-shipno'));
+    tr.appendChild(td(it.companyNumber, 'col-companyno'));
 
-    var tbody = wrap.querySelector('tbody');
-    items.forEach(function (it) {
-      var tr = document.createElement('tr');
-      tr.appendChild(td(it.deliveryOrder, 'col-order'));
-      tr.appendChild(td(it.shippingNumber, 'col-shipno'));
-      tr.appendChild(td(it.companyNumber, 'col-companyno'));
+    var nickTd = document.createElement('td'); nickTd.className = 'col-nickname';
+    nickTd.textContent = it.nickname || '';
+    if (it.isAdded) { var addBadge = document.createElement('span'); addBadge.className = 'badge-mini add'; addBadge.textContent = '추가'; nickTd.appendChild(addBadge); }
+    else if (it.isEdited) { var editBadge = document.createElement('span'); editBadge.className = 'badge-mini edit'; editBadge.textContent = '수정'; nickTd.appendChild(editBadge); }
+    tr.appendChild(nickTd);
 
-      var nickTd = document.createElement('td'); nickTd.className = 'col-nickname';
-      nickTd.textContent = it.nickname || '';
-      if (it.isAdded) { var addBadge = document.createElement('span'); addBadge.className = 'badge-mini add'; addBadge.textContent = '추가'; nickTd.appendChild(addBadge); }
-      else if (it.isEdited) { var editBadge = document.createElement('span'); editBadge.className = 'badge-mini edit'; editBadge.textContent = '수정'; nickTd.appendChild(editBadge); }
-      tr.appendChild(nickTd);
+    tr.appendChild(td(bagSizeDisplay(it.bagSize), 'col-bagsize'));
+    tr.appendChild(td('', 'col-bagfill'));
+    tr.appendChild(td('', 'col-towelfill'));
 
-      tr.appendChild(td(bagSizeDisplay(it.bagSize), 'col-bagsize'));
-      tr.appendChild(td('', 'col-bagfill'));
-      tr.appendChild(td('', 'col-towelfill'));
-
-      var note = buildSpecialNote(it);
-      var noteTd = td(note, 'col-note');
-      if (noteHasEmphasis(note)) noteTd.classList.add('emphasis');
-      tr.appendChild(noteTd);
-
-      tbody.appendChild(tr);
-    });
-    return wrap;
+    var note = buildSpecialNote(it);
+    var noteTd = td(note, 'col-note');
+    if (noteHasEmphasis(note)) noteTd.classList.add('emphasis');
+    tr.appendChild(noteTd);
+    return tr;
   }
 
+  // 전체 업체를 코스순 · 배송순서순으로 하나의 연속된 표에 담는다(코스별 제목 문단/별도 표/강제 페이지 분리 없음)
   function buildCloserDoc(allCourses, merged) {
     var container = document.createElement('div');
     container.className = 'closer-doc';
 
     var allItems = [];
-    allCourses.forEach(function (course) { allItems = allItems.concat(merged.byCourse[course]); });
+    allCourses.forEach(function (course) { allItems = allItems.concat(merged.byCourse[course] || []); });
 
-    var header = document.createElement('div');
-    header.className = 'closer-doc-header';
-    header.innerHTML = CLOSER_DOC_HEADER_TEMPLATE;
-    header.querySelector('[data-slot="sub"]').textContent =
+    var headerBox = document.createElement('div');
+    headerBox.className = 'closer-header-box';
+    headerBox.innerHTML =
+      '<div class="closer-kicker">세탁팀 마감용</div>' +
+      '<div class="closer-main-title">마감자용 세탁 수량 확인표</div>' +
+      '<div class="closer-meta-line" data-slot="meta"></div>';
+    headerBox.querySelector('[data-slot="meta"]').textContent =
       fmtBigDate(state.selectedDate) + ' · 전체 업체 수: ' + allItems.length + '개 · 인쇄 시각: ' + fmtPrintTime(new Date());
-    container.appendChild(header);
+    container.appendChild(headerBox);
 
-    allCourses.forEach(function (course) {
-      container.appendChild(buildCloserCourseBlock(course, merged.byCourse[course] || []));
+    var tableWrap = document.createElement('div');
+    tableWrap.innerHTML = CLOSER_TABLE_TEMPLATE;
+    var table = tableWrap.firstElementChild;
+    var tbody = table.querySelector('tbody');
+    allCourses.forEach(function (course, courseIdx) {
+      (merged.byCourse[course] || []).forEach(function (it, itemIdx) {
+        tbody.appendChild(buildCloserRow(it, courseIdx > 0 && itemIdx === 0));
+      });
     });
+    container.appendChild(table);
 
     var summary = document.createElement('div');
     summary.className = 'closer-summary';
@@ -1264,13 +1319,13 @@
       var closed = document.createElement('div'); closed.className = 'preview-empty'; closed.textContent = '이 날짜는 휴무일입니다 — 인쇄할 문서가 없습니다.';
       previewSurface.appendChild(closed); return;
     }
-    if (state.docType === 'closerQty') {
+    if (state.docType === 'closer' || state.docType === 'closer_all_address') {
       var closerNode = buildCloserDoc(state.merged.courses.slice(), state.merged);
       previewSurface.appendChild(buildPageFrame(closerNode, true));
       requestAnimationFrame(fitPreviewPages);
       return;
     }
-    if (state.docType === 'addressAll') {
+    if (state.docType === 'all_address') {
       var addrAllNode = buildAddressAllDoc(state.merged);
       previewSurface.appendChild(buildPageFrame(addrAllNode, true));
       requestAnimationFrame(fitPreviewPages);
@@ -1387,9 +1442,10 @@
 
   btnPrintMain.addEventListener('click', function () {
     if (!canPrint()) return;
-    if (state.docType === 'both') { guideModal.classList.add('show'); return; }
-    if (state.docType === 'closerQty') { printCloserDoc(); return; }
-    if (state.docType === 'addressAll') { printAddressAllDoc(); return; }
+    if (state.docType === 'status_address') { guideModal.classList.add('show'); return; }
+    if (state.docType === 'closer') { printCloserDoc(); return; }
+    if (state.docType === 'all_address') { printAddressAllDoc(); return; }
+    if (state.docType === 'closer_all_address') { closerAllGuideModal.classList.add('show'); return; }
     printSingle(state.docType);
   });
   guideStatusBtn.addEventListener('click', function () { printSingle('status'); guideStatusBtn.classList.add('done'); });
@@ -1397,6 +1453,13 @@
   guideClose.addEventListener('click', function () {
     guideModal.classList.remove('show');
     guideStatusBtn.classList.remove('done'); guideAddressBtn.classList.remove('done');
+  });
+
+  closerAllStep1Btn.addEventListener('click', function () { printCloserDoc(); closerAllStep1Btn.classList.add('done'); });
+  closerAllStep2Btn.addEventListener('click', function () { printAddressAllDoc(); closerAllStep2Btn.classList.add('done'); });
+  closerAllDone.addEventListener('click', function () {
+    closerAllGuideModal.classList.remove('show');
+    closerAllStep1Btn.classList.remove('done'); closerAllStep2Btn.classList.remove('done');
   });
 
   function printCloserDoc() {
