@@ -201,6 +201,14 @@
   .address-table tr.cart-row td { background: #eafbea; }
   .address-table tr.cart-row td.col-comment.has-note { background: #fff59d; }
 
+  /* 차량(지원차/자차) 체크 + 총 수거량 기재표 — 현황지·마감자용 수량표 하단 공용 */
+  .vehicle-check-table.doc-table {
+    width: 210mm; margin-top: -1px; background: #fff;
+    break-inside: avoid; page-break-inside: avoid; break-before: avoid; page-break-before: avoid;
+  }
+  .vehicle-check-table tr.vc-head-row th { background: #f3f4f6; font-weight: 800; font-size: 13pt; padding: 7px 6px; }
+  .vehicle-check-table tr.vc-input-row td { height: 14mm; background: #fff; border-width: 2px; }
+
   .address-footnote {
     width: 297mm; text-align: center; font-size: 12pt; font-weight: 700;
     border: 1px solid #000; border-top: 0; padding: 8px; break-inside: avoid; background: #fff;
@@ -1070,6 +1078,24 @@
     '</table>' +
     '<div class="address-footnote">【메모란】 위치 꿀팁(주차/비번 등) · 배송코멘트를 남겨주시면 차주 현황지에 반영됩니다.</div>';
 
+  // 차량(지원차/자차) 체크 + 총 수거량 기재란 — 기사가 인쇄물에 직접 손으로 체크/기재하는 빈칸
+  var VEHICLE_CHECK_TEMPLATE =
+    '<table class="doc-table vehicle-check-table">' +
+      '<colgroup><col style="width:22%"><col style="width:22%"><col style="width:56%"></colgroup>' +
+      '<thead>' +
+        '<tr class="vc-head-row"><th>지원차</th><th>자차</th><th>총 수거량 (개)</th></tr>' +
+      '</thead>' +
+      '<tbody>' +
+        '<tr class="vc-input-row"><td class="vc-check"></td><td class="vc-check"></td><td class="vc-total"></td></tr>' +
+      '</tbody>' +
+    '</table>';
+
+  function buildVehicleCheckTable() {
+    var wrap = document.createElement('div');
+    wrap.innerHTML = VEHICLE_CHECK_TEMPLATE;
+    return wrap.firstElementChild;
+  }
+
   function renderStatusRows(tbody, items) {
     tbody.innerHTML = '';
     items.forEach(function (it) {
@@ -1128,6 +1154,7 @@
       fmtTitleDate(state.selectedDate, merged.dayOfWeek) + '　' + course + '코스 · ' + (cleanDriverName(driver) || '기사 미배정') + ' 세탁물 현황';
     applyCourseColorBlock(wrap.querySelector('tr.doc-title-row'), wrap.querySelector('tr.doc-col-row'), course);
     renderStatusRows(wrap.querySelector('tbody'), items);
+    wrap.appendChild(buildVehicleCheckTable());
     return wrap;
   }
   function buildAddressCourseBlock(course, items, driver, merged) {
@@ -1204,6 +1231,7 @@
       });
     });
     container.appendChild(table);
+    container.appendChild(buildVehicleCheckTable());
 
     var summary = document.createElement('div');
     summary.className = 'closer-summary';
