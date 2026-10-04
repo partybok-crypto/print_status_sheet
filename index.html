@@ -1272,7 +1272,7 @@
     applyCourseColorBlock(wrap.querySelector('tr.doc-title-row'), wrap.querySelector('tr.doc-col-row'), course);
 
     wrap.querySelector('[data-slot="title"]').textContent =
-      fmtTitleDate(state.selectedDate, merged.dayOfWeek) + '　' + course + '코스 · 전체 주소지 (사용 후 폐기)';
+      fmtTitleDate(state.selectedDate, merged.dayOfWeek) + '　' + course + '코스 · ' + (cleanDriverName(merged.drivers[course]) || '기사 미배정') + ' · 전체 주소지 (사용 후 폐기)';
 
     var tbody = wrap.querySelector('tbody');
     tbody.innerHTML = '';
