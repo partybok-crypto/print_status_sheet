@@ -109,6 +109,14 @@
   .primary-doc-btn.selected { background: var(--blue-dark); border-color: var(--blue-dark); color: #fff; }
   .primary-doc-btn.selected .pdb-sub { color: rgba(255,255,255,.85); }
   .primary-doc-btn.selected:hover { background: var(--blue-dark); }
+  /* 출력본과 달라진 내용이 있을 때 눈에 띄게 */
+  .primary-doc-btn.has-changes { border-color: #ea580c; background: #fff7ed; color: #c2410c; }
+  .primary-doc-btn.has-changes .pdb-sub { color: #9a3412; }
+  .primary-doc-btn.has-changes.selected { background: #c2410c; border-color: #c2410c; color: #fff; }
+  .primary-doc-btn.has-changes.selected .pdb-sub { color: rgba(255,255,255,.9); }
+  .pdb-badge { display: none; margin-left: 6px; padding: 1px 9px; border-radius: 999px; font-size: 12.5px; font-weight: 800; background: #ea580c; color: #fff; vertical-align: 2px; }
+  .primary-doc-btn.has-changes .pdb-badge { display: inline-block; }
+  .primary-doc-btn.has-changes.selected .pdb-badge { background: #fff; color: #c2410c; }
 
   /* 기타 출력 — 작은 단독 출력 버튼 4개 */
   .other-doc-head { display: flex; align-items: baseline; gap: 8px; margin-top: 3px; }
@@ -171,6 +179,10 @@
   .status-table.doc-table { width: 210mm; }
   .address-table.doc-table { width: 297mm; }
   .closer-table.doc-table { width: 210mm; }
+  .changes-table th, .changes-table td { font-size: 13pt; }
+  .changes-table td.chg-type { font-weight: 800; }
+  .changes-table td.chg-to { font-weight: 800; color: #b91c1c; }
+  .changes-section-title { font-size: 13pt; font-weight: 800; margin: 6mm 0 2mm; }
   table.doc-table thead { display: table-header-group; }
   table.doc-table th, table.doc-table td {
     border: 1px solid #000; padding: 5px 7px; text-align: center; overflow-wrap: break-word; word-break: break-word;
@@ -292,7 +304,7 @@
 
   /* ================= 인쇄 전용 ================= */
   .print-only { display: none; }
-  #printStatus, #printAddress, #printCloser, #printAddressAll { display: none; }
+  #printStatus, #printAddress, #printCloser, #printAddressAll, #printChanges { display: none; }
 
   @page portraitPage { size: A4 portrait; margin: 8mm; }
   @page landscapePage { size: A4 landscape; margin: 7mm; }
@@ -303,11 +315,12 @@
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
 
     .print-only { display: block !important; }
-    #printStatus, #printAddress, #printCloser, #printAddressAll { display: none !important; }
+    #printStatus, #printAddress, #printCloser, #printAddressAll, #printChanges { display: none !important; }
     body.printing-status #printStatus { display: block !important; page: portraitPage; }
     body.printing-address #printAddress { display: block !important; page: landscapePage; }
     body.printing-closer #printCloser { display: block !important; page: portraitPage; }
     body.printing-address-all #printAddressAll { display: block !important; page: portraitPage; }
+    body.printing-changes #printChanges { display: block !important; page: portraitPage; }
 
     .print-course { break-before: page; page-break-before: always; }
     .print-course:first-child { break-before: auto; page-break-before: auto; }
@@ -363,6 +376,10 @@
             <span class="pdb-title">마감자용 수량표 + 전체주소지</span>
             <span class="pdb-sub">세탁 마감용 · 2개 문서 연속 출력</span>
           </button>
+          <button class="primary-doc-btn" data-doc="changes" id="changesDocBtn">
+            <span class="pdb-title">출력 후 변경내용 <span class="pdb-badge" id="changesBadge"></span></span>
+            <span class="pdb-sub" id="changesSub">출력본과 비교하는 중...</span>
+          </button>
         </div>
 
         <div class="other-doc-head">
@@ -412,6 +429,7 @@
   <div class="doc-page" id="printAddress"></div>
   <div class="doc-page" id="printCloser"></div>
   <div class="doc-page" id="printAddressAll"></div>
+  <div class="doc-page" id="printChanges"></div>
 </div>
 
 <!-- 설정 모달 -->
@@ -507,7 +525,10 @@
     zoomPct: 100,
     isLoading: false,
     isPrinting: false,
-    isResolvingNextBiz: false
+    isResolvingNextBiz: false,
+    snapshot: null,          // 이 배송일의 최종 출력본(서버) {date, courses:[...]}
+    snapshotStatus: 'idle',  // idle | loading | ok | error
+    changes: { items: [], drivers: [], printedAt: '' }
   };
 
   // ================= DOM refs =================
@@ -544,6 +565,7 @@
   var printStatus = $('printStatus');
   var printAddress = $('printAddress');
   var printCloser = $('printCloser');
+  var printChanges = $('printChanges');
   var printAddressAll = $('printAddressAll');
 
   var settingsModal = $('settingsModal');
@@ -718,6 +740,8 @@
   // ================= 데이터 불러오기 (날짜 키 캐시 — 요일 키 절대 사용 안 함) =================
   function clearScreenForDateChange() {
     state.raw = null; state.merged = null; state.draft = null;
+    state.snapshot = null; state.snapshotStatus = 'idle'; state.changes = { items: [], drivers: [], printedAt: '' };
+    updateChangesUI();
     courseGrid.innerHTML = '';
     courseInfoCard.textContent = '데이터를 불러오는 중...';
     previewSurface.innerHTML = '';
@@ -766,6 +790,7 @@
     recomputeMerged();
     determineSelectedCourse();
     renderAll();
+    loadSnapshot(dateIso);
   }
 
   // ================= 병합(원본 + 드래프트) — 관리 화면과 동일한 규칙 =================
@@ -936,17 +961,20 @@
     return '';
   }
   function docLabel(type) {
-    return type === 'address' ? '주소지' : type === 'status' ? '현황지' : type === 'closer' ? '마감자용 수량표' : type === 'all_address' ? '전체 주소지' : type === 'closer_all_address' ? '마감자용 수량표+전체주소지' : '현황지+주소지';
+    return type === 'address' ? '주소지' : type === 'status' ? '현황지' : type === 'closer' ? '마감자용 수량표' : type === 'all_address' ? '전체 주소지' : type === 'closer_all_address' ? '마감자용 수량표+전체주소지' : type === 'changes' ? '출력 후 변경내용' : '현황지+주소지';
   }
 
   function canPrint() {
     if (!state.merged || state.merged.closedDay) return false;
+    if (state.docType === 'changes') return state.changes.items.length + state.changes.drivers.length > 0;
     if (ALWAYS_ALL_DOC_TYPES[state.docType]) return state.merged.courses.length > 0;
     return getCoursesToPrint().length > 0;
   }
 
   function updatePrintButton() {
-    if (state.docType === 'closer') {
+    if (state.docType === 'changes') {
+      printBtnLabel.textContent = '변경내용 인쇄';
+    } else if (state.docType === 'closer') {
       printBtnLabel.textContent = '마감자용 전체 수량표 인쇄';
     } else if (state.docType === 'all_address') {
       printBtnLabel.textContent = '전체 주소지 인쇄';
@@ -1352,6 +1380,16 @@
       var closed = document.createElement('div'); closed.className = 'preview-empty'; closed.textContent = '이 날짜는 휴무일입니다 — 인쇄할 문서가 없습니다.';
       previewSurface.appendChild(closed); return;
     }
+    if (state.docType === 'changes') {
+      var msg = changesEmptyMessage();
+      if (msg) {
+        var note = document.createElement('div'); note.className = 'preview-empty'; note.textContent = msg;
+        previewSurface.appendChild(note); return;
+      }
+      previewSurface.appendChild(buildPageFrame(buildChangesDoc(), true));
+      requestAnimationFrame(fitPreviewPages);
+      return;
+    }
     if (state.docType === 'closer' || state.docType === 'closer_all_address') {
       var closerNode = buildCloserDoc(state.merged.courses.slice(), state.merged);
       previewSurface.appendChild(buildPageFrame(closerNode, true));
@@ -1454,7 +1492,172 @@
       var keys = Object.keys(sigs);
       if (keys.length > 20) delete sigs[keys[0]];
       writeJsonLS(STORAGE_KEYS.snapshotSig, sigs);
+      // 방금 출력한 내용이 새 기준이 되므로 변경내용을 다시 계산한다.
+      if (snap.date === isoDate(state.selectedDate)) loadSnapshot(snap.date);
     }).catch(function () { queueSnapshot(snap); });
+  }
+
+  // ================= 출력 후 변경내용 (마지막 출력본 vs 지금 화면) =================
+  var SNAPSHOT_TIMEOUT_MS = 12000;
+
+  function loadSnapshot(dateIso) {
+    state.snapshotStatus = 'loading';
+    updateChangesUI();
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, SNAPSHOT_TIMEOUT_MS);
+    return fetch(SNAPSHOT_URL + '?date=' + encodeURIComponent(dateIso), { signal: controller.signal })
+      .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+      .then(function (data) {
+        if (isoDate(state.selectedDate) !== dateIso) return;  // 그 사이 날짜를 바꿨다
+        if (!data || !data.ok) throw new Error('bad response');
+        state.snapshot = data;
+        state.snapshotStatus = 'ok';
+        recomputeChanges();
+      })
+      .catch(function () {
+        if (isoDate(state.selectedDate) !== dateIso) return;
+        state.snapshot = null; state.snapshotStatus = 'error';
+        state.changes = { items: [], drivers: [], printedAt: '' };
+      })
+      .then(function () {
+        clearTimeout(timer);
+        updateChangesUI();
+        if (state.docType === 'changes') { renderPreview(); updatePrintButton(); }
+      });
+  }
+
+  var CHANGE_TYPE_ORDER = { '코스 이동': 0, '추가': 1, '제외': 2, '순서 변경': 3 };
+
+  function recomputeChanges() {
+    var out = { items: [], drivers: [], printedAt: '' };
+    var snap = state.snapshot, merged = state.merged;
+    if (!snap || !snap.courses || !snap.courses.length || !merged || merged.closedDay) { state.changes = out; return; }
+
+    var base = {}, baseCourses = {};
+    snap.courses.forEach(function (c) {
+      baseCourses[c.course] = c;
+      if (c.printed_at && c.printed_at > out.printedAt) out.printedAt = c.printed_at;
+      (c.items || []).forEach(function (it) { if (it.no) base[it.no] = { course: c.course, seq: it.seq, name: it.name }; });
+    });
+    var now = {};
+    merged.courses.forEach(function (course) {
+      (merged.byCourse[course] || []).forEach(function (it) {
+        if (it.companyNumber) now[it.companyNumber] = { course: course, seq: it.deliveryOrder, name: it.nickname };
+      });
+    });
+
+    // 같은 코스에 그대로 남은 업체끼리의 상대 순서(1등, 2등...)로 "순서 변경"을 판단한다.
+    // 중간 업체 하나가 빠지거나 끼어들 때 뒤 업체 번호가 전부 밀려도 순서 변경으로 치지 않기 위해서다.
+    var rankBase = {}, rankNow = {};
+    Object.keys(baseCourses).forEach(function (course) {
+      var common = (baseCourses[course].items || []).filter(function (it) { return it.no && now[it.no] && now[it.no].course === course; });
+      common.forEach(function (it, i) { rankBase[it.no] = i; });
+      var nowCommon = (merged.byCourse[course] || []).filter(function (it) { return base[it.companyNumber] && base[it.companyNumber].course === course; });
+      nowCommon.forEach(function (it, i) { rankNow[it.companyNumber] = i; });
+    });
+
+    Object.keys(now).forEach(function (no) {
+      var n = now[no], b = base[no];
+      if (b) {
+        if (b.course !== n.course) out.items.push({ no: no, name: n.name || b.name, type: '코스 이동', from: b.seq || b.course, to: n.seq || n.course });
+        else if (rankBase[no] !== rankNow[no]) out.items.push({ no: no, name: n.name || b.name, type: '순서 변경', from: b.seq, to: n.seq });
+      } else if (baseCourses[n.course]) {
+        out.items.push({ no: no, name: n.name, type: '추가', from: '-', to: n.seq || n.course });
+      }
+    });
+    Object.keys(base).forEach(function (no) {
+      if (!now[no]) out.items.push({ no: no, name: base[no].name, type: '제외', from: base[no].seq || base[no].course, to: '제외' });
+    });
+    out.items.sort(function (a, b) {
+      return (CHANGE_TYPE_ORDER[a.type] - CHANGE_TYPE_ORDER[b.type]) || (parseInt(a.no, 10) - parseInt(b.no, 10) || 0) || (a.no < b.no ? -1 : a.no > b.no ? 1 : 0);
+    });
+
+    snap.courses.forEach(function (c) {
+      if (merged.courses.indexOf(c.course) === -1) return;
+      var was = cleanDriverName(c.driver), is = cleanDriverName(merged.drivers[c.course]);
+      if (was !== is) out.drivers.push({ course: c.course, from: was || '미배정', to: is || '미배정' });
+    });
+    state.changes = out;
+  }
+
+  function changesEmptyMessage() {
+    if (state.snapshotStatus === 'loading' || state.snapshotStatus === 'idle') return '출력본과 비교하는 중입니다...';
+    if (state.snapshotStatus === 'error') return '출력본을 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 눌러주세요.';
+    if (!state.snapshot || !state.snapshot.courses || !state.snapshot.courses.length) {
+      return '이 배송일의 출력본이 아직 없습니다. 현황지나 마감자용 수량표를 출력하면 그 내용이 기준으로 저장됩니다.';
+    }
+    if (!state.changes.items.length && !state.changes.drivers.length) return '마지막 출력본과 비교해 달라진 내용이 없습니다.';
+    return '';
+  }
+
+  function updateChangesUI() {
+    var btn = document.getElementById('changesDocBtn');
+    if (!btn) return;
+    var badge = document.getElementById('changesBadge'), sub = document.getElementById('changesSub');
+    var n = state.changes.items.length + state.changes.drivers.length;
+    var has = state.snapshotStatus === 'ok' && n > 0;
+    btn.classList.toggle('has-changes', has);
+    if (has) {
+      badge.textContent = '변경내용 있음 ' + n + '건';
+      sub.textContent = '마지막 출력(' + state.changes.printedAt.replace(/^\d{4}-/, '') + ') 이후 달라진 곳 · 눌러서 확인';
+    } else {
+      badge.textContent = '';
+      sub.textContent = (state.snapshotStatus === 'loading' || state.snapshotStatus === 'idle') ? '출력본과 비교하는 중...'
+        : state.snapshotStatus === 'error' ? '출력본 확인 실패 · 눌러서 다시 시도'
+        : (!state.snapshot || !state.snapshot.courses.length) ? '출력본 없음 · 출력하면 기준으로 저장'
+        : '마지막 출력본과 같음 · 변경 없음';
+    }
+  }
+
+  function escHtml(v) {
+    return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function buildChangesDoc() {
+    var container = document.createElement('div');
+    container.className = 'closer-doc changes-doc';
+    var c = state.changes;
+    var box = document.createElement('div');
+    box.className = 'closer-header-box';
+    box.innerHTML =
+      '<div class="closer-kicker">현황지 출력 후 변경</div>' +
+      '<div class="closer-main-title">변경내용 확인표</div>' +
+      '<div class="closer-meta-line" data-slot="meta"></div>';
+    box.querySelector('[data-slot="meta"]').textContent =
+      fmtBigDate(state.selectedDate) + ' · 출력본 ' + c.printedAt + ' 기준 · 변경 ' + (c.items.length + c.drivers.length) + '건 · 인쇄 ' + fmtPrintTime(new Date());
+    container.appendChild(box);
+
+    if (c.items.length) {
+      var wrap = document.createElement('div');
+      var rows = c.items.map(function (it) {
+        return '<tr><td class="col-companyno">' + escHtml(it.no) + '</td><td class="col-nickname">' + escHtml(it.name) + '</td>' +
+          '<td class="chg-type">' + escHtml(it.type) + '</td><td>' + escHtml(it.from) + '</td><td class="chg-to">' + escHtml(it.to) + '</td></tr>';
+      }).join('');
+      wrap.innerHTML =
+        '<table class="doc-table closer-table changes-table"><colgroup><col style="width:14%"><col style="width:28%"><col style="width:18%"><col style="width:20%"><col style="width:20%"></colgroup>' +
+        '<thead><tr class="closer-col-row"><th>업체번호</th><th>약칭</th><th>구분</th><th>출력본</th><th>지금</th></tr></thead><tbody>' + rows + '</tbody></table>';
+      container.appendChild(wrap.firstElementChild);
+    }
+    if (c.drivers.length) {
+      var t = document.createElement('div'); t.className = 'changes-section-title'; t.textContent = '기사 변경';
+      container.appendChild(t);
+      var wrap2 = document.createElement('div');
+      wrap2.innerHTML =
+        '<table class="doc-table closer-table changes-table"><colgroup><col style="width:20%"><col style="width:40%"><col style="width:40%"></colgroup>' +
+        '<thead><tr class="closer-col-row"><th>코스</th><th>출력본 기사</th><th>지금 기사</th></tr></thead><tbody>' +
+        c.drivers.map(function (d) { return '<tr><td class="col-companyno">' + escHtml(d.course) + '</td><td>' + escHtml(d.from) + '</td><td class="chg-to">' + escHtml(d.to) + '</td></tr>'; }).join('') +
+        '</tbody></table>';
+      container.appendChild(wrap2.firstElementChild);
+    }
+    return container;
+  }
+
+  function printChangesDoc() {
+    if (!canPrint()) return;
+    printChanges.innerHTML = '';
+    printChanges.appendChild(buildChangesDoc());
+    // 변경내용 확인표는 출력본(기준)을 남기지 않는다 - 기준은 현황지/마감자용을 출력할 때만 바뀐다.
+    doPrint('printing-changes');
   }
 
   function recordPrint(kind, courses) {
@@ -1537,6 +1740,7 @@
 
   btnPrintMain.addEventListener('click', function () {
     if (!canPrint()) return;
+    if (state.docType === 'changes') { printChangesDoc(); return; }
     if (state.docType === 'status_address') { guideModal.classList.add('show'); return; }
     if (state.docType === 'closer') { printCloserDoc(); return; }
     if (state.docType === 'all_address') { printAddressAllDoc(); return; }
