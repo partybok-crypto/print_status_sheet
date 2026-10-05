@@ -467,8 +467,13 @@
   var STORAGE_KEYS = {
     gasUrl: 'ysc_gas_url_v2',
     printHistory: 'ysc_print_history_v1',
-    lastCourse: 'ysc_field_last_course_v1'
+    lastCourse: 'ysc_field_last_course_v1',
+    snapshotSig: 'ysc_snapshot_sig_v1',
+    snapshotPending: 'ysc_snapshot_pending_v1'
   };
+  // 현황지/마감자용을 출력하면 그 내용을 포장기록 서버(현장입력 시트의 '현황지출력본' 탭)에 한 벌 남긴다.
+  // 원본 시트에는 쓰지 않는다. 저장이 실패해도 인쇄에는 영향이 없고, 다음 출력/접속 때 다시 보낸다.
+  var SNAPSHOT_URL = 'https://yuseong-packing-production.up.railway.app/api/status-snapshot';
   var DRAFT_KEY_PREFIX = 'ysc_print_draft_';
   var DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbx4L6ZiXjjKkQPo1vcGxp5iuP7MktAo30gn-fCRAQPCdrRb1VQ_yijQ6hvS21NoIrvM/exec';
   var FETCH_TIMEOUT_MS = 30000;
@@ -1391,7 +1396,69 @@
   });
 
   // ================= 인쇄 기록 (관리 화면 출력기록 탭과 공유) =================
+  // ================= 출력본 남기기 (마감 때 출력한 현황지를 서버에 한 벌 저장) =================
+  function readJsonLS(key, fallback) {
+    try { var v = JSON.parse(localStorage.getItem(key) || 'null'); return v == null ? fallback : v; } catch (e) { return fallback; }
+  }
+  function writeJsonLS(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
+
+  function buildSnapshot(kind, courses) {
+    var m = state.merged;
+    if (!m || m.closedDay || !courses || !courses.length) return null;
+    var out = [];
+    courses.forEach(function (course) {
+      var arr = (m.byCourse && m.byCourse[course]) || [];
+      if (!arr.length) return;
+      out.push({
+        course: course,
+        driver: (m.drivers && m.drivers[course]) || '',
+        items: arr.map(function (it) { return { seq: it.deliveryOrder || '', no: it.companyNumber || '', name: it.nickname || '' }; })
+      });
+    });
+    if (!out.length) return null;
+    return { date: isoDate(state.selectedDate), kind: kind, courses: out };
+  }
+
+  function postSnapshot(snap) {
+    // text/plain으로 보내면 브라우저가 사전 확인(preflight) 없이 바로 전송한다.
+    return fetch(SNAPSHOT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(snap) })
+      .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); });
+  }
+
+  function flushPendingSnapshots() {
+    var pending = readJsonLS(STORAGE_KEYS.snapshotPending, []);
+    if (!pending.length) return;
+    writeJsonLS(STORAGE_KEYS.snapshotPending, []);
+    pending.forEach(function (snap) {
+      postSnapshot(snap).catch(function () { queueSnapshot(snap); });
+    });
+  }
+  function queueSnapshot(snap) {
+    var pending = readJsonLS(STORAGE_KEYS.snapshotPending, []);
+    pending.push(snap);
+    if (pending.length > 5) pending = pending.slice(pending.length - 5);
+    writeJsonLS(STORAGE_KEYS.snapshotPending, pending);
+  }
+
+  function saveSnapshot(kind, courses) {
+    if (kind !== 'status' && kind !== 'closer') return;
+    var snap = buildSnapshot(kind, courses);
+    if (!snap) return;
+    // 같은 날·같은 문서·같은 내용을 연속으로 다시 출력하면 중복으로 쌓지 않는다.
+    var sig = snap.date + '|' + kind + '|' + JSON.stringify(snap.courses);
+    var sigs = readJsonLS(STORAGE_KEYS.snapshotSig, {});
+    var sigKey = snap.date + '|' + kind;
+    if (sigs[sigKey] === sig) return;
+    postSnapshot(snap).then(function () {
+      sigs[sigKey] = sig;
+      var keys = Object.keys(sigs);
+      if (keys.length > 20) delete sigs[keys[0]];
+      writeJsonLS(STORAGE_KEYS.snapshotSig, sigs);
+    }).catch(function () { queueSnapshot(snap); });
+  }
+
   function recordPrint(kind, courses) {
+    saveSnapshot(kind, courses);
     try {
       var list = JSON.parse(localStorage.getItem(STORAGE_KEYS.printHistory) || '[]');
       list.push({ date: isoDate(state.selectedDate), kind: kind, courses: courses, at: new Date().toISOString() });
@@ -1528,6 +1595,7 @@
     refreshDateDisplay();
     clearScreenForDateChange();
     loadDayData(false);
+    flushPendingSnapshots();
   }
 
   init();
