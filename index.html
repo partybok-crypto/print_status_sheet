@@ -114,9 +114,9 @@
   .primary-doc-btn.has-changes .pdb-sub { color: #9a3412; }
   .primary-doc-btn.has-changes.selected { background: #c2410c; border-color: #c2410c; color: #fff; }
   .primary-doc-btn.has-changes.selected .pdb-sub { color: rgba(255,255,255,.9); }
-  .pdb-badge { display: none; margin-left: 6px; padding: 1px 9px; border-radius: 999px; font-size: 12.5px; font-weight: 800; background: #ea580c; color: #fff; vertical-align: 2px; }
-  .primary-doc-btn.has-changes .pdb-badge { display: inline-block; }
-  .primary-doc-btn.has-changes.selected .pdb-badge { background: #fff; color: #c2410c; }
+  .pdb-badge { margin-left: 4px; font-size: 14px; font-weight: 800; color: #64748b; }
+  .primary-doc-btn.has-changes .pdb-badge { color: #c2410c; }
+  .primary-doc-btn.selected .pdb-badge { color: rgba(255,255,255,.9); }
 
   /* 기타 출력 — 작은 단독 출력 버튼 4개 */
   .other-doc-head { display: flex; align-items: baseline; gap: 8px; margin-top: 3px; }
@@ -377,7 +377,7 @@
             <span class="pdb-sub">세탁 마감용 · 2개 문서 연속 출력</span>
           </button>
           <button class="primary-doc-btn" data-doc="changes" id="changesDocBtn">
-            <span class="pdb-title">출력 후 변경내용 <span class="pdb-badge" id="changesBadge"></span></span>
+            <span class="pdb-title">출력 후 라벨코스 변경내역 <span class="pdb-badge" id="changesBadge"></span></span>
             <span class="pdb-sub" id="changesSub">출력본과 비교하는 중...</span>
           </button>
         </div>
@@ -399,6 +399,7 @@
         <button class="print-btn" id="btnPrintMain" disabled><span>🖨</span><span id="printBtnLabel">인쇄</span></button>
         <div class="print-sub-row">
           <button class="sub-btn" id="btnEdit"><span>✏</span>내용 수정</button>
+          <button class="sub-btn" id="btnChangesTest"><span>🧪</span>변경내역 테스트 출력</button>
         </div>
         <div class="print-caption">미리보기와 동일하게 출력됩니다</div>
       </div>
@@ -528,7 +529,8 @@
     isResolvingNextBiz: false,
     snapshot: null,          // 이 배송일의 최종 출력본(서버) {date, courses:[...]}
     snapshotStatus: 'idle',  // idle | loading | ok | error
-    changes: { items: [], drivers: [], printedAt: '' }
+    changes: { items: [], drivers: [], printedAt: '' },
+    testMode: false          // true면 가짜 예시 변경내역으로 화면/인쇄 모양만 확인한다(저장·비교 없음)
   };
 
   // ================= DOM refs =================
@@ -895,7 +897,7 @@
   }
   var ALWAYS_ALL_DOC_TYPES = { closer: true, all_address: true, closer_all_address: true };
 
-  function selectDocType(type) { state.docType = type; renderAll(); }
+  function selectDocType(type) { state.docType = type; if (type !== 'changes') state.testMode = false; renderAll(); }
 
   // ================= 렌더 총괄 =================
   function renderAll() {
@@ -961,19 +963,19 @@
     return '';
   }
   function docLabel(type) {
-    return type === 'address' ? '주소지' : type === 'status' ? '현황지' : type === 'closer' ? '마감자용 수량표' : type === 'all_address' ? '전체 주소지' : type === 'closer_all_address' ? '마감자용 수량표+전체주소지' : type === 'changes' ? '출력 후 변경내용' : '현황지+주소지';
+    return type === 'address' ? '주소지' : type === 'status' ? '현황지' : type === 'closer' ? '마감자용 수량표' : type === 'all_address' ? '전체 주소지' : type === 'closer_all_address' ? '마감자용 수량표+전체주소지' : type === 'changes' ? '출력 후 라벨코스 변경내역' : '현황지+주소지';
   }
 
   function canPrint() {
     if (!state.merged || state.merged.closedDay) return false;
-    if (state.docType === 'changes') return state.changes.items.length + state.changes.drivers.length > 0;
+    if (state.docType === 'changes') return state.testMode || state.changes.items.length + state.changes.drivers.length > 0;
     if (ALWAYS_ALL_DOC_TYPES[state.docType]) return state.merged.courses.length > 0;
     return getCoursesToPrint().length > 0;
   }
 
   function updatePrintButton() {
     if (state.docType === 'changes') {
-      printBtnLabel.textContent = '변경내용 인쇄';
+      printBtnLabel.textContent = state.testMode ? '변경내역 인쇄 (테스트)' : '변경내역 인쇄';
     } else if (state.docType === 'closer') {
       printBtnLabel.textContent = '마감자용 전체 수량표 인쇄';
     } else if (state.docType === 'all_address') {
@@ -1492,12 +1494,12 @@
       var keys = Object.keys(sigs);
       if (keys.length > 20) delete sigs[keys[0]];
       writeJsonLS(STORAGE_KEYS.snapshotSig, sigs);
-      // 방금 출력한 내용이 새 기준이 되므로 변경내용을 다시 계산한다.
+      // 방금 출력한 내용이 새 기준이 되므로 변경내역을 다시 계산한다.
       if (snap.date === isoDate(state.selectedDate)) loadSnapshot(snap.date);
     }).catch(function () { queueSnapshot(snap); });
   }
 
-  // ================= 출력 후 변경내용 (마지막 출력본 vs 지금 화면) =================
+  // ================= 출력 후 변경내역 (마지막 출력본 vs 지금 화면) =================
   var SNAPSHOT_TIMEOUT_MS = 12000;
 
   function loadSnapshot(dateIso) {
@@ -1525,6 +1527,20 @@
         if (state.docType === 'changes') { renderPreview(); updatePrintButton(); }
       });
   }
+
+  // 인쇄 모양 확인용 예시(실제 데이터가 아니다). 변경내역이 하나도 없는 날에도 출력물이 어떻게 나오는지 볼 수 있다.
+  var SAMPLE_CHANGES = {
+    printedAt: '2026-10-05 17:40:12',
+    items: [
+      { no: '24', name: '헬스코인', type: '코스 이동', from: 'B-02', to: 'C-01' },
+      { no: '153', name: '비르덴', type: '코스 이동', from: 'E-03', to: 'C-05' },
+      { no: '120', name: '더부즈', type: '추가', from: '-', to: 'F-13' },
+      { no: '26', name: '보그', type: '제외', from: 'F-01', to: '제외' },
+      { no: '61', name: '묘우', type: '순서 변경', from: 'F-05', to: 'F-02' }
+    ],
+    drivers: [{ course: 'F', from: '홍길동', to: '김철수' }]
+  };
+  function activeChanges() { return state.testMode ? SAMPLE_CHANGES : state.changes; }
 
   var CHANGE_TYPE_ORDER = { '코스 이동': 0, '추가': 1, '제외': 2, '순서 변경': 3 };
 
@@ -1581,6 +1597,7 @@
   }
 
   function changesEmptyMessage() {
+    if (state.testMode) return '';
     if (state.snapshotStatus === 'loading' || state.snapshotStatus === 'idle') return '출력본과 비교하는 중입니다...';
     if (state.snapshotStatus === 'error') return '출력본을 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 눌러주세요.';
     if (!state.snapshot || !state.snapshot.courses || !state.snapshot.courses.length) {
@@ -1598,14 +1615,15 @@
     var has = state.snapshotStatus === 'ok' && n > 0;
     btn.classList.toggle('has-changes', has);
     if (has) {
-      badge.textContent = '변경내용 있음 ' + n + '건';
-      sub.textContent = '마지막 출력(' + state.changes.printedAt.replace(/^\d{4}-/, '') + ') 이후 달라진 곳 · 눌러서 확인';
+      badge.textContent = '(있습니다.)';
+      sub.textContent = '마지막 출력(' + state.changes.printedAt.replace(/^\d{4}-/, '') + ') 이후 ' + n + '건 달라짐 · 눌러서 확인';
     } else {
-      badge.textContent = '';
+      badge.textContent = (state.snapshotStatus === 'loading' || state.snapshotStatus === 'idle') ? ''
+        : state.snapshotStatus === 'error' ? '(확인 실패)' : '(없습니다.)';
       sub.textContent = (state.snapshotStatus === 'loading' || state.snapshotStatus === 'idle') ? '출력본과 비교하는 중...'
         : state.snapshotStatus === 'error' ? '출력본 확인 실패 · 눌러서 다시 시도'
         : (!state.snapshot || !state.snapshot.courses.length) ? '출력본 없음 · 출력하면 기준으로 저장'
-        : '마지막 출력본과 같음 · 변경 없음';
+        : '마지막 출력본과 같음';
     }
   }
 
@@ -1616,12 +1634,12 @@
   function buildChangesDoc() {
     var container = document.createElement('div');
     container.className = 'closer-doc changes-doc';
-    var c = state.changes;
+    var c = activeChanges();
     var box = document.createElement('div');
     box.className = 'closer-header-box';
     box.innerHTML =
-      '<div class="closer-kicker">현황지 출력 후 변경</div>' +
-      '<div class="closer-main-title">변경내용 확인표</div>' +
+      '<div class="closer-kicker">' + (state.testMode ? '테스트 출력 · 예시 내용입니다 (실제 데이터 아님)' : '현황지 출력 후') + '</div>' +
+      '<div class="closer-main-title">라벨코스 변경내역</div>' +
       '<div class="closer-meta-line" data-slot="meta"></div>';
     box.querySelector('[data-slot="meta"]').textContent =
       fmtBigDate(state.selectedDate) + ' · 출력본 ' + c.printedAt + ' 기준 · 변경 ' + (c.items.length + c.drivers.length) + '건 · 인쇄 ' + fmtPrintTime(new Date());
@@ -1656,7 +1674,7 @@
     if (!canPrint()) return;
     printChanges.innerHTML = '';
     printChanges.appendChild(buildChangesDoc());
-    // 변경내용 확인표는 출력본(기준)을 남기지 않는다 - 기준은 현황지/마감자용을 출력할 때만 바뀐다.
+    // 변경내역 확인표는 출력본(기준)을 남기지 않는다 - 기준은 현황지/마감자용을 출력할 때만 바뀐다.
     doPrint('printing-changes');
   }
 
@@ -1737,6 +1755,12 @@
     var bodyClass = kind === 'status' ? 'printing-status' : 'printing-address';
     doPrint(bodyClass, function () { recordPrint(kind, getCoursesToPrint()); });
   }
+
+  var btnChangesTest = $('btnChangesTest');
+  btnChangesTest.addEventListener('click', function () {
+    state.docType = 'changes'; state.testMode = true;
+    renderAll();
+  });
 
   btnPrintMain.addEventListener('click', function () {
     if (!canPrint()) return;
