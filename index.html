@@ -41,6 +41,9 @@
   .app-header-left { font-size: 22px; font-weight: 900; color: var(--navy); letter-spacing: -.2px; }
   .app-header-right { display: flex; align-items: center; gap: 18px; }
   .conn-text { font-size: 14.5px; font-weight: 700; }
+  .lang-switch { display: flex; gap: 4px; }
+  .lang-btn { border: 1px solid #cfd6e0; background: #fff; color: #566; border-radius: 8px; padding: 6px 12px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .lang-btn.active { background: #1f3a68; border-color: #1f3a68; color: #fff; }
   .conn-text.ok { color: var(--green); }
   .conn-text.err { color: var(--red); }
   .conn-text.pending { color: var(--text-sub); }
@@ -334,10 +337,15 @@
 
 <div class="field-shell no-print">
   <header class="app-header">
-    <div class="app-header-left">유성클리닝 현황지 출력</div>
+    <div class="app-header-left" data-i18n="appTitle">유성클리닝 현황지 출력</div>
     <div class="app-header-right">
+      <div class="lang-switch" id="langSwitch">
+        <button class="lang-btn" data-lang="ko">한국어</button>
+        <button class="lang-btn" data-lang="id">Bahasa Indonesia</button>
+        <button class="lang-btn" data-lang="vi">Tiếng Việt</button>
+      </div>
       <span class="conn-text pending" id="connText">연결 확인 중</span>
-      <button class="icon-btn" id="btnSettings" title="설정">⚙</button>
+      <button class="icon-btn" id="btnSettings" title="설정" data-i18n-title="settings">⚙</button>
     </div>
   </header>
 
@@ -346,70 +354,70 @@
 
       <div class="inline-error" id="inlineError">
         <span id="inlineErrorText"></span>
-        <button id="btnRetry">재시도</button>
+        <button id="btnRetry" data-i18n="retry">재시도</button>
       </div>
 
       <div class="field-section">
-        <div class="section-label">1. 날짜 선택</div>
+        <div class="section-label" data-i18n="sec1">1. 날짜 선택</div>
         <button class="date-box" id="dateBox"><span class="ic">📅</span><span id="dateBoxText">-</span></button>
         <input type="date" id="datePickerHidden" class="visually-hidden">
         <div class="date-sub-row">
-          <button class="sub-btn" id="btnToday"><span>📅</span>오늘</button>
-          <button class="sub-btn" id="btnNextBiz"><span>📅</span>다음 영업일</button>
+          <button class="sub-btn" id="btnToday"><span>📅</span><span data-i18n="today">오늘</span></button>
+          <button class="sub-btn" id="btnNextBiz"><span>📅</span><span data-i18n="nextBiz">다음 영업일</span></button>
         </div>
       </div>
 
       <div class="field-section">
-        <div class="section-label">2. 코스 선택</div>
+        <div class="section-label" data-i18n="sec2">2. 코스 선택</div>
         <div class="course-grid" id="courseGrid"></div>
         <div class="info-card" id="courseInfoCard">데이터를 불러오는 중...</div>
       </div>
 
       <div class="field-section">
-        <div class="section-label">3. 자주 사용하는 출력</div>
+        <div class="section-label" data-i18n="sec3">3. 자주 사용하는 출력</div>
         <div class="primary-doc-list" id="primaryDocList">
           <button class="primary-doc-btn" data-doc="status_address">
-            <span class="pdb-title">현황지 + 주소지</span>
-            <span class="pdb-sub">배송기사용 · 2개 문서 연속 출력</span>
+            <span class="pdb-title" data-i18n="pdbStatusAddr">현황지 + 주소지</span>
+            <span class="pdb-sub" data-i18n="pdbStatusAddrSub">배송기사용 · 2개 문서 연속 출력</span>
           </button>
           <button class="primary-doc-btn" data-doc="closer_all_address">
-            <span class="pdb-title">마감자용 수량표 + 전체주소지</span>
-            <span class="pdb-sub">세탁 마감용 · 2개 문서 연속 출력</span>
+            <span class="pdb-title" data-i18n="pdbCloserAll">마감자용 수량표 + 전체주소지</span>
+            <span class="pdb-sub" data-i18n="pdbCloserAllSub">세탁 마감용 · 2개 문서 연속 출력</span>
           </button>
           <button class="primary-doc-btn" data-doc="changes" id="changesDocBtn">
-            <span class="pdb-title">출력 후 라벨코스 변경내역 <span class="pdb-badge" id="changesBadge"></span></span>
+            <span class="pdb-title"><span data-i18n="pdbChanges">출력 후 라벨코스 변경내역</span> <span class="pdb-badge" id="changesBadge"></span></span>
             <span class="pdb-sub" id="changesSub">출력본과 비교하는 중...</span>
           </button>
         </div>
 
         <div class="other-doc-head">
-          <span class="other-doc-title">기타 출력</span>
-          <span class="other-doc-sub">필요할 때만 선택하세요</span>
+          <span class="other-doc-title" data-i18n="otherTitle">기타 출력</span>
+          <span class="other-doc-sub" data-i18n="otherSub">필요할 때만 선택하세요</span>
         </div>
         <div class="other-doc-grid" id="otherDocGrid">
-          <button class="other-doc-btn" data-doc="address">주소지만</button>
-          <button class="other-doc-btn" data-doc="status">현황지만</button>
-          <button class="other-doc-btn" data-doc="closer">마감자용 수량표만</button>
-          <button class="other-doc-btn" data-doc="all_address">전체주소지만</button>
+          <button class="other-doc-btn" data-doc="address" data-i18n="odAddress">주소지만</button>
+          <button class="other-doc-btn" data-doc="status" data-i18n="odStatus">현황지만</button>
+          <button class="other-doc-btn" data-doc="closer" data-i18n="odCloser">마감자용 수량표만</button>
+          <button class="other-doc-btn" data-doc="all_address" data-i18n="odAllAddr">전체주소지만</button>
         </div>
       </div>
 
       <div class="field-section print-section">
-        <div class="section-label">4. 인쇄</div>
+        <div class="section-label" data-i18n="sec4">4. 인쇄</div>
         <button class="print-btn" id="btnPrintMain" disabled><span>🖨</span><span id="printBtnLabel">인쇄</span></button>
         <div class="print-sub-row">
-          <button class="sub-btn" id="btnEdit"><span>✏</span>내용 수정</button>
-          <button class="sub-btn" id="btnChangesTest"><span>🧪</span>변경내역 테스트 출력</button>
+          <button class="sub-btn" id="btnEdit"><span>✏</span><span data-i18n="edit">내용 수정</span></button>
+          <button class="sub-btn" id="btnChangesTest"><span>🧪</span><span data-i18n="changesTest">변경내역 테스트 출력</span></button>
         </div>
-        <div class="print-caption">미리보기와 동일하게 출력됩니다</div>
+        <div class="print-caption" data-i18n="caption">미리보기와 동일하게 출력됩니다</div>
       </div>
 
-      <button class="admin-open-btn" id="btnOpenAdmin">🔗 관리·편집 화면 열기</button>
+      <button class="admin-open-btn" id="btnOpenAdmin"><span data-i18n="openAdmin">🔗 관리·편집 화면 열기</span></button>
     </aside>
 
     <main class="right-panel">
       <div class="preview-head">
-        <div class="preview-title">인쇄 미리보기</div>
+        <div class="preview-title" data-i18n="previewTitle">인쇄 미리보기</div>
         <div class="preview-badges" id="previewBadges"></div>
         <div class="zoom-controls">
           <button id="zoomOut">−</button>
@@ -436,14 +444,14 @@
 <!-- 설정 모달 -->
 <div class="modal-overlay no-print" id="settingsModal">
   <div class="modal-box">
-    <div class="modal-title">설정</div>
+    <div class="modal-title" data-i18n="settings">설정</div>
     <div class="modal-field">
       <label>GAS 배포 URL</label>
       <input id="gasUrlInput" type="text">
     </div>
     <div class="modal-actions">
-      <button class="cancel" id="settingsCancel">닫기</button>
-      <button class="confirm" id="settingsSave">저장</button>
+      <button class="cancel" id="settingsCancel" data-i18n="close">닫기</button>
+      <button class="confirm" id="settingsSave" data-i18n="save">저장</button>
     </div>
   </div>
 </div>
@@ -451,14 +459,14 @@
 <!-- 현황지+주소지 인쇄 순서 안내 모달 -->
 <div class="modal-overlay no-print" id="guideModal">
   <div class="modal-box">
-    <div class="modal-title">인쇄 순서 안내</div>
-    <div class="modal-body">현황지와 주소지를 각각 안정적으로 출력합니다. 아래 순서대로 눌러주세요.</div>
+    <div class="modal-title" data-i18n="guideTitle">인쇄 순서 안내</div>
+    <div class="modal-body" data-i18n="guideBody">현황지와 주소지를 각각 안정적으로 출력합니다. 아래 순서대로 눌러주세요.</div>
     <div class="guide-steps">
-      <button id="guideStatusBtn">1. 현황지 인쇄</button>
-      <button id="guideAddressBtn">2. 주소지 인쇄</button>
+      <button id="guideStatusBtn" data-i18n="guideStep1">1. 현황지 인쇄</button>
+      <button id="guideAddressBtn" data-i18n="guideStep2">2. 주소지 인쇄</button>
     </div>
     <div class="modal-actions">
-      <button class="cancel" id="guideClose">닫기</button>
+      <button class="cancel" id="guideClose" data-i18n="close">닫기</button>
     </div>
   </div>
 </div>
@@ -466,14 +474,14 @@
 <!-- 마감자용 수량표+전체주소지 인쇄 순서 안내 모달 -->
 <div class="modal-overlay no-print" id="closerAllGuideModal">
   <div class="modal-box">
-    <div class="modal-title">세탁 마감용 문서 출력</div>
-    <div class="modal-body">1. 마감자용 수량표<br>2. 전체주소지<br><br>두 문서를 순서대로 출력해주세요.</div>
+    <div class="modal-title" data-i18n="closerTitle">세탁 마감용 문서 출력</div>
+    <div class="modal-body" data-i18n-html="closerBody">1. 마감자용 수량표<br>2. 전체주소지<br><br>두 문서를 순서대로 출력해주세요.</div>
     <div class="guide-steps">
-      <button id="closerAllStep1Btn">1. 마감자용 수량표 인쇄</button>
-      <button id="closerAllStep2Btn">2. 전체주소지 인쇄</button>
+      <button id="closerAllStep1Btn" data-i18n="closerStep1">1. 마감자용 수량표 인쇄</button>
+      <button id="closerAllStep2Btn" data-i18n="closerStep2">2. 전체주소지 인쇄</button>
     </div>
     <div class="modal-actions">
-      <button class="confirm" id="closerAllDone">출력 완료</button>
+      <button class="confirm" id="closerAllDone" data-i18n="closerDone">출력 완료</button>
     </div>
   </div>
 </div>
@@ -481,6 +489,135 @@
 <script>
 (function () {
   'use strict';
+
+  // ================= 메뉴 언어(한국어 / 인도네시아어 / 베트남어) — 화면 메뉴만 번역, 출력 문서는 한국어 그대로 =================
+  var I18N = {
+    ko: {
+      appTitle: '유성클리닝 현황지 출력', settings: '설정', retry: '재시도', close: '닫기', save: '저장',
+      sec1: '1. 날짜 선택', sec2: '2. 코스 선택', sec3: '3. 자주 사용하는 출력', sec4: '4. 인쇄',
+      today: '오늘', nextBiz: '다음 영업일',
+      pdbStatusAddr: '현황지 + 주소지', pdbStatusAddrSub: '배송기사용 · 2개 문서 연속 출력',
+      pdbCloserAll: '마감자용 수량표 + 전체주소지', pdbCloserAllSub: '세탁 마감용 · 2개 문서 연속 출력',
+      pdbChanges: '출력 후 라벨코스 변경내역',
+      otherTitle: '기타 출력', otherSub: '필요할 때만 선택하세요',
+      odAddress: '주소지만', odStatus: '현황지만', odCloser: '마감자용 수량표만', odAllAddr: '전체주소지만',
+      edit: '내용 수정', changesTest: '변경내역 테스트 출력', caption: '미리보기와 동일하게 출력됩니다',
+      openAdmin: '🔗 관리·편집 화면 열기', previewTitle: '인쇄 미리보기',
+      guideTitle: '인쇄 순서 안내', guideBody: '현황지와 주소지를 각각 안정적으로 출력합니다. 아래 순서대로 눌러주세요.',
+      guideStep1: '1. 현황지 인쇄', guideStep2: '2. 주소지 인쇄',
+      closerTitle: '세탁 마감용 문서 출력', closerBody: '1. 마감자용 수량표<br>2. 전체주소지<br><br>두 문서를 순서대로 출력해주세요.',
+      closerStep1: '1. 마감자용 수량표 인쇄', closerStep2: '2. 전체주소지 인쇄', closerDone: '출력 완료',
+      connPending: '연결 확인 중', connOk: '원본 데이터 연결됨', connErr: '데이터 연결 오류',
+      errTimeout: '요청이 너무 오래 걸려 중단됐어요. 다시 시도해주세요.', errGas: 'GAS 연결을 확인해주세요.', errLoad: '데이터를 불러오지 못했습니다.',
+      loading: '데이터를 불러오는 중...', loadingDocs: '데이터를 불러오는 중입니다...',
+      closedCourse: '이 날짜는 휴무일입니다 — 배정된 코스가 없습니다.', closedInfo: 'ℹ 휴무일 — 인쇄할 수 있는 코스가 없습니다.',
+      closedPreview: '이 날짜는 휴무일입니다 — 인쇄할 문서가 없습니다.',
+      all: '전체', courseFmt: '{c}코스', infoAll: 'ℹ 전체 · {n}개 코스 · {c}곳', infoPick: 'ℹ 코스를 선택해주세요.',
+      noDriver: '기사 미배정', infoCourse: 'ℹ {course} · {driver} · {c}곳', pickCoursePreview: '코스를 선택해주세요.',
+      lblAll: '전체', lblAddress: '주소지', lblStatus: '현황지', lblCloser: '마감자용 수량표', lblAllAddr: '전체 주소지',
+      lblCloserAll: '마감자용 수량표+전체주소지', lblChanges: '출력 후 라벨코스 변경내역', lblStatusAddr: '현황지+주소지',
+      btnChangesTest: '변경내역 인쇄 (테스트)', btnChanges: '변경내역 인쇄', btnCloser: '마감자용 전체 수량표 인쇄',
+      btnAllAddr: '전체 주소지 인쇄', btnCloserAll: '마감자용 + 전체주소지 출력', btnStatusAddr: '현황지 + 주소지 출력', btnPrintSuffix: ' 인쇄',
+      bAllBiz: '전체 업체', bAllCourse: '전체 코스', bA4P: 'A4 세로', bA4L: 'A4 가로', bA4P2: 'A4 세로 2종', bPL: '세로+가로',
+      bCloserAll: '마감자용 + 전체주소지',
+      chHas: '(있습니다.)', chNone: '(없습니다.)', chFail: '(확인 실패)',
+      chSubHas: '마지막 출력({d}) 이후 {n}건 달라짐 · 눌러서 확인', chSubLoading: '출력본과 비교하는 중...',
+      chSubFail: '출력본 확인 실패 · 눌러서 다시 시도', chSubNoSnap: '출력본 없음 · 출력하면 기준으로 저장', chSubSame: '마지막 출력본과 같음',
+      chMsgLoading: '출력본과 비교하는 중입니다...', chMsgError: '출력본을 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 눌러주세요.',
+      chMsgNoSnap: '이 배송일의 출력본이 아직 없습니다. 현황지나 마감자용 수량표를 출력하면 그 내용이 기준으로 저장됩니다.',
+      chMsgSame: '마지막 출력본과 비교해 달라진 내용이 없습니다.',
+      nothingToPrint: '인쇄할 내용이 없습니다.'
+    },
+    id: {
+      appTitle: 'Cetak Lembar Status Yuseong Cleaning', settings: 'Pengaturan', retry: 'Coba lagi', close: 'Tutup', save: 'Simpan',
+      sec1: '1. Pilih tanggal', sec2: '2. Pilih rute', sec3: '3. Cetakan yang sering dipakai', sec4: '4. Cetak',
+      today: 'Hari ini', nextBiz: 'Hari kerja berikutnya',
+      pdbStatusAddr: 'Lembar status + Daftar alamat', pdbStatusAddrSub: 'Untuk pengantar · cetak 2 dokumen berurutan',
+      pdbCloserAll: 'Tabel jumlah penutupan + Semua alamat', pdbCloserAllSub: 'Untuk penutupan cucian · cetak 2 dokumen berurutan',
+      pdbChanges: 'Perubahan rute label setelah cetak',
+      otherTitle: 'Cetakan lainnya', otherSub: 'Pilih hanya jika diperlukan',
+      odAddress: 'Daftar alamat saja', odStatus: 'Lembar status saja', odCloser: 'Tabel jumlah penutupan saja', odAllAddr: 'Semua alamat saja',
+      edit: 'Ubah isi', changesTest: 'Cetak uji perubahan', caption: 'Dicetak sama seperti pratinjau',
+      openAdmin: '🔗 Buka layar kelola/ubah', previewTitle: 'Pratinjau cetak',
+      guideTitle: 'Urutan cetak', guideBody: 'Lembar status dan daftar alamat dicetak satu per satu agar stabil. Tekan sesuai urutan di bawah.',
+      guideStep1: '1. Cetak lembar status', guideStep2: '2. Cetak daftar alamat',
+      closerTitle: 'Cetak dokumen penutupan cucian', closerBody: '1. Tabel jumlah penutupan<br>2. Semua alamat<br><br>Cetak kedua dokumen sesuai urutan.',
+      closerStep1: '1. Cetak tabel jumlah penutupan', closerStep2: '2. Cetak semua alamat', closerDone: 'Selesai mencetak',
+      connPending: 'Memeriksa koneksi', connOk: 'Data asli terhubung', connErr: 'Kesalahan koneksi data',
+      errTimeout: 'Permintaan terlalu lama dan dihentikan. Silakan coba lagi.', errGas: 'Periksa koneksi GAS.', errLoad: 'Gagal memuat data.',
+      loading: 'Memuat data...', loadingDocs: 'Memuat data...',
+      closedCourse: 'Tanggal ini hari libur — tidak ada rute.', closedInfo: 'ℹ Hari libur — tidak ada rute yang bisa dicetak.',
+      closedPreview: 'Tanggal ini hari libur — tidak ada dokumen untuk dicetak.',
+      all: 'Semua', courseFmt: 'Rute {c}', infoAll: 'ℹ Semua · {n} rute · {c} tempat', infoPick: 'ℹ Silakan pilih rute.',
+      noDriver: 'Pengantar belum ditentukan', infoCourse: 'ℹ {course} · {driver} · {c} tempat', pickCoursePreview: 'Silakan pilih rute.',
+      lblAll: 'Semua', lblAddress: 'Daftar alamat', lblStatus: 'Lembar status', lblCloser: 'Tabel jumlah penutupan', lblAllAddr: 'Semua alamat',
+      lblCloserAll: 'Tabel penutupan + Semua alamat', lblChanges: 'Perubahan rute label setelah cetak', lblStatusAddr: 'Lembar status + Daftar alamat',
+      btnChangesTest: 'Cetak perubahan (uji)', btnChanges: 'Cetak perubahan', btnCloser: 'Cetak tabel jumlah penutupan (semua)',
+      btnAllAddr: 'Cetak semua alamat', btnCloserAll: 'Cetak tabel penutupan + semua alamat', btnStatusAddr: 'Cetak lembar status + daftar alamat', btnPrintSuffix: ' — Cetak',
+      bAllBiz: 'Semua pelanggan', bAllCourse: 'Semua rute', bA4P: 'A4 tegak', bA4L: 'A4 mendatar', bA4P2: 'A4 tegak 2 jenis', bPL: 'Tegak + mendatar',
+      bCloserAll: 'Tabel penutupan + Semua alamat',
+      chHas: '(Ada)', chNone: '(Tidak ada)', chFail: '(Gagal memeriksa)',
+      chSubHas: '{n} perubahan sejak cetak terakhir ({d}) · tekan untuk melihat', chSubLoading: 'Membandingkan dengan hasil cetak...',
+      chSubFail: 'Gagal memeriksa hasil cetak · tekan untuk coba lagi', chSubNoSnap: 'Belum ada hasil cetak · setelah dicetak disimpan sebagai acuan', chSubSame: 'Sama dengan cetakan terakhir',
+      chMsgLoading: 'Membandingkan dengan hasil cetak...', chMsgError: 'Gagal memuat hasil cetak. Periksa koneksi internet lalu tekan lagi.',
+      chMsgNoSnap: 'Belum ada hasil cetak untuk hari pengiriman ini. Setelah lembar status atau tabel jumlah penutupan dicetak, isinya disimpan sebagai acuan.',
+      chMsgSame: 'Tidak ada perubahan dibanding cetakan terakhir.',
+      nothingToPrint: 'Tidak ada isi untuk dicetak.'
+    },
+    vi: {
+      appTitle: 'In bảng tình hình Yuseong Cleaning', settings: 'Cài đặt', retry: 'Thử lại', close: 'Đóng', save: 'Lưu',
+      sec1: '1. Chọn ngày', sec2: '2. Chọn tuyến', sec3: '3. Bản in thường dùng', sec4: '4. In',
+      today: 'Hôm nay', nextBiz: 'Ngày làm việc tiếp theo',
+      pdbStatusAddr: 'Bảng tình hình + Danh sách địa chỉ', pdbStatusAddrSub: 'Dành cho tài xế giao hàng · in liên tiếp 2 tài liệu',
+      pdbCloserAll: 'Bảng số lượng chốt + Tất cả địa chỉ', pdbCloserAllSub: 'Dành cho chốt giặt · in liên tiếp 2 tài liệu',
+      pdbChanges: 'Thay đổi tuyến nhãn sau khi in',
+      otherTitle: 'Bản in khác', otherSub: 'Chỉ chọn khi cần',
+      odAddress: 'Chỉ danh sách địa chỉ', odStatus: 'Chỉ bảng tình hình', odCloser: 'Chỉ bảng số lượng chốt', odAllAddr: 'Chỉ tất cả địa chỉ',
+      edit: 'Sửa nội dung', changesTest: 'In thử thay đổi', caption: 'In giống như bản xem trước',
+      openAdmin: '🔗 Mở màn hình quản lý/chỉnh sửa', previewTitle: 'Xem trước khi in',
+      guideTitle: 'Thứ tự in', guideBody: 'Bảng tình hình và danh sách địa chỉ được in riêng từng bản để ổn định. Hãy bấm theo thứ tự bên dưới.',
+      guideStep1: '1. In bảng tình hình', guideStep2: '2. In danh sách địa chỉ',
+      closerTitle: 'In tài liệu chốt giặt', closerBody: '1. Bảng số lượng chốt<br>2. Tất cả địa chỉ<br><br>Hãy in hai tài liệu theo thứ tự.',
+      closerStep1: '1. In bảng số lượng chốt', closerStep2: '2. In tất cả địa chỉ', closerDone: 'In xong',
+      connPending: 'Đang kiểm tra kết nối', connOk: 'Đã kết nối dữ liệu gốc', connErr: 'Lỗi kết nối dữ liệu',
+      errTimeout: 'Yêu cầu quá lâu nên đã bị dừng. Vui lòng thử lại.', errGas: 'Vui lòng kiểm tra kết nối GAS.', errLoad: 'Không tải được dữ liệu.',
+      loading: 'Đang tải dữ liệu...', loadingDocs: 'Đang tải dữ liệu...',
+      closedCourse: 'Ngày này là ngày nghỉ — không có tuyến được giao.', closedInfo: 'ℹ Ngày nghỉ — không có tuyến để in.',
+      closedPreview: 'Ngày này là ngày nghỉ — không có tài liệu để in.',
+      all: 'Tất cả', courseFmt: 'Tuyến {c}', infoAll: 'ℹ Tất cả · {n} tuyến · {c} nơi', infoPick: 'ℹ Vui lòng chọn tuyến.',
+      noDriver: 'Chưa phân công tài xế', infoCourse: 'ℹ {course} · {driver} · {c} nơi', pickCoursePreview: 'Vui lòng chọn tuyến.',
+      lblAll: 'Tất cả', lblAddress: 'Danh sách địa chỉ', lblStatus: 'Bảng tình hình', lblCloser: 'Bảng số lượng chốt', lblAllAddr: 'Tất cả địa chỉ',
+      lblCloserAll: 'Bảng chốt + Tất cả địa chỉ', lblChanges: 'Thay đổi tuyến nhãn sau khi in', lblStatusAddr: 'Bảng tình hình + Danh sách địa chỉ',
+      btnChangesTest: 'In thay đổi (thử)', btnChanges: 'In thay đổi', btnCloser: 'In bảng số lượng chốt (tất cả)',
+      btnAllAddr: 'In tất cả địa chỉ', btnCloserAll: 'In bảng chốt + tất cả địa chỉ', btnStatusAddr: 'In bảng tình hình + danh sách địa chỉ', btnPrintSuffix: ' — In',
+      bAllBiz: 'Tất cả khách hàng', bAllCourse: 'Tất cả tuyến', bA4P: 'A4 dọc', bA4L: 'A4 ngang', bA4P2: 'A4 dọc 2 loại', bPL: 'Dọc + ngang',
+      bCloserAll: 'Bảng chốt + Tất cả địa chỉ',
+      chHas: '(Có)', chNone: '(Không có)', chFail: '(Kiểm tra thất bại)',
+      chSubHas: '{n} thay đổi kể từ lần in cuối ({d}) · bấm để xem', chSubLoading: 'Đang so sánh với bản đã in...',
+      chSubFail: 'Kiểm tra bản đã in thất bại · bấm để thử lại', chSubNoSnap: 'Chưa có bản đã in · in xong sẽ lưu làm chuẩn', chSubSame: 'Giống bản in lần cuối',
+      chMsgLoading: 'Đang so sánh với bản đã in...', chMsgError: 'Không tải được bản đã in. Hãy kiểm tra kết nối internet rồi bấm lại.',
+      chMsgNoSnap: 'Ngày giao này chưa có bản đã in. Khi in bảng tình hình hoặc bảng số lượng chốt, nội dung sẽ được lưu làm chuẩn.',
+      chMsgSame: 'Không có thay đổi so với bản in lần cuối.',
+      nothingToPrint: 'Không có nội dung để in.'
+    }
+  };
+  var LANG_KEY = 'ysc_menu_lang_v1';
+  var curLang = 'ko';
+  try { var savedLang = localStorage.getItem(LANG_KEY); if (savedLang && I18N[savedLang]) curLang = savedLang; } catch (e) {}
+  function t(key, vars) {
+    var str = (I18N[curLang] && I18N[curLang][key] !== undefined) ? I18N[curLang][key] : I18N.ko[key];
+    if (str === undefined) return key;
+    if (vars) Object.keys(vars).forEach(function (k) { str = str.split('{' + k + '}').join(vars[k]); });
+    return str;
+  }
+  function courseText(course) { return t('courseFmt', { c: course }); }
+  function applyStaticI18n() {
+    document.documentElement.lang = curLang;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-i18n]'), function (el) { el.textContent = t(el.getAttribute('data-i18n')); });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-i18n-html]'), function (el) { el.innerHTML = t(el.getAttribute('data-i18n-html')); });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-i18n-title]'), function (el) { el.title = t(el.getAttribute('data-i18n-title')); });
+    Array.prototype.forEach.call(document.querySelectorAll('.lang-btn'), function (b) { b.classList.toggle('active', b.getAttribute('data-lang') === curLang); });
+  }
 
   // ================= 설정 =================
   var STORAGE_KEYS = {
@@ -718,9 +855,11 @@
   function showInlineError(msg) { inlineErrorText.textContent = msg; inlineError.classList.add('show'); }
   btnRetry.addEventListener('click', function () { loadDayData(true); });
 
-  function setConn(kind, text) {
+  var connState = { kind: 'pending', key: 'connPending' };
+  function setConn(kind, key) {
+    connState = { kind: kind, key: key };
     connText.className = 'conn-text ' + kind;
-    connText.textContent = text;
+    connText.textContent = t(key);
   }
 
   // ================= 드래프트(로컬 임시저장, 관리 화면과 동일한 키 사용) =================
@@ -745,7 +884,7 @@
     state.snapshot = null; state.snapshotStatus = 'idle'; state.changes = { items: [], drivers: [], printedAt: '' };
     updateChangesUI();
     courseGrid.innerHTML = '';
-    courseInfoCard.textContent = '데이터를 불러오는 중...';
+    courseInfoCard.textContent = t('loading');
     previewSurface.innerHTML = '';
     previewBadges.innerHTML = '';
     updatePrintButton();
@@ -763,24 +902,24 @@
 
     state.isLoading = true;
     hideInlineError();
-    setConn('pending', '연결 확인 중');
+    setConn('pending', 'connPending');
 
     callGAS({ action: 'getData', weekday: weekday, date: dateIso })
       .then(function (data) {
-        if (!data || !data.success) throw new Error((data && data.message) || '데이터를 불러오지 못했습니다.');
+        if (!data || !data.success) throw new Error((data && data.message) || t('errLoad'));
         if (data.requestedDate !== dateIso) {
           throw new Error('날짜 불일치: 요청 ' + dateIso + ' / 응답 ' + data.requestedDate);
         }
         if (isoDate(state.selectedDate) !== dateIso) return;
         state.rawCache[dateIso] = data;
         applyRawData(data, dateIso);
-        setConn('ok', '원본 데이터 연결됨');
+        setConn('ok', 'connOk');
       })
       .catch(function (err) {
-        setConn('err', '데이터 연결 오류');
+        setConn('err', 'connErr');
         var msg = (err && err.name === 'AbortError')
-          ? '요청이 너무 오래 걸려 중단됐어요. 다시 시도해주세요.'
-          : (err && err.message) ? err.message : 'GAS 연결을 확인해주세요.';
+          ? t('errTimeout')
+          : (err && err.message) ? err.message : t('errGas');
         showInlineError(msg);
       })
       .finally(function () { state.isLoading = false; });
@@ -915,20 +1054,20 @@
     if (state.merged.closedDay || !state.merged.courses.length) {
       var empty = document.createElement('div');
       empty.style.cssText = 'grid-column:1/-1;padding:14px;text-align:center;color:var(--text-sub);font-size:14px;font-weight:700;';
-      empty.textContent = '이 날짜는 휴무일입니다 — 배정된 코스가 없습니다.';
+      empty.textContent = t('closedCourse');
       courseGrid.appendChild(empty);
       return;
     }
     var allBtn = document.createElement('button');
     allBtn.className = 'course-btn' + (state.selectedCourse === ALL_SENTINEL ? ' selected' : '');
-    allBtn.textContent = '전체';
+    allBtn.textContent = t('all');
     allBtn.addEventListener('click', function () { selectCourse(ALL_SENTINEL); });
     courseGrid.appendChild(allBtn);
     state.merged.courses.forEach(function (course) {
       var btn = document.createElement('button');
       var isSelected = state.selectedCourse === course;
       btn.className = 'course-btn' + (isSelected ? ' selected' : '');
-      btn.textContent = course + '코스';
+      btn.textContent = courseText(course);
       if (isSelected) {
         var c = courseColor(course);
         btn.style.background = c; btn.style.borderColor = c; btn.style.color = '#fff';
@@ -939,17 +1078,17 @@
   }
 
   function updateInfoCard() {
-    if (!state.merged) { courseInfoCard.textContent = '데이터를 불러오는 중...'; return; }
-    if (state.merged.closedDay || !state.merged.courses.length) { courseInfoCard.textContent = 'ℹ 휴무일 — 인쇄할 수 있는 코스가 없습니다.'; return; }
+    if (!state.merged) { courseInfoCard.textContent = t('loading'); return; }
+    if (state.merged.closedDay || !state.merged.courses.length) { courseInfoCard.textContent = t('closedInfo'); return; }
     if (state.selectedCourse === ALL_SENTINEL) {
-      courseInfoCard.textContent = 'ℹ 전체 · ' + state.merged.courses.length + '개 코스 · ' + state.merged.totalCount + '곳';
+      courseInfoCard.textContent = t('infoAll', { n: state.merged.courses.length, c: state.merged.totalCount });
       return;
     }
     var course = state.selectedCourse;
-    if (!course) { courseInfoCard.textContent = 'ℹ 코스를 선택해주세요.'; return; }
-    var driver = cleanDriverName(state.merged.drivers[course]) || '기사 미배정';
+    if (!course) { courseInfoCard.textContent = t('infoPick'); return; }
+    var driver = cleanDriverName(state.merged.drivers[course]) || t('noDriver');
     var count = (state.merged.byCourse[course] || []).length;
-    courseInfoCard.textContent = 'ℹ ' + course + '코스 · ' + driver + ' · ' + count + '곳';
+    courseInfoCard.textContent = t('infoCourse', { course: courseText(course), driver: driver, c: count });
   }
 
   function renderDocCards() {
@@ -958,12 +1097,12 @@
   docCards.forEach(function (card) { card.addEventListener('click', function () { selectDocType(card.dataset.doc); }); });
 
   function courseLabel() {
-    if (state.selectedCourse === ALL_SENTINEL) return '전체';
-    if (state.selectedCourse) return state.selectedCourse + '코스';
+    if (state.selectedCourse === ALL_SENTINEL) return t('lblAll');
+    if (state.selectedCourse) return courseText(state.selectedCourse);
     return '';
   }
   function docLabel(type) {
-    return type === 'address' ? '주소지' : type === 'status' ? '현황지' : type === 'closer' ? '마감자용 수량표' : type === 'all_address' ? '전체 주소지' : type === 'closer_all_address' ? '마감자용 수량표+전체주소지' : type === 'changes' ? '출력 후 라벨코스 변경내역' : '현황지+주소지';
+    return type === 'address' ? t('lblAddress') : type === 'status' ? t('lblStatus') : type === 'closer' ? t('lblCloser') : type === 'all_address' ? t('lblAllAddr') : type === 'closer_all_address' ? t('lblCloserAll') : type === 'changes' ? t('lblChanges') : t('lblStatusAddr');
   }
 
   function canPrint() {
@@ -975,20 +1114,20 @@
 
   function updatePrintButton() {
     if (state.docType === 'changes') {
-      printBtnLabel.textContent = state.testMode ? '변경내역 인쇄 (테스트)' : '변경내역 인쇄';
+      printBtnLabel.textContent = state.testMode ? t('btnChangesTest') : t('btnChanges');
     } else if (state.docType === 'closer') {
-      printBtnLabel.textContent = '마감자용 전체 수량표 인쇄';
+      printBtnLabel.textContent = t('btnCloser');
     } else if (state.docType === 'all_address') {
-      printBtnLabel.textContent = '전체 주소지 인쇄';
+      printBtnLabel.textContent = t('btnAllAddr');
     } else if (state.docType === 'closer_all_address') {
-      printBtnLabel.textContent = '마감자용 + 전체주소지 출력';
+      printBtnLabel.textContent = t('btnCloserAll');
     } else if (state.docType === 'status_address') {
       var cl0 = courseLabel();
-      printBtnLabel.textContent = (cl0 ? cl0 + ' ' : '') + '현황지 + 주소지 출력';
+      printBtnLabel.textContent = (cl0 ? cl0 + ' ' : '') + t('btnStatusAddr');
     } else {
       var cl = courseLabel();
       var dl = docLabel(state.docType);
-      printBtnLabel.textContent = (cl ? cl + ' ' : '') + dl + ' 인쇄';
+      printBtnLabel.textContent = (cl ? cl + ' ' : '') + dl + t('btnPrintSuffix');
     }
     var ok = canPrint();
     btnPrintMain.disabled = !ok;
@@ -999,23 +1138,23 @@
     if (!state.merged || state.merged.closedDay) return;
     var items = [];
     if (state.docType === 'closer') {
-      items.push({ text: '전체 업체', cls: 'b-solid' });
-      items.push({ text: '마감자용 수량표', cls: 'b-soft' });
-      items.push({ text: 'A4 세로', cls: '' });
+      items.push({ text: t('bAllBiz'), cls: 'b-solid' });
+      items.push({ text: t('lblCloser'), cls: 'b-soft' });
+      items.push({ text: t('bA4P'), cls: '' });
     } else if (state.docType === 'all_address') {
-      items.push({ text: '전체 코스', cls: 'b-solid' });
-      items.push({ text: '전체 주소지', cls: 'b-soft' });
-      items.push({ text: 'A4 세로', cls: '' });
+      items.push({ text: t('bAllCourse'), cls: 'b-solid' });
+      items.push({ text: t('lblAllAddr'), cls: 'b-soft' });
+      items.push({ text: t('bA4P'), cls: '' });
     } else if (state.docType === 'closer_all_address') {
-      items.push({ text: '전체 업체', cls: 'b-solid' });
-      items.push({ text: '마감자용 + 전체주소지', cls: 'b-soft' });
-      items.push({ text: 'A4 세로 2종', cls: '' });
+      items.push({ text: t('bAllBiz'), cls: 'b-solid' });
+      items.push({ text: t('bCloserAll'), cls: 'b-soft' });
+      items.push({ text: t('bA4P2'), cls: '' });
     } else {
       var singleCourse = (state.selectedCourse && state.selectedCourse !== ALL_SENTINEL) ? state.selectedCourse : null;
       items.push({ text: courseLabel(), cls: 'b-solid', course: singleCourse });
-      if (state.docType === 'address') { items.push({ text: '주소지', cls: 'b-soft' }); items.push({ text: 'A4 가로', cls: '' }); }
-      else if (state.docType === 'status') { items.push({ text: '현황지', cls: 'b-soft' }); items.push({ text: 'A4 세로', cls: '' }); }
-      else { items.push({ text: '현황지+주소지', cls: 'b-soft' }); items.push({ text: '세로+가로', cls: '' }); }
+      if (state.docType === 'address') { items.push({ text: t('lblAddress'), cls: 'b-soft' }); items.push({ text: t('bA4L'), cls: '' }); }
+      else if (state.docType === 'status') { items.push({ text: t('lblStatus'), cls: 'b-soft' }); items.push({ text: t('bA4P'), cls: '' }); }
+      else { items.push({ text: t('lblStatusAddr'), cls: 'b-soft' }); items.push({ text: t('bPL'), cls: '' }); }
     }
     items.forEach(function (o) {
       if (!o.text) return;
@@ -1375,11 +1514,11 @@
   function renderPreview() {
     previewSurface.innerHTML = '';
     if (!state.merged) {
-      var loading = document.createElement('div'); loading.className = 'preview-empty'; loading.textContent = '데이터를 불러오는 중입니다...';
+      var loading = document.createElement('div'); loading.className = 'preview-empty'; loading.textContent = t('loadingDocs');
       previewSurface.appendChild(loading); return;
     }
     if (state.merged.closedDay) {
-      var closed = document.createElement('div'); closed.className = 'preview-empty'; closed.textContent = '이 날짜는 휴무일입니다 — 인쇄할 문서가 없습니다.';
+      var closed = document.createElement('div'); closed.className = 'preview-empty'; closed.textContent = t('closedPreview');
       previewSurface.appendChild(closed); return;
     }
     if (state.docType === 'changes') {
@@ -1406,7 +1545,7 @@
     }
     var courses = getCoursesToPrint();
     if (!courses.length) {
-      var none = document.createElement('div'); none.className = 'preview-empty'; none.textContent = '코스를 선택해주세요.';
+      var none = document.createElement('div'); none.className = 'preview-empty'; none.textContent = t('pickCoursePreview');
       previewSurface.appendChild(none); return;
     }
     function appendDoc(kind) {
@@ -1598,12 +1737,12 @@
 
   function changesEmptyMessage() {
     if (state.testMode) return '';
-    if (state.snapshotStatus === 'loading' || state.snapshotStatus === 'idle') return '출력본과 비교하는 중입니다...';
-    if (state.snapshotStatus === 'error') return '출력본을 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 눌러주세요.';
+    if (state.snapshotStatus === 'loading' || state.snapshotStatus === 'idle') return t('chMsgLoading');
+    if (state.snapshotStatus === 'error') return t('chMsgError');
     if (!state.snapshot || !state.snapshot.courses || !state.snapshot.courses.length) {
-      return '이 배송일의 출력본이 아직 없습니다. 현황지나 마감자용 수량표를 출력하면 그 내용이 기준으로 저장됩니다.';
+      return t('chMsgNoSnap');
     }
-    if (!state.changes.items.length && !state.changes.drivers.length) return '마지막 출력본과 비교해 달라진 내용이 없습니다.';
+    if (!state.changes.items.length && !state.changes.drivers.length) return t('chMsgSame');
     return '';
   }
 
@@ -1615,15 +1754,15 @@
     var has = state.snapshotStatus === 'ok' && n > 0;
     btn.classList.toggle('has-changes', has);
     if (has) {
-      badge.textContent = '(있습니다.)';
-      sub.textContent = '마지막 출력(' + state.changes.printedAt.replace(/^\d{4}-/, '') + ') 이후 ' + n + '건 달라짐 · 눌러서 확인';
+      badge.textContent = t('chHas');
+      sub.textContent = t('chSubHas', { d: state.changes.printedAt.replace(/^\d{4}-/, ''), n: n });
     } else {
       badge.textContent = (state.snapshotStatus === 'loading' || state.snapshotStatus === 'idle') ? ''
-        : state.snapshotStatus === 'error' ? '(확인 실패)' : '(없습니다.)';
-      sub.textContent = (state.snapshotStatus === 'loading' || state.snapshotStatus === 'idle') ? '출력본과 비교하는 중...'
-        : state.snapshotStatus === 'error' ? '출력본 확인 실패 · 눌러서 다시 시도'
-        : (!state.snapshot || !state.snapshot.courses.length) ? '출력본 없음 · 출력하면 기준으로 저장'
-        : '마지막 출력본과 같음';
+        : state.snapshotStatus === 'error' ? t('chFail') : t('chNone');
+      sub.textContent = (state.snapshotStatus === 'loading' || state.snapshotStatus === 'idle') ? t('chSubLoading')
+        : state.snapshotStatus === 'error' ? t('chSubFail')
+        : (!state.snapshot || !state.snapshot.courses.length) ? t('chSubNoSnap')
+        : t('chSubSame');
     }
   }
 
@@ -1751,7 +1890,7 @@
     if (!canPrint()) return;
     renderPrintDoc(kind);
     var container = kind === 'status' ? printStatus : printAddress;
-    if (!hasPrintableContent(container)) { alert('인쇄할 내용이 없습니다.'); return; }
+    if (!hasPrintableContent(container)) { alert(t('nothingToPrint')); return; }
     var bodyClass = kind === 'status' ? 'printing-status' : 'printing-address';
     doPrint(bodyClass, function () { recordPrint(kind, getCoursesToPrint()); });
   }
@@ -1794,7 +1933,7 @@
       alert('마감자용 인쇄 오류: 전체 업체 수(' + expected + ')와 실제 인쇄될 행 수(' + actual + ')가 일치하지 않습니다. 인쇄를 중단했습니다.');
       return;
     }
-    if (!hasPrintableContent(printCloser)) { alert('인쇄할 내용이 없습니다.'); return; }
+    if (!hasPrintableContent(printCloser)) { alert(t('nothingToPrint')); return; }
     doPrint('printing-closer', function () { recordPrint('closer', state.merged.courses); });
   }
 
@@ -1807,7 +1946,7 @@
       alert('전체 주소지 인쇄 오류: 화면 데이터 건수(' + expected + ')와 실제 인쇄될 행 수(' + actual + ')가 일치하지 않습니다. 인쇄를 중단했습니다.');
       return;
     }
-    if (!hasPrintableContent(printAddressAll)) { alert('인쇄할 내용이 없습니다.'); return; }
+    if (!hasPrintableContent(printAddressAll)) { alert(t('nothingToPrint')); return; }
     doPrint('printing-address-all', function () { recordPrint('addressAll', state.merged.courses); });
   }
 
@@ -1816,8 +1955,24 @@
   btnEdit.addEventListener('click', openAdmin);
   btnOpenAdmin.addEventListener('click', openAdmin);
 
+  // ================= 메뉴 언어 전환 =================
+  function setLang(lang) {
+    if (!I18N[lang]) return;
+    curLang = lang;
+    try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+    applyStaticI18n();
+    setConn(connState.kind, connState.key);
+    if (state.merged) renderAll(); else { courseInfoCard.textContent = t('loading'); }
+    updateChangesUI();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.lang-btn'), function (b) {
+    b.addEventListener('click', function () { setLang(b.getAttribute('data-lang')); });
+  });
+
   // ================= 초기화 =================
   function init() {
+    applyStaticI18n();
+    setConn(connState.kind, connState.key);
     var qDate = getQueryDate_();
     state.selectedDate = qDate || new Date();
     refreshDateDisplay();
