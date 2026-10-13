@@ -41,10 +41,7 @@
   .app-header-left { font-size: 22px; font-weight: 900; color: var(--navy); letter-spacing: -.2px; }
   .app-header-right { display: flex; align-items: center; gap: 18px; }
   .conn-text { font-size: 14.5px; font-weight: 700; }
-  .lang-switch { position: relative; }
-  .lang-toggle { border: 1px solid #cfd6e0; background: #fff; color: #1f3a68; border-radius: 8px; padding: 6px 14px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
-  .lang-menu { display: none; position: absolute; right: 0; top: calc(100% + 4px); background: #fff; border: 1px solid #cfd6e0; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,.15); padding: 4px; z-index: 50; flex-direction: column; gap: 4px; min-width: 170px; }
-  .lang-switch.open .lang-menu { display: flex; }
+  .lang-switch { display: flex; gap: 4px; }
   .lang-btn { border: 1px solid #cfd6e0; background: #fff; color: #566; border-radius: 8px; padding: 6px 12px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
   .lang-btn.active { background: #1f3a68; border-color: #1f3a68; color: #fff; }
   .conn-text.ok { color: var(--green); }
@@ -343,12 +340,9 @@
     <div class="app-header-left" data-i18n="appTitle">유성클리닝 현황지 출력</div>
     <div class="app-header-right">
       <div class="lang-switch" id="langSwitch">
-        <button class="lang-toggle" id="langToggle">언어선택 ▾</button>
-        <div class="lang-menu">
         <button class="lang-btn" data-lang="ko">한국어</button>
         <button class="lang-btn" data-lang="id">Bahasa Indonesia</button>
         <button class="lang-btn" data-lang="vi">Tiếng Việt</button>
-        </div>
       </div>
       <span class="conn-text pending" id="connText">연결 확인 중</span>
       <button class="icon-btn" id="btnSettings" title="설정" data-i18n-title="settings">⚙</button>
@@ -1972,11 +1966,8 @@
     updateChangesUI();
   }
   Array.prototype.forEach.call(document.querySelectorAll('.lang-btn'), function (b) {
-    b.addEventListener('click', function () { setLang(b.getAttribute('data-lang')); langSwitch.classList.remove('open'); });
+    b.addEventListener('click', function () { setLang(b.getAttribute('data-lang')); });
   });
-  var langSwitch = document.getElementById('langSwitch');
-  document.getElementById('langToggle').addEventListener('click', function (e) { e.stopPropagation(); langSwitch.classList.toggle('open'); });
-  document.addEventListener('click', function () { langSwitch.classList.remove('open'); });
 
   // ================= 초기화 =================
   function init() {
