@@ -43,7 +43,12 @@
   .conn-text { font-size: 14.5px; font-weight: 700; }
   .lang-switch { display: flex; gap: 4px; }
   .lang-btn { border: 1px solid #cfd6e0; background: #fff; color: #566; border-radius: 8px; padding: 6px 12px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .lang-btn { transition: transform .18s ease, box-shadow .18s ease, background-color .25s ease, color .25s ease, border-color .25s ease; }
+  .lang-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(31,58,104,.25); border-color: #1f3a68; }
+  .lang-btn:active { transform: translateY(0) scale(.94); box-shadow: none; }
   .lang-btn.active { background: #1f3a68; border-color: #1f3a68; color: #fff; }
+  .lang-btn.pop { animation: langPop .45s ease; }
+  @keyframes langPop { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(31,58,104,.5); } 40% { transform: scale(1.18); box-shadow: 0 0 0 8px rgba(31,58,104,.15); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(31,58,104,0); } }
   .conn-text.ok { color: var(--green); }
   .conn-text.err { color: var(--red); }
   .conn-text.pending { color: var(--text-sub); }
@@ -1966,7 +1971,10 @@
     updateChangesUI();
   }
   Array.prototype.forEach.call(document.querySelectorAll('.lang-btn'), function (b) {
-    b.addEventListener('click', function () { setLang(b.getAttribute('data-lang')); });
+    b.addEventListener('click', function () {
+      setLang(b.getAttribute('data-lang'));
+      b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+    });
   });
 
   // ================= 초기화 =================
