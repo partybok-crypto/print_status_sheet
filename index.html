@@ -265,6 +265,8 @@
   .closer-main-title {
     font-size: 28pt; font-weight: 900; line-height: 1.15; text-align: center; letter-spacing: -0.5px; padding: 7mm 0 4mm;
   }
+  .packed-total-line { text-align: center; font-size: 10pt; font-weight: 500; color: #9ca3af; padding-bottom: 3mm; }
+  .addressall-doc > .packed-total-line { text-align: right; padding-bottom: 1.5mm; }
   .closer-meta-line { text-align: center; font-size: 12pt; font-weight: 600; color: #374151; padding-bottom: 5mm; }
 
   .closer-table thead th { background: #111827; color: #fff; font-weight: 800; }
@@ -635,6 +637,7 @@
   // 현황지/마감자용을 출력하면 그 내용을 포장기록 서버(현장입력 시트의 '현황지출력본' 탭)에 한 벌 남긴다.
   // 원본 시트에는 쓰지 않는다. 저장이 실패해도 인쇄에는 영향이 없고, 다음 출력/접속 때 다시 보낸다.
   var SNAPSHOT_URL = 'https://yuseong-packing-production.up.railway.app/api/status-snapshot';
+  var PACKED_COUNT_URL = 'https://yuseong-packing-production.up.railway.app/api/packed-count';
   var DRAFT_KEY_PREFIX = 'ysc_print_draft_';
   var DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbx4L6ZiXjjKkQPo1vcGxp5iuP7MktAo30gn-fCRAQPCdrRb1VQ_yijQ6hvS21NoIrvM/exec';
   var FETCH_TIMEOUT_MS = 30000;
@@ -670,6 +673,7 @@
     isPrinting: false,
     isResolvingNextBiz: false,
     snapshot: null,          // 이 배송일의 최종 출력본(서버) {date, courses:[...]}
+    packedCount: null,       // { date, total } - 그 배송일에 나가는 총 포장 수(포대+수건)
     snapshotStatus: 'idle',  // idle | loading | ok | error
     changes: { items: [], drivers: [], printedAt: '' },
     testMode: false          // true면 가짜 예시 변경내역으로 화면/인쇄 모양만 확인한다(저장·비교 없음)
@@ -937,6 +941,7 @@
     determineSelectedCourse();
     renderAll();
     loadSnapshot(dateIso);
+    loadPackedCount(dateIso);
   }
 
   // ================= 병합(원본 + 드래프트) — 관리 화면과 동일한 규칙 =================
@@ -1383,6 +1388,31 @@
   }
 
   // 전체 업체를 코스순 · 배송순서순으로 하나의 연속된 표에 담는다(코스별 제목 문단/별도 표/강제 페이지 분리 없음)
+  // 포장기록 기준 총 포장 수. 못 읽었거나 0건이면 줄을 아예 찍지 않는다(틀린 숫자를 찍는 것보다 낫다).
+  function buildPackedTotalLine() {
+    var pc = state.packedCount;
+    if (!pc || pc.date !== isoDate(state.selectedDate) || !(pc.total > 0)) return null;
+    var line = document.createElement('div');
+    line.className = 'packed-total-line';
+    line.textContent = '총수량(포대+수건) ' + pc.total + '개';
+    return line;
+  }
+
+  function loadPackedCount(dateIso) {
+    state.packedCount = null;
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, 12000);
+    return fetch(PACKED_COUNT_URL + '?date=' + encodeURIComponent(dateIso), { signal: controller.signal })
+      .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+      .then(function (data) {
+        if (isoDate(state.selectedDate) !== dateIso || !data || !data.ok) return;
+        state.packedCount = { date: dateIso, total: Number(data.total) || 0 };
+        if (state.docType === 'closer' || state.docType === 'closer_all_address' || state.docType === 'all_address') renderPreview();
+      })
+      .catch(function () {})
+      .then(function () { clearTimeout(timer); });
+  }
+
   function buildCloserDoc(allCourses, merged) {
     var container = document.createElement('div');
     container.className = 'closer-doc';
@@ -1398,6 +1428,8 @@
       '<div class="closer-meta-line" data-slot="meta"></div>';
     headerBox.querySelector('[data-slot="meta"]').textContent =
       fmtBigDate(state.selectedDate) + ' · 전체 업체 수: ' + allItems.length + '개 · 인쇄 시각: ' + fmtPrintTime(new Date());
+    var packedLine = buildPackedTotalLine();
+    if (packedLine) headerBox.appendChild(packedLine);
     container.appendChild(headerBox);
 
     var tableWrap = document.createElement('div');
@@ -1477,6 +1509,8 @@
   function buildAddressAllDoc(merged) {
     var container = document.createElement('div');
     container.className = 'addressall-doc';
+    var packedLine = buildPackedTotalLine();
+    if (packedLine) container.appendChild(packedLine);
     merged.courses.forEach(function (course) {
       container.appendChild(buildAddressAllCourseBlock(course, merged.byCourse[course] || [], merged));
     });
