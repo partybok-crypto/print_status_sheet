@@ -265,6 +265,7 @@
   .closer-main-title {
     font-size: 28pt; font-weight: 900; line-height: 1.15; text-align: center; letter-spacing: -0.5px; padding: 7mm 0 4mm;
   }
+  .closer-table th .th-sub { font-size: 7.5pt; font-weight: 500; color: #6b7280; }
   .closer-table td.col-bagfill .packed-gray { color: #9ca3af; font-size: 7.5pt; font-weight: 500; line-height: 1.25; }
   .closer-meta-line { text-align: center; font-size: 12pt; font-weight: 600; color: #374151; padding-bottom: 5mm; }
 
@@ -1356,7 +1357,7 @@
     '<table class="doc-table closer-table">' +
       '<colgroup>' + CLOSER_COL_WIDTHS.map(function (w) { return '<col style="width:' + w + '%">'; }).join('') + '</colgroup>' +
       '<thead>' +
-        '<tr class="closer-col-row"><th>배송순서</th><th>출고번호</th><th>업체번호</th><th>약칭</th><th>포대사이즈</th><th>포대배송</th><th>수건배송</th><th>특이사항</th></tr>' +
+        '<tr class="closer-col-row"><th>배송순서</th><th>출고번호</th><th>업체번호</th><th>약칭</th><th>포대사이즈</th><th>포대배송<br><span class="th-sub">(회색깔은 참고용)</span></th><th>수건배송</th><th>특이사항</th></tr>' +
       '</thead>' +
       '<tbody></tbody>' +
     '</table>';
