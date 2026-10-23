@@ -1416,8 +1416,17 @@
       if (clothesN > 0) bagTd.appendChild(grayCount('(옷)', clothesN));
       if (towelN > 0) towelTd.appendChild(grayCount('(수건)', towelN));
     } else if (packedN > 0) {
-      bagTd.appendChild(grayCount('(포대+수건)', packedN));
+      var names = packedPackersFor(companyNumber);
+      bagTd.appendChild(grayCount(names ? '(' + names + ')' : '(포대+수건)', packedN));
     }
+  }
+
+  // 그 업체를 포장한 담당자 이름(여럿이면 · 로 연결). 못 읽었으면 빈 문자열.
+  function packedPackersFor(companyNumber) {
+    var pc = state.packedCount;
+    if (!pc || pc.date !== isoDate(state.selectedDate) || !pc.byPackers) return '';
+    var key = String(companyNumber == null ? '' : companyNumber).trim().replace(/^0+/, '') || '0';
+    return (pc.byPackers[key] || []).join('·');
   }
 
   function packedCountFor(companyNumber) {
@@ -1443,7 +1452,7 @@
       .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
       .then(function (data) {
         if (isoDate(state.selectedDate) !== dateIso || !data || !data.ok) return;
-        state.packedCount = { date: dateIso, byCompany: data.by_company || {}, byItems: data.by_company_items || {} };
+        state.packedCount = { date: dateIso, byCompany: data.by_company || {}, byItems: data.by_company_items || {}, byPackers: data.by_company_packers || {} };
         if (state.merged) renderPreview();
       })
       .catch(function () {})
