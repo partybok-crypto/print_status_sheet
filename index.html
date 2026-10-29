@@ -1448,7 +1448,8 @@
     var ok = pc && pc.date === isoDate(state.selectedDate);
     var names = ok && pc.byItemPackers && pc.byItemPackers[key] && pc.byItemPackers[key][item];
     var time = ok && pc.byItemTime && pc.byItemTime[key] && pc.byItemTime[key][item];
-    return { names: names ? names.join('·') : packedPackersFor(companyNumber), time: time || packedTimeFor(companyNumber) };
+    var first = ok && pc.byItemTimeFirst && pc.byItemTimeFirst[key] && pc.byItemTimeFirst[key][item];
+    return { names: names ? names.join('·') : packedPackersFor(companyNumber), time: time ? timeRange(first, time) : packedTimeFor(companyNumber) };
   }
 
   // 그 업체를 가장 늦게 포장한 시각(HH:MM). 못 읽었으면 빈 문자열.
@@ -1456,8 +1457,10 @@
     var pc = state.packedCount;
     if (!pc || pc.date !== isoDate(state.selectedDate) || !pc.byTime) return '';
     var key = String(companyNumber == null ? '' : companyNumber).trim().replace(/^0+/, '') || '0';
-    return pc.byTime[key] || '';
+    var last = pc.byTime[key] || '';
+    return last ? timeRange(pc.byTimeFirst && pc.byTimeFirst[key], last) : '';
   }
+  function timeRange(first, last) { return first && first !== last ? first + '~' + last : last; }
 
   function packedCountFor(companyNumber) {
     var pc = state.packedCount;
@@ -1474,16 +1477,17 @@
     return pc.byItems[key] || {};
   }
 
-  function loadPackedCount(dateIso) {
-    state.packedCount = null;
+  function loadPackedCount(dateIso, keepOld) {
+    if (!keepOld) state.packedCount = null;
     var controller = new AbortController();
     var timer = setTimeout(function () { controller.abort(); }, 12000);
     return fetch(PACKED_COUNT_URL + '?date=' + encodeURIComponent(dateIso), { signal: controller.signal })
       .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
       .then(function (data) {
         if (isoDate(state.selectedDate) !== dateIso || !data || !data.ok) return;
-        state.packedCount = { date: dateIso, byCompany: data.by_company || {}, byItems: data.by_company_items || {}, byPackers: data.by_company_packers || {}, byTime: data.by_company_time || {}, byItemPackers: data.by_item_packers || {}, byItemTime: data.by_item_time || {} };
-        if (state.merged) renderPreview();
+        var needRender = !keepOld;
+        state.packedCount = { date: dateIso, byCompany: data.by_company || {}, byItems: data.by_company_items || {}, byPackers: data.by_company_packers || {}, byTime: data.by_company_time || {}, byTimeFirst: data.by_company_time_first || {}, byItemTimeFirst: data.by_item_time_first || {}, byItemPackers: data.by_item_packers || {}, byItemTime: data.by_item_time || {} };
+        if (state.merged && needRender) renderPreview();
       })
       .catch(function () {})
       .then(function () { clearTimeout(timer); });
@@ -1997,7 +2001,15 @@
     fontsReady.then(waitForRender).then(function () { window.print(); }).catch(function () { cleanup(); });
   }
 
+  // 인쇄 직전에 포장 수량·시각을 다시 읽는다(화면을 켜 둔 사이 포장된 것 반영). 읽기 실패 시 기존 값으로 인쇄.
+  function withFreshPacked(fn) {
+    function run() { state.freshPacking = true; try { fn(); } finally { state.freshPacking = false; } }
+    if (!state.merged) return run();
+    loadPackedCount(isoDate(state.selectedDate), true).then(run);
+  }
+
   function printSingle(kind) {
+    if (!state.freshPacking) { withFreshPacked(function () { printSingle(kind); }); return; }
     if (!canPrint()) return;
     renderPrintDoc(kind);
     var container = kind === 'status' ? printStatus : printAddress;
@@ -2036,6 +2048,7 @@
   });
 
   function printCloserDoc() {
+    if (!state.freshPacking) { withFreshPacked(printCloserDoc); return; }
     if (!state.merged || state.merged.closedDay) return;
     renderPrintDoc('closer');
     var expected = state.merged.totalCount;
@@ -2049,6 +2062,7 @@
   }
 
   function printAddressAllDoc() {
+    if (!state.freshPacking) { withFreshPacked(printAddressAllDoc); return; }
     if (!state.merged || state.merged.closedDay) return;
     renderPrintDoc('addressAll');
     var expected = state.merged.totalCount;
