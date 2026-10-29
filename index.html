@@ -1424,10 +1424,9 @@
     var itemsN = packedItemsFor(companyNumber);
     var clothesN = itemsN['옷'] || 0, towelN = itemsN['수건'] || 0;
     if (clothesN + towelN > 0) {
-      var hhmmItems = packedTimeFor(companyNumber);
-      var gymNames = packedPackersFor(companyNumber);
-      if (clothesN > 0) bagTd.appendChild(grayCount('(옷' + (gymNames ? '·' + gymNames : '') + ')', clothesN, hhmmItems));
-      if (towelN > 0) towelTd.appendChild(grayCount('(수건' + (gymNames ? '·' + gymNames : '') + ')', towelN, hhmmItems));
+      var cl = itemInfoFor(companyNumber, '옷'), tw = itemInfoFor(companyNumber, '수건');
+      if (clothesN > 0) bagTd.appendChild(grayCount('(옷' + (cl.names ? '·' + cl.names : '') + ')', clothesN, cl.time));
+      if (towelN > 0) towelTd.appendChild(grayCount('(수건' + (tw.names ? '·' + tw.names : '') + ')', towelN, tw.time));
     } else if (packedN > 0) {
       var names = packedPackersFor(companyNumber);
       bagTd.appendChild(grayCount(names ? '(' + names + ')' : '(포대+수건)', packedN, packedTimeFor(companyNumber)));
@@ -1440,6 +1439,16 @@
     if (!pc || pc.date !== isoDate(state.selectedDate) || !pc.byPackers) return '';
     var key = String(companyNumber == null ? '' : companyNumber).trim().replace(/^0+/, '') || '0';
     return (pc.byPackers[key] || []).join('·');
+  }
+
+  // 헬스장: 품목(옷/수건)별 담당자 이름·포장 시각. 품목별 값이 없으면 업체 전체 값으로 대신한다.
+  function itemInfoFor(companyNumber, item) {
+    var pc = state.packedCount;
+    var key = String(companyNumber == null ? '' : companyNumber).trim().replace(/^0+/, '') || '0';
+    var ok = pc && pc.date === isoDate(state.selectedDate);
+    var names = ok && pc.byItemPackers && pc.byItemPackers[key] && pc.byItemPackers[key][item];
+    var time = ok && pc.byItemTime && pc.byItemTime[key] && pc.byItemTime[key][item];
+    return { names: names ? names.join('·') : packedPackersFor(companyNumber), time: time || packedTimeFor(companyNumber) };
   }
 
   // 그 업체를 가장 늦게 포장한 시각(HH:MM). 못 읽었으면 빈 문자열.
@@ -1473,7 +1482,7 @@
       .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
       .then(function (data) {
         if (isoDate(state.selectedDate) !== dateIso || !data || !data.ok) return;
-        state.packedCount = { date: dateIso, byCompany: data.by_company || {}, byItems: data.by_company_items || {}, byPackers: data.by_company_packers || {}, byTime: data.by_company_time || {} };
+        state.packedCount = { date: dateIso, byCompany: data.by_company || {}, byItems: data.by_company_items || {}, byPackers: data.by_company_packers || {}, byTime: data.by_company_time || {}, byItemPackers: data.by_item_packers || {}, byItemTime: data.by_item_time || {} };
         if (state.merged) renderPreview();
       })
       .catch(function () {})
