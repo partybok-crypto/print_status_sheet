@@ -1425,8 +1425,9 @@
     var clothesN = itemsN['옷'] || 0, towelN = itemsN['수건'] || 0;
     if (clothesN + towelN > 0) {
       var hhmmItems = packedTimeFor(companyNumber);
-      if (clothesN > 0) bagTd.appendChild(grayCount('(옷)', clothesN, hhmmItems));
-      if (towelN > 0) towelTd.appendChild(grayCount('(수건)', towelN, hhmmItems));
+      var gymNames = packedPackersFor(companyNumber);
+      if (clothesN > 0) bagTd.appendChild(grayCount('(옷' + (gymNames ? '·' + gymNames : '') + ')', clothesN, hhmmItems));
+      if (towelN > 0) towelTd.appendChild(grayCount('(수건' + (gymNames ? '·' + gymNames : '') + ')', towelN, hhmmItems));
     } else if (packedN > 0) {
       var names = packedPackersFor(companyNumber);
       bagTd.appendChild(grayCount(names ? '(' + names + ')' : '(포대+수건)', packedN, packedTimeFor(companyNumber)));
