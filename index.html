@@ -270,6 +270,8 @@
   }
   .closer-table th .th-sub { font-size: 8pt; font-weight: 700; color: #fff; }
   .closer-table td.col-bagfill .packed-gray .packed-num, .closer-table td.col-towelfill .packed-gray .packed-num { font-size: 22.5pt; font-weight: 600; line-height: 1.1; }
+  .packed-gray .packed-time { font-size: 7.5pt; font-weight: 500; }
+  .status-title-stamp { font-size: 10pt; font-weight: 600; margin-left: 12px; opacity: .9; }
   .closer-table td.col-bagfill .packed-gray, .closer-table td.col-towelfill .packed-gray { color: #9ca3af; font-size: 7.5pt; font-weight: 500; line-height: 1.25; }
   .closer-meta-line { text-align: center; font-size: 12pt; font-weight: 600; color: #374151; padding-bottom: 5mm; }
 
@@ -1342,6 +1344,10 @@
     wrap.innerHTML = STATUS_TEMPLATE;
     wrap.querySelector('[data-slot="title"]').textContent =
       fmtTitleDate(state.selectedDate, merged.dayOfWeek) + '　' + course + '코스 · ' + (cleanDriverName(driver) || '기사 미배정') + ' 세탁물 현황';
+    var stamp = document.createElement('span'); stamp.className = 'status-title-stamp';
+    var now = new Date();
+    stamp.textContent = '출력 ' + (now.getMonth() + 1) + '/' + now.getDate() + ' ' + fmtPrintTime(now);
+    wrap.querySelector('[data-slot="title"]').appendChild(stamp);
     applyCourseColorBlock(wrap.querySelector('tr.doc-title-row'), wrap.querySelector('tr.doc-col-row'), course);
     renderStatusRows(wrap.querySelector('tbody'), items);
     wrap.appendChild(buildVehicleCheckTable());
@@ -1398,13 +1404,18 @@
 
   // 전체 업체를 코스순 · 배송순서순으로 하나의 연속된 표에 담는다(코스별 제목 문단/별도 표/강제 페이지 분리 없음)
   // 포장기록 기준 업체별 포장 수. 못 읽었거나 그 업체가 0건이면 칸을 비워 둔다(틀린 숫자를 찍는 것보다 낫다).
-  function grayCount(label, n) {
+  function grayCount(label, n, hhmm) {
     var gray = document.createElement('span'); gray.className = 'packed-gray';
     gray.appendChild(document.createTextNode(label));
     gray.appendChild(document.createElement('br'));
     var num = document.createElement('span'); num.className = 'packed-num'; num.textContent = n;
     gray.appendChild(num);
     gray.appendChild(document.createTextNode('개'));
+    if (hhmm) {
+      gray.appendChild(document.createElement('br'));
+      var tm = document.createElement('span'); tm.className = 'packed-time'; tm.textContent = hhmm + ' 포장';
+      gray.appendChild(tm);
+    }
     return gray;
   }
   // 마감자용 수량표와 현황지가 같이 쓰는 회색 참고 수량. 헬스장: 포대배송 칸=옷, 수건배송 칸=수건
@@ -1413,11 +1424,12 @@
     var itemsN = packedItemsFor(companyNumber);
     var clothesN = itemsN['옷'] || 0, towelN = itemsN['수건'] || 0;
     if (clothesN + towelN > 0) {
-      if (clothesN > 0) bagTd.appendChild(grayCount('(옷)', clothesN));
-      if (towelN > 0) towelTd.appendChild(grayCount('(수건)', towelN));
+      var hhmmItems = packedTimeFor(companyNumber);
+      if (clothesN > 0) bagTd.appendChild(grayCount('(옷)', clothesN, hhmmItems));
+      if (towelN > 0) towelTd.appendChild(grayCount('(수건)', towelN, hhmmItems));
     } else if (packedN > 0) {
       var names = packedPackersFor(companyNumber);
-      bagTd.appendChild(grayCount(names ? '(' + names + ')' : '(포대+수건)', packedN));
+      bagTd.appendChild(grayCount(names ? '(' + names + ')' : '(포대+수건)', packedN, packedTimeFor(companyNumber)));
     }
   }
 
@@ -1427,6 +1439,14 @@
     if (!pc || pc.date !== isoDate(state.selectedDate) || !pc.byPackers) return '';
     var key = String(companyNumber == null ? '' : companyNumber).trim().replace(/^0+/, '') || '0';
     return (pc.byPackers[key] || []).join('·');
+  }
+
+  // 그 업체를 가장 늦게 포장한 시각(HH:MM). 못 읽었으면 빈 문자열.
+  function packedTimeFor(companyNumber) {
+    var pc = state.packedCount;
+    if (!pc || pc.date !== isoDate(state.selectedDate) || !pc.byTime) return '';
+    var key = String(companyNumber == null ? '' : companyNumber).trim().replace(/^0+/, '') || '0';
+    return pc.byTime[key] || '';
   }
 
   function packedCountFor(companyNumber) {
@@ -1452,7 +1472,7 @@
       .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
       .then(function (data) {
         if (isoDate(state.selectedDate) !== dateIso || !data || !data.ok) return;
-        state.packedCount = { date: dateIso, byCompany: data.by_company || {}, byItems: data.by_company_items || {}, byPackers: data.by_company_packers || {} };
+        state.packedCount = { date: dateIso, byCompany: data.by_company || {}, byItems: data.by_company_items || {}, byPackers: data.by_company_packers || {}, byTime: data.by_company_time || {} };
         if (state.merged) renderPreview();
       })
       .catch(function () {})
