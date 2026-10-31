@@ -370,9 +370,45 @@
   .wash-cycle-sum { margin-left: auto; font-weight: 800; }
   .wash-foot-line { display: flex; justify-content: space-between; font-size: 8.5pt; color: #333; }
 
+  /* ================= 합세탁 체크표(마감자용) — A4 세로, 1단 표 ================= */
+  .washcheck-doc { width: 194mm; color: #111; }
+  .wck-head { display: flex; justify-content: space-between; align-items: flex-end; border: 0.6mm solid #111; padding: 2.4mm 3.6mm; }
+  .wck-kicker { font-size: 8.5pt; color: #444; }
+  .wck-title { font-size: 21pt; font-weight: 900; line-height: 1.15; }
+  .wck-warn { font-size: 11.5pt; font-weight: 800; color: #c1121f; line-height: 1.45; }
+  .wck-head-right { text-align: right; padding-bottom: 1mm; }
+  .wck-date { font-size: 10.5pt; color: #333; }
+  .wck-writer { font-size: 12.5pt; font-weight: 700; margin-top: 2mm; }
+  .wck-legend { margin: 3mm 0 2mm; }
+  .wck-legend-1 { font-size: 11pt; font-weight: 800; display: flex; align-items: center; }
+  .wck-legend-2 { font-size: 9pt; color: #333; margin-top: 1.6mm; }
+  .wck-sw { display: inline-block; width: 11mm; height: 5.6mm; border: 0.5mm solid #111; margin: 0 2.4mm 0 0; }
+  .wck-legend-1 .wck-sw + .wck-sw, .wck-legend-1 .wck-sw:nth-of-type(2) { margin-left: 6mm; }
+  .wck-sw-unk { background: #fff8c7; } .wck-sw-ok { background: #fff; }
+  .wck-rule { border: 0.3mm solid #777; padding: 1.6mm 2.4mm; font-size: 8pt; line-height: 1.5; margin-bottom: 3mm; }
+  .wck-table { width: 194mm; border-collapse: collapse; table-layout: fixed; }
+  .wck-table thead { display: table-header-group; }
+  .wck-table th { background: #f1f1f1; border: 0.3mm solid #333; border-bottom: 0.7mm solid #111; font-size: 9.5pt; font-weight: 800; height: 11mm; line-height: 1.15; }
+  .wck-table td { border: 0.3mm solid #333; text-align: center; padding: 0 1mm; overflow: hidden; white-space: nowrap; font-weight: 700; height: 9.7mm; }
+  .wck-table tr { break-inside: avoid; page-break-inside: avoid; }
+  .wck-table tr.course-start td { border-top: 0.8mm solid #111; }
+  .wck-table td.wck-ship { font-size: 11pt; font-weight: 800; }
+  .wck-table td.wck-no { font-size: 12.4pt; font-weight: 800; }
+  .wck-table td.wck-name { font-size: 13pt; font-weight: 800; text-align: left; padding-left: 2mm; }
+  .wck-table td.wck-biz { font-size: 10.3pt; font-weight: 500; }
+  .wck-table td.wck-size { font-size: 11.7pt; font-weight: 600; }
+  .wck-table td.wck-check { line-height: 1.05; }
+  .wck-boxes { font-size: 13pt; font-weight: 800; }
+  .wck-box { display: inline-block; width: 5.8mm; height: 5.8mm; border: 0.5mm solid #111; background: #fff; vertical-align: -1.2mm; margin-right: 0.6mm; }
+  .wck-cur { font-size: 7.6pt; font-weight: 500; color: #666; margin-top: 0.4mm; }
+  .wck-table td.wck-memo { text-align: left; font-size: 8.2pt; font-weight: 500; color: #666; background: #fff; white-space: normal; padding-left: 1.6mm; }
+  .wck-table tr.wck-unk td { background: #fff8c7; }
+  .wck-table tr.wck-unk td.wck-memo { background: #fffdf0; }
+  .wck-foot { display: flex; justify-content: space-between; font-size: 8.5pt; color: #333; margin-top: 3mm; }
+
   /* ================= 인쇄 전용 ================= */
   .print-only { display: none; }
-  #printStatus, #printAddress, #printCloser, #printAddressAll, #printChanges, #printWash { display: none; }
+  #printStatus, #printAddress, #printCloser, #printAddressAll, #printChanges, #printWash, #printWashCheck { display: none; }
 
   @page portraitPage { size: A4 portrait; margin: 8mm; }
   @page landscapePage { size: A4 landscape; margin: 7mm; }
@@ -383,13 +419,14 @@
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
 
     .print-only { display: block !important; }
-    #printStatus, #printAddress, #printCloser, #printAddressAll, #printChanges, #printWash { display: none !important; }
+    #printStatus, #printAddress, #printCloser, #printAddressAll, #printChanges, #printWash, #printWashCheck { display: none !important; }
     body.printing-status #printStatus { display: block !important; page: portraitPage; }
     body.printing-address #printAddress { display: block !important; page: landscapePage; }
     body.printing-closer #printCloser { display: block !important; page: portraitPage; }
     body.printing-address-all #printAddressAll { display: block !important; page: portraitPage; }
     body.printing-changes #printChanges { display: block !important; page: portraitPage; }
     body.printing-wash #printWash { display: block !important; page: portraitPage; }
+    body.printing-wash-check #printWashCheck { display: block !important; page: portraitPage; }
     .wash-page { break-after: page; page-break-after: always; }
     .wash-page:last-child { break-after: auto; page-break-after: auto; }
     .wash-page + .wash-page { margin-top: 0; }
@@ -454,8 +491,8 @@
             <span class="pdb-sub" data-i18n="pdbWashSub">세탁팀용 · 합세탁 체크표 출력</span>
           </button>
           <button class="primary-doc-btn" data-doc="closer_all_address">
-            <span class="pdb-title" data-no="③" data-i18n="pdbCloserAll">마감자용 수량표 + 전체주소지</span>
-            <span class="pdb-sub" data-i18n="pdbCloserAllSub">세탁 마감용 · 2개 문서 연속 출력</span>
+            <span class="pdb-title" data-no="③" data-i18n="pdbCloserAll">마감자용 수량표 + 전체주소지 + 합세탁 체크표</span>
+            <span class="pdb-sub" data-i18n="pdbCloserAllSub">세탁 마감용 · 3개 문서 연속 출력</span>
           </button>
           <button class="primary-doc-btn" data-doc="changes" id="changesDocBtn">
             <span class="pdb-title" data-no="④"><span data-i18n="pdbChanges">출력 후 라벨코스 변경내역</span> <span class="pdb-badge" id="changesBadge"></span></span>
@@ -471,6 +508,7 @@
           <button class="other-doc-btn" data-doc="address" data-i18n="odAddress">주소지만</button>
           <button class="other-doc-btn" data-doc="status" data-i18n="odStatus">현황지만</button>
           <button class="other-doc-btn" data-doc="closer" data-i18n="odCloser">마감자용 수량표만</button>
+          <button class="other-doc-btn" data-doc="washCheck" data-i18n="odWashCheck">합세탁 체크표만</button>
           <button class="other-doc-btn" data-doc="all_address" data-i18n="odAllAddr">전체주소지만</button>
           <button class="other-doc-btn" data-doc="status_address" data-i18n="pdbStatusAddr">현황지 + 주소지</button>
         </div>
@@ -514,6 +552,7 @@
   <div class="doc-page" id="printAddressAll"></div>
   <div class="doc-page" id="printChanges"></div>
   <div class="doc-page" id="printWash"></div>
+  <div class="doc-page" id="printWashCheck"></div>
 </div>
 
 <!-- 설정 모달 -->
@@ -566,10 +605,11 @@
 <div class="modal-overlay no-print" id="closerAllGuideModal">
   <div class="modal-box">
     <div class="modal-title" data-i18n="closerTitle">세탁 마감용 문서 출력</div>
-    <div class="modal-body" data-i18n-html="closerBody">1. 마감자용 수량표<br>2. 전체주소지<br><br>두 문서를 순서대로 출력해주세요.</div>
+    <div class="modal-body" data-i18n-html="closerBody">1. 마감자용 수량표<br>2. 전체주소지<br>3. 합세탁 체크표<br><br>세 문서를 순서대로 출력해주세요.</div>
     <div class="guide-steps">
       <button id="closerAllStep1Btn" data-i18n="closerStep1">1. 마감자용 수량표 인쇄</button>
       <button id="closerAllStep2Btn" data-i18n="closerStep2">2. 전체주소지 인쇄</button>
+      <button id="closerAllStep3Btn" data-i18n="closerStep3">3. 합세탁 체크표 인쇄</button>
     </div>
     <div class="modal-actions">
       <button class="confirm" id="closerAllDone" data-i18n="closerDone">출력 완료</button>
@@ -591,7 +631,8 @@
       pdbStatusAddrWash: '현황지 + 주소지 + 세탁공정', pdbStatusAddrWashSub: '배송기사용 + 세탁팀용 · 3개 문서 연속 출력',
       pdbWash: '세탁공정', pdbWashSub: '세탁팀용 · 합세탁 체크표 출력', lblWash: '세탁공정', btnWash: '세탁공정 인쇄', btnStatusAddrWash: '현황지 + 주소지 + 세탁공정 출력',
       washGuideBody: '현황지, 주소지, 세탁공정을 각각 안정적으로 출력합니다. 아래 순서대로 눌러주세요.', washStep3: '3. 세탁공정 인쇄', bWash: '세탁공정 · A4 세로',
-      pdbCloserAll: '마감자용 수량표 + 전체주소지', pdbCloserAllSub: '세탁 마감용 · 2개 문서 연속 출력',
+      pdbCloserAll: '마감자용 수량표 + 전체주소지 + 합세탁 체크표', pdbCloserAllSub: '세탁 마감용 · 3개 문서 연속 출력',
+      odWashCheck: '합세탁 체크표만', lblWashCheck: '합세탁 체크표', btnWashCheck: '합세탁 체크표 인쇄', bWashCheck: '합세탁 체크표 · A4 세로', closerStep3: '3. 합세탁 체크표 인쇄',
       pdbChanges: '출력 후 라벨코스 변경내역',
       otherTitle: '기타 출력', otherSub: '필요할 때만 선택하세요',
       odAddress: '주소지만', odStatus: '현황지만', odCloser: '마감자용 수량표만', odAllAddr: '전체주소지만',
@@ -599,7 +640,7 @@
       openAdmin: '🔗 관리·편집 화면 열기', previewTitle: '인쇄 미리보기',
       guideTitle: '인쇄 순서 안내', guideBody: '현황지와 주소지를 각각 안정적으로 출력합니다. 아래 순서대로 눌러주세요.',
       guideStep1: '1. 현황지 인쇄', guideStep2: '2. 주소지 인쇄',
-      closerTitle: '세탁 마감용 문서 출력', closerBody: '1. 마감자용 수량표<br>2. 전체주소지<br><br>두 문서를 순서대로 출력해주세요.',
+      closerTitle: '세탁 마감용 문서 출력', closerBody: '1. 마감자용 수량표<br>2. 전체주소지<br>3. 합세탁 체크표<br><br>세 문서를 순서대로 출력해주세요.',
       closerStep1: '1. 마감자용 수량표 인쇄', closerStep2: '2. 전체주소지 인쇄', closerDone: '출력 완료',
       connPending: '연결 확인 중', connOk: '원본 데이터 연결됨', connErr: '데이터 연결 오류',
       errTimeout: '요청이 너무 오래 걸려 중단됐어요. 다시 시도해주세요.', errGas: 'GAS 연결을 확인해주세요.', errLoad: '데이터를 불러오지 못했습니다.',
@@ -609,11 +650,11 @@
       all: '전체', courseFmt: '{c}코스', infoAll: 'ℹ 전체 · {n}개 코스 · {c}곳', infoPick: 'ℹ 코스를 선택해주세요.',
       noDriver: '기사 미배정', infoCourse: 'ℹ {course} · {driver} · {c}곳', pickCoursePreview: '코스를 선택해주세요.',
       lblAll: '전체', lblAddress: '주소지', lblStatus: '현황지', lblCloser: '마감자용 수량표', lblAllAddr: '전체 주소지',
-      lblCloserAll: '마감자용 수량표+전체주소지', lblChanges: '출력 후 라벨코스 변경내역', lblStatusAddr: '현황지+주소지',
+      lblCloserAll: '마감자용 수량표+전체주소지+합세탁 체크표', lblChanges: '출력 후 라벨코스 변경내역', lblStatusAddr: '현황지+주소지',
       btnChangesTest: '변경내역 인쇄 (테스트)', btnChanges: '변경내역 인쇄', btnCloser: '마감자용 전체 수량표 인쇄',
-      btnAllAddr: '전체 주소지 인쇄', btnCloserAll: '마감자용 + 전체주소지 출력', btnStatusAddr: '현황지 + 주소지 출력', btnPrintSuffix: ' 인쇄',
+      btnAllAddr: '전체 주소지 인쇄', btnCloserAll: '마감자용 + 전체주소지 + 합세탁 체크표 출력', btnStatusAddr: '현황지 + 주소지 출력', btnPrintSuffix: ' 인쇄',
       bAllBiz: '전체 업체', bAllCourse: '전체 코스', bA4P: 'A4 세로', bA4L: 'A4 가로', bA4P2: 'A4 세로 2종', bPL: '세로+가로',
-      bCloserAll: '마감자용 + 전체주소지',
+      bCloserAll: '마감자용 + 전체주소지 + 합세탁 체크표',
       chHas: '(있습니다.)', chNone: '(없습니다.)', chFail: '(확인 실패)',
       chSubHas: '마지막 출력({d}) 이후 {n}건 달라짐 · 눌러서 확인', chSubLoading: '출력본과 비교하는 중...',
       chSubFail: '출력본 확인 실패 · 눌러서 다시 시도', chSubNoSnap: '출력본 없음 · 출력하면 기준으로 저장', chSubSame: '마지막 출력본과 같음',
@@ -635,7 +676,7 @@
       openAdmin: '🔗 Buka layar kelola/ubah', previewTitle: 'Pratinjau cetak',
       guideTitle: 'Urutan cetak', guideBody: 'Lembar status dan daftar alamat dicetak satu per satu agar stabil. Tekan sesuai urutan di bawah.',
       guideStep1: '1. Cetak lembar status', guideStep2: '2. Cetak daftar alamat',
-      closerTitle: 'Cetak dokumen penutupan cucian', closerBody: '1. Tabel jumlah penutupan<br>2. Semua alamat<br><br>Cetak kedua dokumen sesuai urutan.',
+      closerTitle: 'Cetak dokumen penutupan cucian', closerBody: '1. Tabel jumlah penutupan<br>2. Semua alamat<br>3. 합세탁 체크표<br><br>Cetak ketiga dokumen sesuai urutan.',
       closerStep1: '1. Cetak tabel jumlah penutupan', closerStep2: '2. Cetak semua alamat', closerDone: 'Selesai mencetak',
       connPending: 'Memeriksa koneksi', connOk: 'Data asli terhubung', connErr: 'Kesalahan koneksi data',
       errTimeout: 'Permintaan terlalu lama dan dihentikan. Silakan coba lagi.', errGas: 'Periksa koneksi GAS.', errLoad: 'Gagal memuat data.',
@@ -671,7 +712,7 @@
       openAdmin: '🔗 Mở màn hình quản lý/chỉnh sửa', previewTitle: 'Xem trước khi in',
       guideTitle: 'Thứ tự in', guideBody: 'Bảng tình hình và danh sách địa chỉ được in riêng từng bản để ổn định. Hãy bấm theo thứ tự bên dưới.',
       guideStep1: '1. In bảng tình hình', guideStep2: '2. In danh sách địa chỉ',
-      closerTitle: 'In tài liệu chốt giặt', closerBody: '1. Bảng số lượng chốt<br>2. Tất cả địa chỉ<br><br>Hãy in hai tài liệu theo thứ tự.',
+      closerTitle: 'In tài liệu chốt giặt', closerBody: '1. Bảng số lượng chốt<br>2. Tất cả địa chỉ<br>3. 합세탁 체크표<br><br>Hãy in ba tài liệu theo thứ tự.',
       closerStep1: '1. In bảng số lượng chốt', closerStep2: '2. In tất cả địa chỉ', closerDone: 'In xong',
       connPending: 'Đang kiểm tra kết nối', connOk: 'Đã kết nối dữ liệu gốc', connErr: 'Lỗi kết nối dữ liệu',
       errTimeout: 'Yêu cầu quá lâu nên đã bị dừng. Vui lòng thử lại.', errGas: 'Vui lòng kiểm tra kết nối GAS.', errLoad: 'Không tải được dữ liệu.',
@@ -801,6 +842,7 @@
   var printAddress = $('printAddress');
   var printCloser = $('printCloser');
   var printWash = $('printWash');
+  var printWashCheck = $('printWashCheck');
   var printChanges = $('printChanges');
   var printAddressAll = $('printAddressAll');
 
@@ -1132,7 +1174,7 @@
     if (state.selectedCourse && state.merged.courses.indexOf(state.selectedCourse) !== -1) return [state.selectedCourse];
     return [];
   }
-  var ALWAYS_ALL_DOC_TYPES = { closer: true, all_address: true, closer_all_address: true, wash: true };
+  var ALWAYS_ALL_DOC_TYPES = { closer: true, all_address: true, closer_all_address: true, wash: true, washCheck: true };
 
   function selectDocType(type) { state.docType = type; if (type !== 'changes') state.testMode = false; renderAll(); }
 
@@ -1200,7 +1242,7 @@
     return '';
   }
   function docLabel(type) {
-    return type === 'address' ? t('lblAddress') : type === 'status' ? t('lblStatus') : type === 'closer' ? t('lblCloser') : type === 'all_address' ? t('lblAllAddr') : type === 'closer_all_address' ? t('lblCloserAll') : type === 'changes' ? t('lblChanges') : type === 'wash' ? t('lblWash') : type === 'status_address_wash' ? t('btnStatusAddrWash') : t('lblStatusAddr');
+    return type === 'address' ? t('lblAddress') : type === 'status' ? t('lblStatus') : type === 'closer' ? t('lblCloser') : type === 'all_address' ? t('lblAllAddr') : type === 'closer_all_address' ? t('lblCloserAll') : type === 'changes' ? t('lblChanges') : type === 'wash' ? t('lblWash') : type === 'washCheck' ? t('lblWashCheck') : type === 'status_address_wash' ? t('btnStatusAddrWash') : t('lblStatusAddr');
   }
 
   function canPrint() {
@@ -1221,6 +1263,8 @@
       printBtnLabel.textContent = t('btnCloserAll');
     } else if (state.docType === 'wash') {
       printBtnLabel.textContent = t('btnWash');
+    } else if (state.docType === 'washCheck') {
+      printBtnLabel.textContent = t('btnWashCheck');
     } else if (state.docType === 'status_address_wash') {
       var cl1 = courseLabel();
       printBtnLabel.textContent = (cl1 ? cl1 + ' ' : '') + t('btnStatusAddrWash');
@@ -1251,6 +1295,10 @@
     } else if (state.docType === 'wash') {
       items.push({ text: t('bAllBiz'), cls: 'b-solid' });
       items.push({ text: t('bWash'), cls: 'b-soft' });
+    } else if (state.docType === 'washCheck') {
+      items.push({ text: t('bAllBiz'), cls: 'b-solid' });
+      items.push({ text: t('bWashCheck'), cls: 'b-soft' });
+      items.push({ text: t('bA4P'), cls: '' });
     } else if (state.docType === 'closer_all_address') {
       items.push({ text: t('bAllBiz'), cls: 'b-solid' });
       items.push({ text: t('bCloserAll'), cls: 'b-soft' });
@@ -1819,6 +1867,90 @@
     return container;
   }
 
+  // ================= 합세탁 체크표(마감자용) 문서 =================
+  // J열(combinedWash) 현재 상태: ok=가능(가능·A/B/C), no=단독(불가·단독·X), unk=미확정(공백·체크·신규·확인·그 외)
+  function washCheckState(it) {
+    var v = String((it && it.combinedWash) || '').replace(/\s+/g, '').toUpperCase();
+    if (v === '가능' || v === 'A' || v === 'B' || v === 'C') return 'ok';
+    if (v === '불가' || v === '단독' || v === 'X') return 'no';
+    return 'unk';
+  }
+  var WASHCHECK_STATE_TEXT = { ok: '현재: 가능', no: '현재: 단독(불가)', unk: '현재: 미확정' };
+  var WASHCHECK_COL_WIDTHS = [8, 6, 15, 9, 6.5, 38.5, 17];
+
+  function buildWashCheckDoc(allCourses, merged) {
+    var container = document.createElement('div');
+    container.className = 'washcheck-doc';
+
+    var head = document.createElement('div');
+    head.className = 'wck-head';
+    head.innerHTML =
+      '<div class="wck-head-left">' +
+        '<div class="wck-kicker">마감자용 · 합세탁 가능 여부 체크</div>' +
+        '<div class="wck-title">합세탁 체크표</div>' +
+        '<div class="wck-warn">※ 포장 끝나고 출고번호대로 깔린 수건을 보면서 체크</div>' +
+      '</div>' +
+      '<div class="wck-head-right"><div class="wck-date"></div><div class="wck-writer">작성 ______________</div></div>';
+    head.querySelector('.wck-date').textContent = isoDate(state.selectedDate) + ' (' + weekdayFromDate(state.selectedDate) + ')';
+    container.appendChild(head);
+
+    var legend = document.createElement('div');
+    legend.className = 'wck-legend';
+    legend.innerHTML =
+      '<div class="wck-legend-1"><span class="wck-sw wck-sw-unk"></span>미확정 — 오늘 꼭 체크<span class="wck-sw wck-sw-ok"></span>확정 — 바뀐 게 보일 때만 체크</div>' +
+      '<div class="wck-legend-2">현재: 가능 → 합세탁 그룹 · 현재: 단독(불가) → 혼자 세탁 · 현재: 미확정 → 확인 전 · 단독</div>';
+    container.appendChild(legend);
+
+    var rule = document.createElement('div');
+    rule.className = 'wck-rule';
+    rule.innerHTML =
+      '<div>같은 색 · 로고/자수 없음 · 이름표 전부 있음 → <b>가능</b> ｜ 하나라도 아니면 → <b>불가</b> + 메모에 이유 (색섞임 / 로고 / 이름표) ｜ 수건이 적거나 애매하면 → <b>보류</b> (다음 수거 때 다시)</div>' +
+      '<div>칸 아래 작은 글씨가 <b>현재 상태</b> · 현재 상태와 같으면 비워 두고, <b>바뀐 게 보이면</b> 새 상태에 체크 + 메모 (예: 수건 바뀜 · 로고 생김)</div>';
+    container.appendChild(rule);
+
+    var table = document.createElement('table');
+    table.className = 'wck-table';
+    table.innerHTML =
+      '<colgroup>' + WASHCHECK_COL_WIDTHS.map(function (w) { return '<col style="width:' + w + '%">'; }).join('') + '</colgroup>' +
+      '<thead><tr><th>출고</th><th>번호</th><th>약칭</th><th>업종</th><th>포대<br>사이즈</th><th>합세탁 체크</th><th>메모</th></tr></thead>';
+    var tbody = document.createElement('tbody');
+    allCourses.forEach(function (course, courseIdx) {
+      (merged.byCourse[course] || []).forEach(function (it, itemIdx) {
+        var st = washCheckState(it);
+        var tr = document.createElement('tr');
+        tr.className = 'wck-row wck-' + st + (courseIdx > 0 && itemIdx === 0 ? ' course-start' : '');
+        tr.appendChild(td(it.deliveryOrder, 'wck-ship'));
+        tr.appendChild(td(it.companyNumber, 'wck-no'));
+        tr.appendChild(td(it.nickname, 'wck-name'));
+        tr.appendChild(td(it.businessType, 'wck-biz'));
+        tr.appendChild(td(bagSizeDisplay(it.bagSize), 'wck-size'));
+        var chk = document.createElement('td');
+        chk.className = 'wck-check';
+        chk.innerHTML =
+          '<div class="wck-boxes"><span class="wck-box"></span>가능 <span class="wck-box"></span>불가 <span class="wck-box"></span>보류</div>' +
+          '<div class="wck-cur"></div>';
+        chk.querySelector('.wck-cur').textContent = WASHCHECK_STATE_TEXT[st];
+        tr.appendChild(chk);
+        var note = buildSpecialNote(it);
+        if (note === '-') note = '';
+        var isNew = String(it.combinedWash || '').replace(/\s+/g, '') === '신규';
+        var memo = document.createElement('td');
+        memo.className = 'wck-memo';
+        memo.textContent = (isNew ? '신규 ' : '') + note;
+        tr.appendChild(memo);
+        tbody.appendChild(tr);
+      });
+    });
+    table.appendChild(tbody);
+    container.appendChild(table);
+
+    var foot = document.createElement('div');
+    foot.className = 'wck-foot';
+    foot.innerHTML = '<span>체크 후 사진 → 단톡방 · 관리운영에서 거래처 시트 합세탁(J열)에 반영</span><span>다음날 세탁공정표부터 그룹 반영됨</span>';
+    container.appendChild(foot);
+    return container;
+  }
+
   var ADDRESSALL_COL_WIDTHS = [7, 8, 8, 11, 32, 10, 16, 8];
   var ADDRESSALL_TEMPLATE =
     '<table class="doc-table addressall-table">' +
@@ -1927,6 +2059,12 @@
     if (state.docType === 'closer' || state.docType === 'closer_all_address') {
       var closerNode = buildCloserDoc(state.merged.courses.slice(), state.merged);
       previewSurface.appendChild(buildPageFrame(closerNode, true));
+      if (state.docType === 'closer_all_address') previewSurface.appendChild(buildPageFrame(buildWashCheckDoc(state.merged.courses.slice(), state.merged), true));
+      requestAnimationFrame(fitPreviewPages);
+      return;
+    }
+    if (state.docType === 'washCheck') {
+      previewSurface.appendChild(buildPageFrame(buildWashCheckDoc(state.merged.courses.slice(), state.merged), true));
       requestAnimationFrame(fitPreviewPages);
       return;
     }
@@ -2234,6 +2372,11 @@
       printCloser.appendChild(buildCloserDoc(allCourses, state.merged));
       return;
     }
+    if (kind === 'washCheck') {
+      printWashCheck.innerHTML = '';
+      printWashCheck.appendChild(buildWashCheckDoc(state.merged.courses.slice(), state.merged));
+      return;
+    }
     if (kind === 'wash') {
       printWash.innerHTML = '';
       printWash.appendChild(buildWashDoc(state.merged));
@@ -2321,6 +2464,7 @@
     if (state.docType === 'all_address') { printAddressAllDoc(); return; }
     if (state.docType === 'closer_all_address') { closerAllGuideModal.classList.add('show'); return; }
     if (state.docType === 'wash') { printWashDoc(); return; }
+    if (state.docType === 'washCheck') { printWashCheckDoc(); return; }
     if (state.docType === 'status_address_wash') { washGuideModal.classList.add('show'); return; }
     printSingle(state.docType);
   });
@@ -2333,9 +2477,11 @@
 
   closerAllStep1Btn.addEventListener('click', function () { printCloserDoc(); closerAllStep1Btn.classList.add('done'); });
   closerAllStep2Btn.addEventListener('click', function () { printAddressAllDoc(); closerAllStep2Btn.classList.add('done'); });
+  var closerAllStep3Btn = $('closerAllStep3Btn');
+  closerAllStep3Btn.addEventListener('click', function () { printWashCheckDoc(); closerAllStep3Btn.classList.add('done'); });
   closerAllDone.addEventListener('click', function () {
     closerAllGuideModal.classList.remove('show');
-    closerAllStep1Btn.classList.remove('done'); closerAllStep2Btn.classList.remove('done');
+    closerAllStep1Btn.classList.remove('done'); closerAllStep2Btn.classList.remove('done'); closerAllStep3Btn.classList.remove('done');
   });
 
   var washGuideModal = $('washGuideModal');
@@ -2347,6 +2493,21 @@
     washGuideModal.classList.remove('show');
     washStepBtns.forEach(function (b) { b.classList.remove('done'); });
   });
+
+  function printWashCheckDoc() {
+    if (!state.freshPacking) { withFreshPacked(printWashCheckDoc); return; }
+    if (!state.merged || state.merged.closedDay) return;
+    renderPrintDoc('washCheck');
+    var expected = state.merged.totalCount;
+    var actual = printWashCheck.querySelectorAll('tr.wck-row').length;
+    if (expected !== actual) {
+      alert('합세탁 체크표 인쇄 오류: 전체 업체 수(' + expected + ')와 실제 인쇄될 행 수(' + actual + ')가 일치하지 않습니다. 인쇄를 중단했습니다.');
+      return;
+    }
+    if (!actual) { alert(t('nothingToPrint')); return; }
+    // 합세탁 체크표는 출력본(변경내역 기준)을 바꾸지 않는다 — saveSnapshot이 status/closer만 저장한다.
+    doPrint('printing-wash-check', function () { recordPrint('washCheck', state.merged.courses); });
+  }
 
   function printWashDoc() {
     if (!state.freshPacking) { withFreshPacked(printWashDoc); return; }
