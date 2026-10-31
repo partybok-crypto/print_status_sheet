@@ -442,13 +442,13 @@
       <div class="field-section">
         <div class="section-label" data-i18n="sec3">3. 자주 사용하는 출력</div>
         <div class="primary-doc-list" id="primaryDocList">
-          <button class="primary-doc-btn" data-doc="status_address">
-            <span class="pdb-title" data-i18n="pdbStatusAddr">현황지 + 주소지</span>
-            <span class="pdb-sub" data-i18n="pdbStatusAddrSub">배송기사용 · 2개 문서 연속 출력</span>
-          </button>
           <button class="primary-doc-btn" data-doc="status_address_wash">
             <span class="pdb-title" data-i18n="pdbStatusAddrWash">현황지 + 주소지 + 세탁공정</span>
             <span class="pdb-sub" data-i18n="pdbStatusAddrWashSub">배송기사용 + 세탁팀용 · 3개 문서 연속 출력</span>
+          </button>
+          <button class="primary-doc-btn" data-doc="wash">
+            <span class="pdb-title" data-i18n="pdbWash">세탁공정</span>
+            <span class="pdb-sub" data-i18n="pdbWashSub">세탁팀용 · 합세탁 체크표 출력</span>
           </button>
           <button class="primary-doc-btn" data-doc="closer_all_address">
             <span class="pdb-title" data-i18n="pdbCloserAll">마감자용 수량표 + 전체주소지</span>
@@ -469,7 +469,7 @@
           <button class="other-doc-btn" data-doc="status" data-i18n="odStatus">현황지만</button>
           <button class="other-doc-btn" data-doc="closer" data-i18n="odCloser">마감자용 수량표만</button>
           <button class="other-doc-btn" data-doc="all_address" data-i18n="odAllAddr">전체주소지만</button>
-          <button class="other-doc-btn" data-doc="wash" data-i18n="odWash">세탁공정만</button>
+          <button class="other-doc-btn" data-doc="status_address" data-i18n="pdbStatusAddr">현황지 + 주소지</button>
         </div>
       </div>
 
@@ -586,7 +586,7 @@
       today: '오늘', nextBiz: '다음 영업일',
       pdbStatusAddr: '현황지 + 주소지', pdbStatusAddrSub: '배송기사용 · 2개 문서 연속 출력',
       pdbStatusAddrWash: '현황지 + 주소지 + 세탁공정', pdbStatusAddrWashSub: '배송기사용 + 세탁팀용 · 3개 문서 연속 출력',
-      odWash: '세탁공정만', lblWash: '세탁공정', btnWash: '세탁공정 인쇄', btnStatusAddrWash: '현황지 + 주소지 + 세탁공정 출력',
+      pdbWash: '세탁공정', pdbWashSub: '세탁팀용 · 합세탁 체크표 출력', lblWash: '세탁공정', btnWash: '세탁공정 인쇄', btnStatusAddrWash: '현황지 + 주소지 + 세탁공정 출력',
       washGuideBody: '현황지, 주소지, 세탁공정을 각각 안정적으로 출력합니다. 아래 순서대로 눌러주세요.', washStep3: '3. 세탁공정 인쇄', bWash: '세탁공정 · A4 세로',
       pdbCloserAll: '마감자용 수량표 + 전체주소지', pdbCloserAllSub: '세탁 마감용 · 2개 문서 연속 출력',
       pdbChanges: '출력 후 라벨코스 변경내역',
