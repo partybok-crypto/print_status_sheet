@@ -327,7 +327,7 @@
   .wash-title { font-size: 21pt; font-weight: 900; line-height: 1.15; }
   .wash-warn { font-size: 11.5pt; font-weight: 800; color: #c1121f; line-height: 1.45; }
   .wash-head-right { text-align: right; padding-bottom: 1mm; }
-  .wash-date { font-size: 10.5pt; color: #333; }
+  .wash-date { font-size: 13pt; font-weight: 800; color: #111; }
   .wash-writer { font-size: 12.5pt; font-weight: 700; margin-top: 2mm; }
   .wash-writer-name.filled { font-size: 16pt; font-weight: 900; }
   .wash-legend { display: flex; gap: 2.4mm; margin: 3mm 0 2mm; align-items: center; }
@@ -363,10 +363,10 @@
   .wash-sub.wg-C td { background: #fff1b8; } .wash-sub.wg-X td { background: #d9d9d9; }
   .wash-sub.wg-N td { background: #fff; border-top: 0.5mm dashed #c58a00; }
   .wash-table tr { break-inside: avoid; page-break-inside: avoid; }
-  .wash-foot { margin-top: 4mm; break-inside: avoid; }
+  .wash-foot { margin-top: 3mm; break-inside: avoid; }
   .wash-cycle { border: 0.6mm solid #111; padding: 2.6mm 3.6mm; font-size: 11.5pt; display: flex; align-items: center; }
   .wash-cycle-sum { margin-left: auto; font-weight: 800; }
-  .wash-foot-line { display: flex; justify-content: space-between; font-size: 8.5pt; color: #333; margin-top: 2mm; }
+  .wash-foot-line { display: flex; justify-content: space-between; font-size: 8.5pt; color: #333; }
 
   /* ================= 인쇄 전용 ================= */
   .print-only { display: none; }
@@ -1641,11 +1641,19 @@
   var WASH_ORDER = ['A', 'B', 'C', 'X', 'N'];
   // 한 열에 쌓을 수 있는 높이 계산용(mm). 행 높이는 CSS와 같은 값이어야 한다.
   var WASH_H = { row: 13.6, rowPlain: 11.2, rowNew: 14.2, sub: 7.6 };
-  var WASH_PAGE_MM = 278, WASH_HEAD1_MM = 50, WASH_HEADN_MM = 12, WASH_FOOT_MM = 24, WASH_THEAD_MM = 9;
+  var WASH_PAGE_MM = 278, WASH_HEAD1_MM = 50, WASH_HEADN_MM = 12, WASH_FOOT_MM = 12, WASH_THEAD_MM = 9;
 
   function washGroupOfItem(it) {
     var g = it && it.washGroup;
     return WASH_GROUPS.hasOwnProperty(g) ? g : 'X';
+  }
+  // 수거일(선택한 배송일) → 세탁일(다음 영업일; 월요일은 휴무라 건너뜀)
+  function washDateText() {
+    var d = state.selectedDate;
+    var w = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+    if (w.getDay() === 1) w = new Date(w.getFullYear(), w.getMonth(), w.getDate() + 1);
+    function f(x) { return (x.getMonth() + 1) + '/' + x.getDate() + '(' + weekdayFromDate(x) + ')'; }
+    return '수거 ' + f(d) + ' → 세탁 ' + f(w);
   }
   function washCourseLetter(c) { return String(c || '').replace(/^-+/, ''); }
 
@@ -1710,7 +1718,6 @@
     var nextBudget = WASH_PAGE_MM - WASH_HEADN_MM - WASH_FOOT_MM - WASH_THEAD_MM;
     var pages = paginateWashRows(rows, firstBudget, nextBudget);
 
-    var wd = weekdayFromDate(state.selectedDate);
     pages.forEach(function (pg, pi) {
       var page = document.createElement('div');
       page.className = 'wash-page';
@@ -1725,7 +1732,7 @@
             '<div class="wash-warn">※ 합세탁 후 꼭 분류하여 포장 담당자에게 인계할 것</div>' +
           '</div>' +
           '<div class="wash-head-right"><div class="wash-date"></div><div class="wash-writer">작성 <span class="wash-writer-name"></span></div></div>';
-        head.querySelector('.wash-date').textContent = isoDate(state.selectedDate) + ' (' + wd + ')';
+        head.querySelector('.wash-date').textContent = washDateText();
         var writerEl = head.querySelector('.wash-writer-name');
         if (merged.washWriter) { writerEl.textContent = merged.washWriter; writerEl.classList.add('filled'); } else { writerEl.textContent = '______________'; }
         page.appendChild(head);
@@ -1757,7 +1764,7 @@
       } else {
         var mini = document.createElement('div');
         mini.className = 'wash-mini';
-        mini.textContent = '세탁공정 · ' + isoDate(state.selectedDate) + ' (' + wd + ') · ' + (pi + 1) + '/' + pages.length + '쪽';
+        mini.textContent = '세탁공정 · ' + washDateText() + ' · ' + (pi + 1) + '/' + pages.length + '쪽';
         page.appendChild(mini);
       }
 
@@ -1802,7 +1809,6 @@
         var foot = document.createElement('div');
         foot.className = 'wash-foot';
         foot.innerHTML =
-          '<div class="wash-cycle"><b>세탁기별 사이클</b>　① ____회　② ____회　③ ____회　④ ____회<span class="wash-cycle-sum">합계 ____회</span></div>' +
           '<div class="wash-foot-line"><span>이상(섞임·오염·냄새·분실) 시 ✗ 표시 후 단톡방 · ☐ 업체는 흰/로고/이름표 확인</span><span>세탁 완료 후 사진 → 단톡방</span></div>';
         page.appendChild(foot);
       }

@@ -30,7 +30,7 @@ const DATA_START_ROW = 4;
  */
 const COL_REGION = 8;      // H
 const COL_DRIVER = 10;     // J (과거 기사명 열 — 이제 기사명 보조로 읽지 않는다)
-const COL_COMBINED_WASH = 10; // J 합세탁 (가능 / 체크·신규·확인 / 공백)
+const COL_COMBINED_WASH = 10; // J 합세탁 (A/B/C/X 직접 지정 / 가능 / 체크·신규·확인 / 공백)
 const COL_COMPANY_NO = 11; // K
 const COL_NICKNAME = 12;   // L
 const COL_BIZ_TYPE = 13;   // M
@@ -139,10 +139,15 @@ function findDayCodeColumn_(sheet, fullDayName) {
 }
 
 // 합세탁 그룹: A 헬스장·필라테스 / B 미용실 / C 피부관리·마사지 / X 단독 / N 신규·미확인(단독+체크)
+// J열 직접 입력(A/B/C/X)이 최우선, 그다음 '가능'+업종 자동, 체크·신규·확인은 N
 function washGroupOf_(washRaw, bizRaw) {
   var w = String(washRaw === null || washRaw === undefined ? "" : washRaw).replace(/\s+/g, "");
   var biz = String(bizRaw === null || bizRaw === undefined ? "" : bizRaw).replace(/\s+/g, "");
+  // 1단계: J열에 A/B/C(또는 X)를 직접 적으면 그게 우선 — 업종표에 없는 곳·예외 업체는 시트에서 직접 지정
+  var direct = w.toUpperCase();
+  if (direct === "A" || direct === "B" || direct === "C" || direct === "X") return direct;
   if (w === "체크" || w === "신규" || w === "확인") return "N";
+  // 2단계: 가능이면 업종으로 자동
   if (w !== "가능") return "X";
   if (/헬스|필라테스/.test(biz)) return "A";
   if (/미용실/.test(biz)) return "B";
