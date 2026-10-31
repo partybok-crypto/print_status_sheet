@@ -357,8 +357,8 @@
   .wash-item.wg-C td { background: #fff1b8; } .wash-item.wg-X td { background: #d9d9d9; }
   .wash-item.wg-N td { background: #fff; border-top: 0.4mm dashed #c58a00; border-bottom: 0.4mm dashed #c58a00; }
   .wash-item.wg-N td.wc-group { border-left: 0.5mm dashed #c58a00; }
-  .wash-item.wg-N td.wc-wash { border-right: 0.5mm dashed #c58a00; }
-  .wash-item td.wc-qty, .wash-item td.wc-wash { background: #fff; }
+  .wash-item.wg-N td.wc-round { border-right: 0.5mm dashed #c58a00; }
+  .wash-item td.wc-qty, .wash-item td.wc-wash, .wash-item td.wc-round { background: #fff; }
   .wash-sub { height: 7.6mm; }
   .wash-sub td { text-align: left; font-size: 9pt; font-weight: 800; padding-left: 2mm; border-top: 0.8mm solid #111; }
   .wash-sub.wg-A td { background: #cfe3ff; } .wash-sub.wg-B td { background: #c9efd2; }
@@ -1797,7 +1797,7 @@
         page.appendChild(legend);
         var rule = document.createElement('div');
         rule.className = 'wash-rule';
-        rule.innerHTML = '같은 색끼리만 한 세탁기에 · <span class="wash-rule-key">넣으면 줄 긋고 세탁기-회차 기입</span> · 흰 줄(X·☐)은 따로 · 수거 없으면 수량 0';
+        rule.innerHTML = '같은 색끼리만 한 세탁기에 · <span class="wash-rule-key">넣으면 줄 긋고 세탁기 번호·회차 기입</span> · 흰 줄(X·☐)은 따로 · 수거 없으면 수량 0';
         page.appendChild(rule);
 
         if (notes.length) {
@@ -1826,15 +1826,15 @@
         var tbl = document.createElement('table');
         tbl.className = 'wash-table';
         tbl.innerHTML =
-          '<colgroup><col style="width:11%"><col style="width:10%"><col style="width:12%"><col style="width:40%"><col style="width:11%"><col style="width:16%"></colgroup>' +
-          '<thead><tr><th>합세탁<br>그룹</th><th>코스</th><th>번호</th><th>약칭</th><th>수량</th><th>세탁<br><span class="th-sub">기-회차</span></th></tr></thead>';
+          '<colgroup><col style="width:10%"><col style="width:9%"><col style="width:11%"><col style="width:35%"><col style="width:10%"><col style="width:15%"><col style="width:10%"></colgroup>' +
+          '<thead><tr><th>합세탁<br>그룹</th><th>코스</th><th>번호</th><th>약칭</th><th>수량</th><th>세탁기<br>번호</th><th>회차</th></tr></thead>';
         var tb = document.createElement('tbody');
         colRows.forEach(function (r) {
           var tr = document.createElement('tr');
           tr.className = 'wg-' + r.g;
           if (r.type === 'sub') {
             tr.classList.add('wash-sub');
-            var c = document.createElement('td'); c.colSpan = 6;
+            var c = document.createElement('td'); c.colSpan = 7;
             c.textContent = (r.g === 'N' ? '☐' : r.g) + ' ' + WASH_GROUPS[r.g].name + ' ' + r.n + '곳';
             tr.appendChild(c);
           } else {
@@ -1849,6 +1849,7 @@
             tr.appendChild(nm);
             tr.appendChild(td('', 'wc-qty'));
             tr.appendChild(td('', 'wc-wash'));
+            tr.appendChild(td('', 'wc-round'));
           }
           tb.appendChild(tr);
         });
