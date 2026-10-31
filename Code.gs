@@ -165,6 +165,13 @@ function scheduleHour_(v) {
   return (isNaN(n) || n < 0 || n > 24) ? null : n;
 }
 
+// 세탁은 수거일 다음 영업일(월요일은 휴무라 건너뜀)에 하므로, 작성자는 그 세탁일 아침 근무자 기준이다.
+function washDateOf_(dateObj) {
+  var w = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate() + 1);
+  if (w.getDay() === 1) w = new Date(w.getFullYear(), w.getMonth(), w.getDate() + 1);
+  return w;
+}
+
 // 작성자: 먼저 "주차별 쉬프트"(이번 주)에서 찾고, 없으면 지난 주 보관 탭("40주차" 등)에서 찾는다.
 function getFirstWorkerName_(dateObj) {
   var n = getFirstWorkerNameCurrent_(dateObj);
@@ -461,7 +468,7 @@ function buildDayData_(weekday, explicitDate) {
     weekNumber: getIsoWeekNumber_(dateObj) + "주차",
     origin: origin,
     courses: order,
-    washWriter: getFirstWorkerName_(dateObj),
+    washWriter: getFirstWorkerName_(washDateOf_(dateObj)),
     drivers: drivers,
     items: items,
     count: items.length,
