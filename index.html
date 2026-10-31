@@ -335,6 +335,7 @@
   .wl-A { background: #cfe3ff; } .wl-B { background: #c9efd2; } .wl-C { background: #fff1b8; } .wl-X { background: #d9d9d9; }
   .wl-N { background: #fff; border: 0.5mm dashed #c58a00; }
   .wash-rule { font-size: 9.5pt; color: #333; margin-bottom: 2.4mm; }
+  .wash-rule-key { font-size: 12.5pt; font-weight: 900; color: #111; }
   .wash-notes { border: 0.6mm solid #c58a00; background: #fff8e6; padding: 2mm 3.4mm; margin-bottom: 3mm; font-size: 10pt; line-height: 1.7; }
   .wash-notes-label { color: #b36b00; margin-right: 3mm; }
   .wash-note { margin-right: 4mm; display: inline-block; }
@@ -1745,7 +1746,7 @@
         page.appendChild(legend);
         var rule = document.createElement('div');
         rule.className = 'wash-rule';
-        rule.innerHTML = '같은 색끼리만 한 세탁기에 · 넣으면 줄 긋고 <b>세탁기-회차</b> 기입 · 흰 줄(X·☐)은 따로 · 수거 없으면 수량 0';
+        rule.innerHTML = '같은 색끼리만 한 세탁기에 · <span class="wash-rule-key">넣으면 줄 긋고 세탁기-회차 기입</span> · 흰 줄(X·☐)은 따로 · 수거 없으면 수량 0';
         page.appendChild(rule);
 
         if (notes.length) {
