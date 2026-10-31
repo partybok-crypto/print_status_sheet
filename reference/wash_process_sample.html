@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; background:#fff; font-family:"Noto Sans CJK KR","Noto Sans KR",sans-serif; color:#111; -webkit-print-color-adjust:exact; }
+  .page { width:794px; height:1123px; padding:24px 28px; display:flex; flex-direction:column; }
+  .hbox { border:2px solid #111; padding:6px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:flex-end; }
+  .kicker { font-size:11px; color:#555; }
+  .title { font-size:24px; font-weight:800; line-height:1.2; }
+  .meta { font-size:13px; color:#333; text-align:right; }
+  .legend { display:flex; gap:8px; font-size:14px; margin:0 0 8px; align-items:center; flex-wrap:wrap; }
+  .legend span { border:1.5px solid #111; border-radius:4px; padding:3px 10px; font-weight:600; }
+  .legend .how { border:none; padding:0; color:#444; font-weight:400; font-size:13px; width:100%; }
+  .A { background:#cfe3ff; } .B { background:#c9efd2; } .C { background:#fff1b8; }
+  .X { background:#d9d9d9; } .N { background:#fff; border:2px dashed #c58a00 !important; }
+  .cols { display:flex; gap:12px; flex:1; }
+  .cols table { width:50%; border-collapse:collapse; font-size:17px; align-self:flex-start; }
+  th, td { border:1.5px solid #111; padding:4px 6px; text-align:center; vertical-align:middle; height:52px; }
+  th { background:#f1f1f1; font-size:14px; height:40px; }
+  th .sub { display:block; font-weight:400; font-size:10px; color:#555; }
+  tr.gs td { border-top:3px solid #111; }
+  td.course { width:52px; font-weight:800; color:#111; font-size:22px; }
+  td.no { width:50px; }
+  td.nick { text-align:left; font-weight:700; font-size:19px; }
+  td.grp { font-weight:900; font-size:22px; width:52px; }
+  td.wash, th.wash { width:84px; background:#fff; }
+  .red { color:#c0392b; font-weight:800; font-size:20px; }
+  tr.done td.nick, tr.done td.no { position:relative; }
+  tr.done td.nick::after, tr.done td.no::after { content:""; position:absolute; left:3px; right:3px; top:50%; border-top:3px solid #c0392b; transform:rotate(-2deg); }
+  .foot { font-size:13px; margin-top:8px; display:flex; justify-content:space-between; }
+  .grpbox { border:1.5px solid #111; padding:6px 10px; margin-bottom:10px; font-size:14.5px; display:grid; grid-template-columns:auto 1fr; column-gap:10px; row-gap:3px; align-items:center; }
+  .grpbox b { font-size:15px; width:28px; height:24px; display:flex; align-items:center; justify-content:center; border:1.5px solid #111; border-radius:3px; }
+  .grpbox b.N { border:2px dashed #c58a00; }
+  th, td { height:60px; }
+  th { height:40px; }
+  td.no { width:60px; font-size:22px; font-weight:700; }
+  td.nick { font-size:22px; }
+  tr.X td, tr.gs.X td, tr.N td { height:48px; }
+  .cols table { font-size:18px; }
+  .grpbox b.A{background:#cfe3ff}.grpbox b.B{background:#c9efd2}.grpbox b.C{background:#fff1b8}.grpbox b.D{background:#fcd5e3}.grpbox b.X{background:#d9d9d9}
+  td.qty, th.qty { width:58px; }
+  td.wash, th.wash { width:76px; }
+  .cols table { table-layout:fixed; }
+  th, td { padding:3px 3px; white-space:nowrap; }
+  td.grp, th:nth-child(1) { width:40px; } td.grp { font-size:21px; }
+  td.course, th:nth-child(2) { width:36px; } td.course { font-size:20px; }
+  td.no, th:nth-child(3) { width:44px; } td.no { font-size:20px; }
+  td.nick { font-size:19px; letter-spacing:-0.5px; }
+  td.qty, th.qty { width:44px; }
+  td.wash, th.wash { width:62px; }
+  .red { font-size:18px; }
+  th { font-size:12px; }
+  th, td { height:56px; } th { height:40px; }
+  tr.X td, tr.gs.X td, tr.N td { height:46px; }
+  .warn { border:2px solid #c58a00; background:#fffaf0; padding:6px 10px; margin-bottom:10px; font-size:13.5px; display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
+  .warn > b { font-size:14px; color:#9a6b00; }
+  tr.sub td { height:24px; text-align:left; font-size:12.5px; font-weight:800; padding:2px 8px; border-top:3px solid #111; }
+  tr.sub.N td { border:2px dashed #c58a00; border-bottom:1.5px solid #111; }
+  .chk { font-size:11px; font-weight:500; color:#444; letter-spacing:0; }
+  .summary { margin-top:10px; border:2px solid #111; padding:8px 12px; display:flex; gap:22px; font-size:16px; font-weight:700; align-items:center; }
+  .summary u { color:#1b3fa0; text-decoration:none; border-bottom:2px solid #111; }
+  .summary .tot { margin-left:auto; }
+</style></head><body><div class="page">
+
+<div class="hbox">
+  <div><div class="kicker">세탁팀용 · 합세탁 체크</div><div class="title">세탁공정</div><div style="font-size:15px;font-weight:800;color:#c0392b;margin-top:3px">※ 이 공정표는 참고용 — 꼭 한 번 더 확인하고 합세탁 진행하기<br>※ 합세탁 후 꼭 분류하여 포장 담당자에게 인계할 것</div></div>
+  <div class="meta">2026-10-31 (토)<br><span style="font-size:13px">작성</span> <b style="font-size:22px">이병찬</b></div>
+</div>
+
+<div class="legend">
+  <span class="A">A 헬스장</span><span class="B">B 미용실·유색</span><span class="C">C 피부관리·마사지</span>
+  <span class="X">X 단독</span><span class="N">☐ 신규 → 단독+체크</span>
+  <span class="how">같은 색끼리만 한 세탁기에 · 넣으면 줄 긋고 <b>세탁기-회차</b> 기입 · 흰 줄(X·☐)은 따로</span>
+</div>
+
+<div class="warn"><b>오늘 주의</b>
+  <span><b>33 타이앤타이</b> 뭉태기 밴딩 · 후공정 분리</span>
+  <span><b>48 줄오오른</b> 이름표 자주 없음 · 단독</span>
+  <span><b>61 그린짐산본</b> 신규 10/29 · 단독 돌리고 체크</span>
+</div>
+<div class="cols">
+<table>
+<thead><tr><th style="font-size:11px">합세탁<br>그룹</th><th>코스</th><th>번호</th><th>약칭</th><th class="qty">수량</th><th class="wash">세탁<span class="sub">기-회차</span></th></tr></thead>
+<tbody>
+<tr class="sub A"><td colspan="6">A 헬스장 9곳</td></tr>
+<tr class="A done"><td class="grp">A</td><td class="course">B</td><td class="no">12</td><td class="nick">올데이</td><td class="qty"></td><td class="wash red">①-1</td></tr>
+<tr class="A done"><td class="grp">A</td><td class="course">B</td><td class="no">19</td><td class="nick">오렌지짐</td><td class="qty"></td><td class="wash red">①-1</td></tr>
+<tr class="A done"><td class="grp">A</td><td class="course">B</td><td class="no">27</td><td class="nick">심</td><td class="qty"></td><td class="wash red">①-1</td></tr>
+<tr class="A done"><td class="grp">A</td><td class="course">B</td><td class="no">31</td><td class="nick">열린헬스</td><td class="qty"></td><td class="wash red">②-1</td></tr>
+<tr class="A done"><td class="grp">A</td><td class="course">B</td><td class="no">44</td><td class="nick">바디101</td><td class="qty"></td><td class="wash red">②-1</td></tr>
+<tr class="A done"><td class="grp">A</td><td class="course">C</td><td class="no">36</td><td class="nick">핸즈성수</td><td class="qty"></td><td class="wash red">②-1</td></tr>
+<tr class="A done"><td class="grp">A</td><td class="course">C</td><td class="no">52</td><td class="nick">나이스하남</td><td class="qty"></td><td class="wash red">①-2</td></tr>
+<tr class="A done"><td class="grp">A</td><td class="course">C</td><td class="no">58</td><td class="nick">비트런</td><td class="qty"></td><td class="wash red">①-2</td></tr>
+<tr class="A done"><td class="grp">A</td><td class="course">D</td><td class="no">41</td><td class="nick">에이바안양</td><td class="qty"></td><td class="wash red">①-2</td></tr>
+<tr class="sub B"><td colspan="6">B 미용실·유색 5곳</td></tr>
+<tr class="B done"><td class="grp">B</td><td class="course">B</td><td class="no">03</td><td class="nick">두빗범계</td><td class="qty"></td><td class="wash red">①-3</td></tr>
+</tbody></table>
+
+<table>
+<thead><tr><th style="font-size:11px">합세탁<br>그룹</th><th>코스</th><th>번호</th><th>약칭</th><th class="qty">수량</th><th class="wash">세탁<span class="sub">기-회차</span></th></tr></thead>
+<tbody>
+<tr class="B done"><td class="grp">B</td><td class="course">B</td><td class="no">05</td><td class="nick">박승철범계</td><td class="qty"></td><td class="wash red">①-3</td></tr>
+<tr class="B done"><td class="grp">B</td><td class="course">B</td><td class="no">08</td><td class="nick">휴이엠</td><td class="qty"></td><td class="wash red">①-3</td></tr>
+<tr class="B"><td class="grp">B</td><td class="course">C</td><td class="no">09</td><td class="nick">닝쿨점</td><td class="qty"></td><td class="wash"></td></tr>
+<tr class="B"><td class="grp">B</td><td class="course">D</td><td class="no">17</td><td class="nick">로이드외방</td><td class="qty"></td><td class="wash"></td></tr>
+<tr class="sub C"><td colspan="6">C 피부관리·마사지 3곳</td></tr>
+<tr class="C done"><td class="grp">C</td><td class="course">D</td><td class="no">15</td><td class="nick">메이퓨어</td><td class="qty"></td><td class="wash red">③-1</td></tr>
+<tr class="C done"><td class="grp">C</td><td class="course">D</td><td class="no">22</td><td class="nick">가현스킨</td><td class="qty"></td><td class="wash red">③-1</td></tr>
+<tr class="C"><td class="grp">C</td><td class="course">B</td><td class="no">33</td><td class="nick">타이앤타이</td><td class="qty"></td><td class="wash"></td></tr>
+<tr class="sub X"><td colspan="6">X 단독 1곳</td></tr>
+<tr class="X"><td class="grp">X</td><td class="course">D</td><td class="no">48</td><td class="nick">줄오오른</td><td class="qty"></td><td class="wash"></td></tr>
+<tr class="sub N"><td colspan="6">☐ 신규 · 미확인 1곳</td></tr>
+<tr><td class="grp N">☐</td><td class="course">D</td><td class="no">61</td><td class="nick" style="line-height:1.1">그린짐산본<br><span class="chk">☐흰수건 ☐로고 ☐이름표OK</span></td><td class="qty"></td><td class="wash"></td></tr>
+</tbody></table>
+</div>
+
+<div class="summary">
+  <span>세탁기별 사이클</span>
+  <span>① <u>&nbsp;&nbsp;4&nbsp;&nbsp;</u>회</span><span>② <u>&nbsp;&nbsp;1&nbsp;&nbsp;</u>회</span><span>③ <u>&nbsp;&nbsp;1&nbsp;&nbsp;</u>회</span><span>④ <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>회</span>
+  <span class="tot">합계 <u>&nbsp;&nbsp;6&nbsp;&nbsp;</u>회</span>
+</div>
+<div class="foot"><span>이상(섞임·오염·냄새·분실) 시 ✗ 표시 후 단톡방 · ☐ 업체는 흰/로고/이름표 확인</span><span>세탁 완료 후 사진 → 단톡방</span></div>
+</div></body></html>
