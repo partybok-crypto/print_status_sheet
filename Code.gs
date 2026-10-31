@@ -294,7 +294,8 @@ function buildDayData_(weekday, explicitDate) {
     // 세탁물 현황의 그 행 자체 값을 쓴다.
     groups[alpha].forEach(function(item) {
       var trade = tradeMap[item.companyNumber];
-      item.resolvedDriver = (trade && trade.driver) ? trade.driver : item.driver;
+      // 세탁물 현황 J열은 다른 용도(합세탁 표시)로 쓰므로 기사명 보조로 읽지 않는다.
+      item.resolvedDriver = (trade && trade.driver) ? trade.driver : "";
     });
 
     // 코스 대표 기사명은 확정 기사명들의 최빈값(가장 많이 등장하는 이름)으로 정한다.
