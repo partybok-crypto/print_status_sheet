@@ -64,6 +64,10 @@ const TRADE_COURSE_COL = { "화": 24, "수": 25, "목": 26, "금": 27, "토": 28
 const TRADE_DRIVER_COL = { "화": 30, "수": 31, "목": 32, "금": 33, "토": 34, "일": 35 };  // AD~AI 요일별 배송기사
 const TRADE_READ_LAST_COL = 35;
 
+/***** 세탁공정 작성자 — "세탁공장-일정표"의 주차별 쉬프트 탭에서 그 날짜 일정표의 첫 출근자 *****/
+const SCHEDULE_SPREADSHEET_ID = "1kqYgHyvl-k1tfKk7qmVXBYfFwh3SVLNJNp41Otgl-u0";
+const SCHEDULE_SHEET_NAME = "주차별 쉬프트";
+
 /***** 요일 설정 *****
  * A~F열(헤더에 "OO요일" 문구가 있는 열)에 그 요일의 코스코드가 미리 입력되어 있고,
  * T~Z열은 그 행이 해당 요일에 나가는지를 나타내는 1/공백 플래그다.
@@ -144,6 +148,54 @@ function washGroupOf_(washRaw, bizRaw) {
   if (/미용실/.test(biz)) return "B";
   if (/피부관리|마사지/.test(biz)) return "C";
   return "X";
+}
+
+// 일정표 시간 값(6, 9.5, "06:30")을 시(소수)로 바꾼다. 읽을 수 없으면 null.
+function scheduleHour_(v) {
+  var t = String(v === null || v === undefined ? "" : v).trim();
+  if (!t) return null;
+  var m = /^(\d{1,2})\s*:\s*(\d{1,2})$/.exec(t);
+  if (m) return Number(m[1]) + Number(m[2]) / 60;
+  var n = Number(t.replace(",", "."));
+  return (isNaN(n) || n < 0 || n > 24) ? null : n;
+}
+
+// 그 날짜 일정표 블록(날짜 칸 "10-31-토" + 바로 아래 머리글 출근/종료/포지션/이름/작업)에서
+// 휴무가 아닌 사람 중 출근이 가장 이른 사람의 이름을 돌려준다(같으면 시트 순서). 못 찾거나 접근이 안 되면 "".
+function getFirstWorkerName_(dateObj) {
+  try {
+    var sh = SpreadsheetApp.openById(SCHEDULE_SPREADSHEET_ID).getSheetByName(SCHEDULE_SHEET_NAME);
+    if (!sh) return "";
+    var v = sh.getDataRange().getDisplayValues();
+    var wd = ["일", "월", "화", "수", "목", "금", "토"][dateObj.getDay()];
+    var mm = dateObj.getMonth() + 1, dd = dateObj.getDate();
+    for (var r = 0; r + 1 < v.length; r++) {
+      for (var c = 0; c < v[r].length; c++) {
+        var m = /^\s*(\d{1,2})\s*-\s*(\d{1,2})\s*-\s*([월화수목금토일])\s*$/.exec(v[r][c]);
+        if (!m || Number(m[1]) !== mm || Number(m[2]) !== dd || m[3] !== wd) continue;
+        var cols = {};
+        for (var k = c; k < Math.min(v[r + 1].length, c + 8); k++) {
+          var lab = String(v[r + 1][k]).trim();
+          if ((lab === "출근" || lab === "이름" || lab === "작업" || lab === "포지션") && cols[lab] === undefined) cols[lab] = k;
+        }
+        if (cols["출근"] === undefined || cols["이름"] === undefined) continue; // 일정표 블록이 아님
+        var best = "", bestHour = null;
+        for (var i = r + 2; i < Math.min(v.length, r + 2 + 80); i++) {
+          var row = v[i];
+          var name = String(row[cols["이름"]] || "").trim();
+          if (!name) continue;
+          var task = cols["작업"] !== undefined ? String(row[cols["작업"]] || "") : "";
+          var pos = cols["포지션"] !== undefined ? String(row[cols["포지션"]] || "") : "";
+          if (task.indexOf("휴무") !== -1 || pos.indexOf("휴무") !== -1 || name.indexOf("휴무") !== -1) continue;
+          var h = scheduleHour_(row[cols["출근"]]);
+          if (h === null) continue;
+          if (bestHour === null || h < bestHour) { bestHour = h; best = name; }
+        }
+        return best;
+      }
+    }
+  } catch (err) {}
+  return "";
 }
 
 // 셀 값을 항상 문자열로. "30_3" 같은 값이 날짜/숫자로 바뀌는 일이 없게 하고,
@@ -359,6 +411,7 @@ function buildDayData_(weekday, explicitDate) {
     weekNumber: getIsoWeekNumber_(dateObj) + "주차",
     origin: origin,
     courses: order,
+    washWriter: getFirstWorkerName_(dateObj),
     drivers: drivers,
     items: items,
     count: items.length,

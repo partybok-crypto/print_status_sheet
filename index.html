@@ -329,6 +329,7 @@
   .wash-head-right { text-align: right; padding-bottom: 1mm; }
   .wash-date { font-size: 10.5pt; color: #333; }
   .wash-writer { font-size: 12.5pt; font-weight: 700; margin-top: 2mm; }
+  .wash-writer-name.filled { font-size: 16pt; font-weight: 900; }
   .wash-legend { display: flex; gap: 2.4mm; margin: 3mm 0 2mm; align-items: center; }
   .wl { font-size: 10.5pt; font-weight: 800; padding: 0.8mm 2.6mm; border: 0.3mm solid #444; border-radius: 1.6mm; }
   .wl-A { background: #cfe3ff; } .wl-B { background: #c9efd2; } .wl-C { background: #fff1b8; } .wl-X { background: #d9d9d9; }
@@ -1103,7 +1104,7 @@
     var editedCount = list.filter(function (it) { return it.isEdited || it.isAdded; }).length;
 
     return {
-      dayOfWeek: raw.dayOfWeek, requestedDate: raw.requestedDate, weekday: raw.weekday, origin: raw.origin,
+      dayOfWeek: raw.dayOfWeek, requestedDate: raw.requestedDate, weekday: raw.weekday, origin: raw.origin, washWriter: raw.washWriter || '',
       closedDay: raw.closedDay, courses: courses, byCourse: byCourse, drivers: drivers, items: list,
       excludedItems: excludedItems, totalCount: list.length, excludedCount: excludedItems.length, editedCount: editedCount
     };
@@ -1723,8 +1724,10 @@
             '<div class="wash-warn">※ 이 공정표는 참고용 — 꼭 한 번 더 확인하고 합세탁 진행하기</div>' +
             '<div class="wash-warn">※ 합세탁 후 꼭 분류하여 포장 담당자에게 인계할 것</div>' +
           '</div>' +
-          '<div class="wash-head-right"><div class="wash-date"></div><div class="wash-writer">작성 ______________</div></div>';
+          '<div class="wash-head-right"><div class="wash-date"></div><div class="wash-writer">작성 <span class="wash-writer-name"></span></div></div>';
         head.querySelector('.wash-date').textContent = isoDate(state.selectedDate) + ' (' + wd + ')';
+        var writerEl = head.querySelector('.wash-writer-name');
+        if (merged.washWriter) { writerEl.textContent = merged.washWriter; writerEl.classList.add('filled'); } else { writerEl.textContent = '______________'; }
         page.appendChild(head);
 
         var legend = document.createElement('div');
