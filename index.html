@@ -2347,7 +2347,7 @@
       alert('세탁공정 인쇄 오류: 전체 업체 수(' + expected + ')와 실제 인쇄될 행 수(' + actual + ')가 일치하지 않습니다. 인쇄를 중단했습니다.');
       return;
     }
-    if (!hasPrintableContent(printWash)) { alert(t('nothingToPrint')); return; }
+    if (!printWash.querySelector('tr.wash-item')) { alert(t('nothingToPrint')); return; }
     // 세탁공정은 출력본(변경내역 기준)을 바꾸지 않는다 — saveSnapshot이 status/closer만 저장한다.
     doPrint('printing-wash', function () { recordPrint('wash', state.merged.courses); });
   }
