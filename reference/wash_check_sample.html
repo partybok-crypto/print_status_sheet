@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; background:#fff; font-family:"Noto Sans CJK KR","Noto Sans KR",sans-serif; color:#111; }
+  .page { width:794px; height:1123px; padding:18px 28px; }
+  .hbox { border:2px solid #111; padding:6px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:flex-end; }
+  .kicker { font-size:11px; color:#555; }
+  .title { font-size:24px; font-weight:800; line-height:1.2; }
+  .note { font-size:14px; font-weight:800; color:#c0392b; margin-top:3px; }
+  .meta { font-size:13px; text-align:right; }
+  .meta b { font-size:20px; }
+  .rule { border:1.5px solid #111; background:#fafafa; padding:5px 10px; font-size:12.5px; margin-bottom:10px; line-height:1.5; }
+  table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:17px; }
+  th, td { border:1.5px solid #111; padding:3px 6px; text-align:center; vertical-align:middle; height:43px; white-space:nowrap; overflow:hidden; }
+  th { background:#f1f1f1; font-size:13px; height:38px; }
+  th .sub { display:block; font-weight:400; font-size:10px; color:#555; }
+  tr.cs td { border-top:3px solid #111; }
+  td.ship { font-weight:800; font-size:16px; }
+  td.no { font-size:18px; font-weight:700; }
+  td.nick { text-align:left; font-weight:700; font-size:19px; }
+  td.biz { font-size:15px; }
+  td.size { font-size:17px; }
+  td.chk { font-size:17px; font-weight:700; letter-spacing:-0.3px; } td.chk .cur { display:block; font-size:10.5px; font-weight:500; color:#777; line-height:1; margin-top:2px; }
+  td.chk .ok { color:#999; font-size:13px; }
+  td.memo { text-align:left; font-size:13px; }
+  .box { display:inline-block; width:20px; height:20px; border:2px solid #111; vertical-align:-4px; margin-right:3px; }
+  .box.v { background:#1b3fa0; border-color:#1b3fa0; }
+  .pen { color:#1b3fa0; font-weight:700; }
+  .foot { font-size:12px; margin-top:8px; display:flex; justify-content:space-between; }
+  tr.u td { background:#fff8c7; }
+  tr.u td.memo { background:#fffdf0; }
+  .legend { display:flex; align-items:center; gap:6px; font-size:12px; margin-bottom:6px; flex-wrap:wrap; }
+  .legend .sw { display:inline-block; width:22px; height:14px; border:1.5px solid #111; margin-left:8px; }
+  .legend .sw.u { background:#fff8c7; margin-left:0; }
+  .legend .k { font-size:10.5px; color:#777; border:1px solid #bbb; border-radius:3px; padding:0 4px; margin-left:8px; }
+  .nochange { margin-top:8px; border:2px solid #111; padding:7px 12px; font-size:16px; display:flex; align-items:center; gap:6px; }
+  .page { padding:16px 28px; }
+  th, td { height:37px; } th { height:34px; } td.chk .cur { margin-top:0; } .rule { font-size:11.5px; line-height:1.4; padding:4px 10px; margin-bottom:6px; } .legend { margin-bottom:4px; } .hbox { margin-bottom:6px; padding:4px 12px; }
+  .legend { font-size:16px; font-weight:800; gap:10px; margin:4px 0 6px; }
+  .legend .sw { width:30px; height:20px; border-width:2px; }
+  .legend .k { font-size:12px; font-weight:600; color:#555; border-color:#999; padding:1px 6px; }
+  .legend .k + * { font-weight:600; }
+  th, td { height:40px; }
+  .legend .d { font-size:13px; font-weight:600; color:#333; }
+  .legend2 { display:flex; align-items:center; gap:6px; font-size:13px; margin-bottom:6px; } .legend2 .k { margin-left:10px; }
+  td.chk { font-size:19px; } .box { width:24px; height:24px; vertical-align:-5px; margin-right:4px; } td.chk .cur { font-size:11px; }
+  th, td { height:40px; } .rule { margin-bottom:5px; } td.memo { font-size:12px; } .page { padding:14px 28px; }
+</style></head><body><div class="page">
+
+<div class="hbox">
+  <div><div class="kicker">마감자용 · 합세탁 가능 여부 체크</div><div class="title">합세탁 체크표</div>
+    <div class="note">※ 포장 끝나고 출고번호대로 깔린 수건을 보면서 체크</div></div>
+  <div class="meta">2026-10-30 (목)<br>작성 <b>김○○</b></div>
+</div>
+
+<div class="legend">
+  <span class="sw u"></span>미확정 — 오늘 꼭 체크
+  <span class="sw"></span>확정 — 바뀐 게 보일 때만 체크
+  </div><div class="legend2"><span class="k">현재: 가능</span><span class="d">합세탁 그룹</span>
+  <span class="k">현재: 단독(불가)</span><span class="d">혼자 세탁</span>
+  <span class="k">현재: 미확정</span><span class="d">확인 전 · 단독</span>
+</div>
+<div class="rule"><b>같은 색 · 로고/자수 없음 · 이름표 전부 있음</b> → <b>가능</b> &nbsp;|&nbsp; 하나라도 아니면 → <b>불가</b> + 메모에 이유 (색섞임 / 로고 / 이름표) &nbsp;|&nbsp; 수건이 적거나 애매하면 → <b>보류</b> (다음 수거 때 다시)<br>
+칸 아래 작은 글씨가 <b>현재 상태</b> · 현재 상태와 같으면 비워 두고, <b>바뀐 게 보이면</b> 새 상태에 체크 + 메모 (예: 수건 바뀜 · 로고 생김)</div>
+
+<table>
+<colgroup><col style="width:8%"><col style="width:6%"><col style="width:15%"><col style="width:9%"><col style="width:6.5%"><col style="width:38.5%"><col style="width:17%"></colgroup>
+<thead><tr><th>출고</th><th>번호</th><th>약칭</th><th>업종</th><th>포대<br>사이즈</th><th>합세탁 체크</th><th>메모</th></tr></thead>
+<tbody>
+<tr class="cs"><td class="ship">B-01</td><td class="no">12</td><td class="nick">올데이</td><td class="biz">헬스장</td><td class="size">대</td><td class="chk"><span class="box"></span>가능 <span class="box"></span>불가 <span class="box"></span>보류<span class="cur">현재: 가능</span></td><td class="memo"></td></tr>
+<tr><td class="ship">B-02</td><td class="no">27</td><td class="nick">심</td><td class="biz">헬스장</td><td class="size">중</td><td class="chk"><span class="box"></span>가능 <span class="box"></span>불가 <span class="box"></span>보류<span class="cur">현재: 가능</span></td><td class="memo"></td></tr>
+<tr><td class="ship">B-03</td><td class="no">19</td><td class="nick">오렌지짐</td><td class="biz">헬스장</td><td class="size">중</td><td class="chk"><span class="box"></span>가능 <span class="box"></span>불가 <span class="box"></span>보류<span class="cur">현재: 가능</span></td><td class="memo"></td></tr>
+<tr><td class="ship">B-04</td><td class="no">31</td><td class="nick">열린헬스</td><td class="biz">헬스장</td><td class="size">소</td><td class="chk"><span class="box"></span>가능 <span class="box"></span>불가 <span class="box"></span>보류<span class="cur">현재: 가능</span></td><td class="memo"></td></tr>
+<tr class="u"><td class="ship">B-05</td><td class="no">05</td><td class="nick">박승철범계</td><td class="biz">미용실</td><td class="size">소</td><td class="chk"><span class="box v"></span>가능 <span class="box"></span>불가 <span class="box"></span>보류<span class="cur">현재: 미확정</span></td><td class="memo pen">같은색 · 로고 없음</td></tr>
+<tr class="u"><td class="ship">B-06</td><td class="no">03</td><td class="nick">두빗범계</td><td class="biz">미용실</td><td class="size">소</td><td class="chk"><span class="box"></span>가능 <span class="box v"></span>불가 <span class="box"></span>보류<span class="cur">현재: 미확정</span></td><td class="memo pen">흰+회색 섞임</td></tr>
+<tr><td class="ship">B-07</td><td class="no">44</td><td class="nick">바디101</td><td class="biz">헬스장</td><td class="size">소</td><td class="chk"><span class="box"></span>가능 <span class="box v"></span>불가 <span class="box"></span>보류<span class="cur">현재: 가능</span></td><td class="memo pen">수건 바뀜 · 로고 생김</td></tr>
+<tr class="u"><td class="ship">B-08</td><td class="no">08</td><td class="nick">휴이엠</td><td class="biz">미용실</td><td class="size">소</td><td class="chk"><span class="box"></span>가능 <span class="box"></span>불가 <span class="box v"></span>보류<span class="cur">현재: 미확정</span></td><td class="memo pen">이름표 절반 없음</td></tr>
+<tr><td class="ship">B-09</td><td class="no">33</td><td class="nick">아르떼무드</td><td class="biz">피부관리</td><td class="size">소</td><td class="chk"><span class="box"></span>가능 <span class="box"></span>불가 <span class="box"></span>보류<span class="cur">현재: 단독(불가)</span></td><td class="memo"><span style="color:#777">자연건조</span></td></tr>
+<tr class="cs"><td class="ship">C-01</td><td class="no">52</td><td class="nick">나이스하남</td><td class="biz">헬스장</td><td class="size">소</td><td class="chk"><span class="box"></span>가능 <span class="box"></span>불가 <span class="box"></span>보류<span class="cur">현재: 가능</span></td><td class="memo"></td></tr>
+<tr><td class="ship">C-02</td><td class="no">36</td><td class="nick">핸즈성수</td><td class="biz">헬스장</td><td class="size">소</td><td class="chk"><span class="box"></span>가능 <span class="box"></span>불가 <span class="box"></span>보류<span class="cur">현재: 가능</span></td><td class="memo"></td></tr>
+<tr><td class="ship">C-03</td><td class="no">58</td><td class="nick">비트런</td><td class="biz">헬스장</td><td class="size">소</td><td class="chk"><span class="box"></span>가능 <span class="box"></span>불가 <span class="box"></span>보류<span class="cur">현재: 가능</span></td><td class="memo"></td></tr>
+<tr class="u"><td class="ship">C-04</td><td class="no">09</td><td class="nick">닝쿨점</td><td class="biz">미용실</td><td class="size">소</td><td class="chk"><span class="box"></span>가능 <span class="box"></span>불가 <span class="box"></span>보류<span class="cur">현재: 미확정</span></td><td class="memo"></td></tr>
+<tr class="cs"><td class="ship">D-01</td><td class="no">41</td><td class="nick">에이바안양</td><td class="biz">헬스장</td><td class="size">중</td><td class="chk"><span class="box"></span>가능 <span class="box"></span>불가 <span class="box"></span>보류<span class="cur">현재: 가능</span></td><td class="memo"></td></tr>
+<tr class="u"><td class="ship">D-02</td><td class="no">15</td><td class="nick">메이퓨어</td><td class="biz">피부관리</td><td class="size">소</td><td class="chk"><span class="box v"></span>가능 <span class="box"></span>불가 <span class="box"></span>보류<span class="cur">현재: 미확정</span></td><td class="memo"></td></tr>
+<tr class="u"><td class="ship">D-03</td><td class="no">22</td><td class="nick">가현스킨</td><td class="biz">피부관리</td><td class="size">소</td><td class="chk"><span class="box"></span>가능 <span class="box"></span>불가 <span class="box"></span>보류<span class="cur">현재: 미확정</span></td><td class="memo"></td></tr>
+<tr class="u"><td class="ship">D-04</td><td class="no">17</td><td class="nick">로이드외방</td><td class="biz">미용실</td><td class="size">소</td><td class="chk"><span class="box"></span>가능 <span class="box"></span>불가 <span class="box"></span>보류<span class="cur">현재: 미확정</span></td><td class="memo"></td></tr>
+<tr><td class="ship">D-05</td><td class="no">48</td><td class="nick">줄오오른</td><td class="biz">마사지</td><td class="size">소</td><td class="chk"><span class="box"></span>가능 <span class="box"></span>불가 <span class="box"></span>보류<span class="cur">현재: 단독(불가)</span></td><td class="memo"><span style="color:#777">이름표 자주 없음</span></td></tr>
+<tr class="u"><td class="ship">D-06</td><td class="no">61</td><td class="nick">그린짐산본</td><td class="biz">헬스장</td><td class="size">소</td><td class="chk"><span class="box"></span>가능 <span class="box"></span>불가 <span class="box v"></span>보류<span class="cur">현재: 미확정</span></td><td class="memo"><span style="color:#777">신규 10/29</span> <span class="pen">다음주 다시</span></td></tr>
+</tbody></table>
+
+<div class="foot"><span>체크 후 사진 → 단톡방 · 관리운영에서 거래처 시트 합세탁(J열)에 반영</span><span>다음날 세탁공정표부터 그룹 반영됨</span></div>
+</div></body></html>
