@@ -318,9 +318,58 @@
   .guide-steps button:hover { background: var(--blue-bg); }
   .guide-steps button.done { border-color: var(--green); color: var(--green); background: #ecfdf3; }
 
+  /* ================= 세탁공정(합세탁 체크용) — A4 세로, 2단 표 ================= */
+  .wash-doc { width: 194mm; color: #111; }
+  .wash-page { width: 194mm; background: #fff; }
+  .wash-page + .wash-page { margin-top: 8mm; }
+  .wash-head { display: flex; justify-content: space-between; align-items: flex-end; border: 0.6mm solid #111; padding: 2.4mm 3.6mm; }
+  .wash-kicker { font-size: 8.5pt; color: #444; }
+  .wash-title { font-size: 21pt; font-weight: 900; line-height: 1.15; }
+  .wash-warn { font-size: 11.5pt; font-weight: 800; color: #c1121f; line-height: 1.45; }
+  .wash-head-right { text-align: right; padding-bottom: 1mm; }
+  .wash-date { font-size: 10.5pt; color: #333; }
+  .wash-writer { font-size: 12.5pt; font-weight: 700; margin-top: 2mm; }
+  .wash-legend { display: flex; gap: 2.4mm; margin: 3mm 0 2mm; align-items: center; }
+  .wl { font-size: 10.5pt; font-weight: 800; padding: 0.8mm 2.6mm; border: 0.3mm solid #444; border-radius: 1.6mm; }
+  .wl-A { background: #cfe3ff; } .wl-B { background: #c9efd2; } .wl-C { background: #fff1b8; } .wl-X { background: #d9d9d9; }
+  .wl-N { background: #fff; border: 0.5mm dashed #c58a00; }
+  .wash-rule { font-size: 9.5pt; color: #333; margin-bottom: 2.4mm; }
+  .wash-notes { border: 0.6mm solid #c58a00; background: #fff8e6; padding: 2mm 3.4mm; margin-bottom: 3mm; font-size: 10pt; line-height: 1.7; }
+  .wash-notes-label { color: #b36b00; margin-right: 3mm; }
+  .wash-note { margin-right: 4mm; display: inline-block; }
+  .wash-mini { font-size: 10pt; font-weight: 800; padding: 0 0 2mm; }
+  .wash-cols { display: flex; gap: 3.6mm; align-items: flex-start; }
+  .wash-table { width: 95mm; border-collapse: collapse; table-layout: fixed; }
+  .wash-table th { background: #f1f1f1; border: 0.25mm solid #333; font-size: 7.5pt; font-weight: 800; height: 9mm; line-height: 1.15; }
+  .wash-table th .th-sub { font-size: 6pt; font-weight: 600; color: #555; }
+  .wash-table td { border: 0.25mm solid #333; text-align: center; padding: 0 1mm; overflow: hidden; white-space: nowrap; font-weight: 800; }
+  .wash-item { height: 13.6mm; }
+  .wash-item.wg-X { height: 11.2mm; }
+  .wash-item.wg-N { height: 14.2mm; }
+  .wash-table td.wc-group { font-size: 14.5pt; }
+  .wash-table td.wc-course, .wash-table td.wc-no { font-size: 14pt; }
+  .wash-table td.wc-name { font-size: 13.5pt; text-align: left; padding-left: 1.6mm; }
+  .wash-nchk { font-size: 6.5pt; font-weight: 600; color: #444; line-height: 1.2; }
+  .wash-item.wg-A td { background: #cfe3ff; } .wash-item.wg-B td { background: #c9efd2; }
+  .wash-item.wg-C td { background: #fff1b8; } .wash-item.wg-X td { background: #d9d9d9; }
+  .wash-item.wg-N td { background: #fff; border-top: 0.4mm dashed #c58a00; border-bottom: 0.4mm dashed #c58a00; }
+  .wash-item.wg-N td.wc-group { border-left: 0.5mm dashed #c58a00; }
+  .wash-item.wg-N td.wc-wash { border-right: 0.5mm dashed #c58a00; }
+  .wash-item td.wc-qty, .wash-item td.wc-wash { background: #fff; }
+  .wash-sub { height: 7.6mm; }
+  .wash-sub td { text-align: left; font-size: 9pt; font-weight: 800; padding-left: 2mm; border-top: 0.8mm solid #111; }
+  .wash-sub.wg-A td { background: #cfe3ff; } .wash-sub.wg-B td { background: #c9efd2; }
+  .wash-sub.wg-C td { background: #fff1b8; } .wash-sub.wg-X td { background: #d9d9d9; }
+  .wash-sub.wg-N td { background: #fff; border-top: 0.5mm dashed #c58a00; }
+  .wash-table tr { break-inside: avoid; page-break-inside: avoid; }
+  .wash-foot { margin-top: 4mm; break-inside: avoid; }
+  .wash-cycle { border: 0.6mm solid #111; padding: 2.6mm 3.6mm; font-size: 11.5pt; display: flex; align-items: center; }
+  .wash-cycle-sum { margin-left: auto; font-weight: 800; }
+  .wash-foot-line { display: flex; justify-content: space-between; font-size: 8.5pt; color: #333; margin-top: 2mm; }
+
   /* ================= 인쇄 전용 ================= */
   .print-only { display: none; }
-  #printStatus, #printAddress, #printCloser, #printAddressAll, #printChanges { display: none; }
+  #printStatus, #printAddress, #printCloser, #printAddressAll, #printChanges, #printWash { display: none; }
 
   @page portraitPage { size: A4 portrait; margin: 8mm; }
   @page landscapePage { size: A4 landscape; margin: 7mm; }
@@ -331,12 +380,16 @@
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
 
     .print-only { display: block !important; }
-    #printStatus, #printAddress, #printCloser, #printAddressAll, #printChanges { display: none !important; }
+    #printStatus, #printAddress, #printCloser, #printAddressAll, #printChanges, #printWash { display: none !important; }
     body.printing-status #printStatus { display: block !important; page: portraitPage; }
     body.printing-address #printAddress { display: block !important; page: landscapePage; }
     body.printing-closer #printCloser { display: block !important; page: portraitPage; }
     body.printing-address-all #printAddressAll { display: block !important; page: portraitPage; }
     body.printing-changes #printChanges { display: block !important; page: portraitPage; }
+    body.printing-wash #printWash { display: block !important; page: portraitPage; }
+    .wash-page { break-after: page; page-break-after: always; }
+    .wash-page:last-child { break-after: auto; page-break-after: auto; }
+    .wash-page + .wash-page { margin-top: 0; }
 
     .print-course { break-before: page; page-break-before: always; }
     .print-course:first-child { break-before: auto; page-break-before: auto; }
@@ -393,6 +446,10 @@
             <span class="pdb-title" data-i18n="pdbStatusAddr">현황지 + 주소지</span>
             <span class="pdb-sub" data-i18n="pdbStatusAddrSub">배송기사용 · 2개 문서 연속 출력</span>
           </button>
+          <button class="primary-doc-btn" data-doc="status_address_wash">
+            <span class="pdb-title" data-i18n="pdbStatusAddrWash">현황지 + 주소지 + 세탁공정</span>
+            <span class="pdb-sub" data-i18n="pdbStatusAddrWashSub">배송기사용 + 세탁팀용 · 3개 문서 연속 출력</span>
+          </button>
           <button class="primary-doc-btn" data-doc="closer_all_address">
             <span class="pdb-title" data-i18n="pdbCloserAll">마감자용 수량표 + 전체주소지</span>
             <span class="pdb-sub" data-i18n="pdbCloserAllSub">세탁 마감용 · 2개 문서 연속 출력</span>
@@ -412,6 +469,7 @@
           <button class="other-doc-btn" data-doc="status" data-i18n="odStatus">현황지만</button>
           <button class="other-doc-btn" data-doc="closer" data-i18n="odCloser">마감자용 수량표만</button>
           <button class="other-doc-btn" data-doc="all_address" data-i18n="odAllAddr">전체주소지만</button>
+          <button class="other-doc-btn" data-doc="wash" data-i18n="odWash">세탁공정만</button>
         </div>
       </div>
 
@@ -452,6 +510,7 @@
   <div class="doc-page" id="printCloser"></div>
   <div class="doc-page" id="printAddressAll"></div>
   <div class="doc-page" id="printChanges"></div>
+  <div class="doc-page" id="printWash"></div>
 </div>
 
 <!-- 설정 모달 -->
@@ -484,6 +543,22 @@
   </div>
 </div>
 
+<!-- 현황지+주소지+세탁공정 인쇄 순서 안내 모달 -->
+<div class="modal-overlay no-print" id="washGuideModal">
+  <div class="modal-box">
+    <div class="modal-title" data-i18n="guideTitle">인쇄 순서 안내</div>
+    <div class="modal-body" data-i18n="washGuideBody">현황지, 주소지, 세탁공정을 각각 안정적으로 출력합니다. 아래 순서대로 눌러주세요.</div>
+    <div class="guide-steps">
+      <button id="washGuideStep1Btn" data-i18n="guideStep1">1. 현황지 인쇄</button>
+      <button id="washGuideStep2Btn" data-i18n="guideStep2">2. 주소지 인쇄</button>
+      <button id="washGuideStep3Btn" data-i18n="washStep3">3. 세탁공정 인쇄</button>
+    </div>
+    <div class="modal-actions">
+      <button class="cancel" id="washGuideClose" data-i18n="close">닫기</button>
+    </div>
+  </div>
+</div>
+
 <!-- 마감자용 수량표+전체주소지 인쇄 순서 안내 모달 -->
 <div class="modal-overlay no-print" id="closerAllGuideModal">
   <div class="modal-box">
@@ -510,6 +585,9 @@
       sec1: '1. 날짜 선택', sec2: '2. 코스 선택', sec3: '3. 자주 사용하는 출력', sec4: '4. 인쇄',
       today: '오늘', nextBiz: '다음 영업일',
       pdbStatusAddr: '현황지 + 주소지', pdbStatusAddrSub: '배송기사용 · 2개 문서 연속 출력',
+      pdbStatusAddrWash: '현황지 + 주소지 + 세탁공정', pdbStatusAddrWashSub: '배송기사용 + 세탁팀용 · 3개 문서 연속 출력',
+      odWash: '세탁공정만', lblWash: '세탁공정', btnWash: '세탁공정 인쇄', btnStatusAddrWash: '현황지 + 주소지 + 세탁공정 출력',
+      washGuideBody: '현황지, 주소지, 세탁공정을 각각 안정적으로 출력합니다. 아래 순서대로 눌러주세요.', washStep3: '3. 세탁공정 인쇄', bWash: '세탁공정 · A4 세로',
       pdbCloserAll: '마감자용 수량표 + 전체주소지', pdbCloserAllSub: '세탁 마감용 · 2개 문서 연속 출력',
       pdbChanges: '출력 후 라벨코스 변경내역',
       otherTitle: '기타 출력', otherSub: '필요할 때만 선택하세요',
@@ -719,6 +797,7 @@
   var printStatus = $('printStatus');
   var printAddress = $('printAddress');
   var printCloser = $('printCloser');
+  var printWash = $('printWash');
   var printChanges = $('printChanges');
   var printAddressAll = $('printAddressAll');
 
@@ -1050,7 +1129,7 @@
     if (state.selectedCourse && state.merged.courses.indexOf(state.selectedCourse) !== -1) return [state.selectedCourse];
     return [];
   }
-  var ALWAYS_ALL_DOC_TYPES = { closer: true, all_address: true, closer_all_address: true };
+  var ALWAYS_ALL_DOC_TYPES = { closer: true, all_address: true, closer_all_address: true, wash: true };
 
   function selectDocType(type) { state.docType = type; if (type !== 'changes') state.testMode = false; renderAll(); }
 
@@ -1118,7 +1197,7 @@
     return '';
   }
   function docLabel(type) {
-    return type === 'address' ? t('lblAddress') : type === 'status' ? t('lblStatus') : type === 'closer' ? t('lblCloser') : type === 'all_address' ? t('lblAllAddr') : type === 'closer_all_address' ? t('lblCloserAll') : type === 'changes' ? t('lblChanges') : t('lblStatusAddr');
+    return type === 'address' ? t('lblAddress') : type === 'status' ? t('lblStatus') : type === 'closer' ? t('lblCloser') : type === 'all_address' ? t('lblAllAddr') : type === 'closer_all_address' ? t('lblCloserAll') : type === 'changes' ? t('lblChanges') : type === 'wash' ? t('lblWash') : type === 'status_address_wash' ? t('btnStatusAddrWash') : t('lblStatusAddr');
   }
 
   function canPrint() {
@@ -1137,6 +1216,11 @@
       printBtnLabel.textContent = t('btnAllAddr');
     } else if (state.docType === 'closer_all_address') {
       printBtnLabel.textContent = t('btnCloserAll');
+    } else if (state.docType === 'wash') {
+      printBtnLabel.textContent = t('btnWash');
+    } else if (state.docType === 'status_address_wash') {
+      var cl1 = courseLabel();
+      printBtnLabel.textContent = (cl1 ? cl1 + ' ' : '') + t('btnStatusAddrWash');
     } else if (state.docType === 'status_address') {
       var cl0 = courseLabel();
       printBtnLabel.textContent = (cl0 ? cl0 + ' ' : '') + t('btnStatusAddr');
@@ -1161,6 +1245,9 @@
       items.push({ text: t('bAllCourse'), cls: 'b-solid' });
       items.push({ text: t('lblAllAddr'), cls: 'b-soft' });
       items.push({ text: t('bA4P'), cls: '' });
+    } else if (state.docType === 'wash') {
+      items.push({ text: t('bAllBiz'), cls: 'b-solid' });
+      items.push({ text: t('bWash'), cls: 'b-soft' });
     } else if (state.docType === 'closer_all_address') {
       items.push({ text: t('bAllBiz'), cls: 'b-solid' });
       items.push({ text: t('bCloserAll'), cls: 'b-soft' });
@@ -1170,6 +1257,7 @@
       items.push({ text: courseLabel(), cls: 'b-solid', course: singleCourse });
       if (state.docType === 'address') { items.push({ text: t('lblAddress'), cls: 'b-soft' }); items.push({ text: t('bA4L'), cls: '' }); }
       else if (state.docType === 'status') { items.push({ text: t('lblStatus'), cls: 'b-soft' }); items.push({ text: t('bA4P'), cls: '' }); }
+      else if (state.docType === 'status_address_wash') { items.push({ text: t('btnStatusAddrWash'), cls: 'b-soft' }); items.push({ text: t('bPL'), cls: '' }); }
       else { items.push({ text: t('lblStatusAddr'), cls: 'b-soft' }); items.push({ text: t('bPL'), cls: '' }); }
     }
     items.forEach(function (o) {
@@ -1541,6 +1629,185 @@
     return container;
   }
 
+  // ================= 세탁공정(합세탁 체크용) 문서 =================
+  var WASH_GROUPS = {
+    A: { name: '헬스장', bg: '#cfe3ff' },
+    B: { name: '미용실·유색', bg: '#c9efd2' },
+    C: { name: '피부관리·마사지', bg: '#fff1b8' },
+    X: { name: '단독', bg: '#d9d9d9' },
+    N: { name: '신규·미확인', bg: '#ffffff' }
+  };
+  var WASH_ORDER = ['A', 'B', 'C', 'X', 'N'];
+  // 한 열에 쌓을 수 있는 높이 계산용(mm). 행 높이는 CSS와 같은 값이어야 한다.
+  var WASH_H = { row: 13.6, rowPlain: 11.2, rowNew: 14.2, sub: 7.6 };
+  var WASH_PAGE_MM = 278, WASH_HEAD1_MM = 50, WASH_HEADN_MM = 12, WASH_FOOT_MM = 24, WASH_THEAD_MM = 9;
+
+  function washGroupOfItem(it) {
+    var g = it && it.washGroup;
+    return WASH_GROUPS.hasOwnProperty(g) ? g : 'X';
+  }
+  function washCourseLetter(c) { return String(c || '').replace(/^-+/, ''); }
+
+  function buildWashRows(merged) {
+    var list = [];
+    merged.courses.forEach(function (course, ci) {
+      (merged.byCourse[course] || []).forEach(function (it, ii) { list.push({ it: it, g: washGroupOfItem(it), ci: ci, ii: ii }); });
+    });
+    list.sort(function (a, b) {
+      var d = WASH_ORDER.indexOf(a.g) - WASH_ORDER.indexOf(b.g);
+      return d || (a.ci - b.ci) || (a.ii - b.ii);
+    });
+    var counts = {};
+    list.forEach(function (r) { counts[r.g] = (counts[r.g] || 0) + 1; });
+    var rows = [];
+    var prev = null;
+    list.forEach(function (r) {
+      if (r.g !== prev) { rows.push({ type: 'sub', g: r.g, n: counts[r.g], h: WASH_H.sub }); prev = r.g; }
+      rows.push({ type: 'row', g: r.g, it: r.it, h: r.g === 'N' ? WASH_H.rowNew : (r.g === 'X' ? WASH_H.rowPlain : WASH_H.row) });
+    });
+    return rows;
+  }
+
+  // 행들을 (페이지 → 왼쪽/오른쪽 열) 로 나눈다. 소계 행이 열 맨 아래에 혼자 남지 않게 한다.
+  function paginateWashRows(rows, firstBudget, nextBudget) {
+    var pages = [], cur = { cols: [[], []] }, col = 0, used = 0, budget = firstBudget;
+    function nextCol() {
+      if (col === 0) { col = 1; used = 0; return; }
+      pages.push(cur); cur = { cols: [[], []] }; col = 0; used = 0; budget = nextBudget;
+    }
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var need = r.h + (r.type === 'sub' && rows[i + 1] ? rows[i + 1].h : 0);
+      if (used + need > budget && cur.cols[col].length) nextCol();
+      cur.cols[col].push(r); used += r.h;
+    }
+    pages.push(cur);
+    return pages;
+  }
+
+  function buildWashDoc(merged) {
+    var container = document.createElement('div');
+    container.className = 'wash-doc';
+
+    var rows = buildWashRows(merged);
+
+    // 오늘 주의: 특이사항이 있는 업체 + 신규·미확인(N) 업체
+    var notes = [];
+    merged.courses.forEach(function (c) {
+      (merged.byCourse[c] || []).forEach(function (it) {
+        var note = buildSpecialNote(it);
+        if (note === '-') note = '';
+        var isNew = washGroupOfItem(it) === 'N';
+        if (!note && !isNew) return;
+        notes.push({ no: it.companyNumber, name: it.nickname, text: note || ((it.combinedWash || '신규') + ' · 단독 돌리고 체크') });
+      });
+    });
+    var noteLen = notes.reduce(function (s, n) { return s + String(n.no).length + String(n.name).length + n.text.length + 8; }, 0);
+    var noteMm = notes.length ? 8 + Math.ceil(noteLen / 72) * 5.6 : 0;
+
+    var firstBudget = WASH_PAGE_MM - WASH_HEAD1_MM - noteMm - WASH_FOOT_MM - WASH_THEAD_MM;
+    var nextBudget = WASH_PAGE_MM - WASH_HEADN_MM - WASH_FOOT_MM - WASH_THEAD_MM;
+    var pages = paginateWashRows(rows, firstBudget, nextBudget);
+
+    var wd = weekdayFromDate(state.selectedDate);
+    pages.forEach(function (pg, pi) {
+      var page = document.createElement('div');
+      page.className = 'wash-page';
+      if (pi === 0) {
+        var head = document.createElement('div');
+        head.className = 'wash-head';
+        head.innerHTML =
+          '<div class="wash-head-left">' +
+            '<div class="wash-kicker">세탁팀용 · 합세탁 체크</div>' +
+            '<div class="wash-title">세탁공정</div>' +
+            '<div class="wash-warn">※ 이 공정표는 참고용 — 꼭 한 번 더 확인하고 합세탁 진행하기</div>' +
+            '<div class="wash-warn">※ 합세탁 후 꼭 분류하여 포장 담당자에게 인계할 것</div>' +
+          '</div>' +
+          '<div class="wash-head-right"><div class="wash-date"></div><div class="wash-writer">작성 ______________</div></div>';
+        head.querySelector('.wash-date').textContent = isoDate(state.selectedDate) + ' (' + wd + ')';
+        page.appendChild(head);
+
+        var legend = document.createElement('div');
+        legend.className = 'wash-legend';
+        legend.innerHTML =
+          '<span class="wl wl-A">A 헬스장</span><span class="wl wl-B">B 미용실·유색</span><span class="wl wl-C">C 피부관리·마사지</span>' +
+          '<span class="wl wl-X">X 단독</span><span class="wl wl-N">☐ 신규 → 단독+체크</span>';
+        page.appendChild(legend);
+        var rule = document.createElement('div');
+        rule.className = 'wash-rule';
+        rule.innerHTML = '같은 색끼리만 한 세탁기에 · 넣으면 줄 긋고 <b>세탁기-회차</b> 기입 · 흰 줄(X·☐)은 따로';
+        page.appendChild(rule);
+
+        if (notes.length) {
+          var nb = document.createElement('div');
+          nb.className = 'wash-notes';
+          var lab = document.createElement('b'); lab.className = 'wash-notes-label'; lab.textContent = '오늘 주의';
+          nb.appendChild(lab);
+          notes.forEach(function (n) {
+            var sp = document.createElement('span'); sp.className = 'wash-note';
+            var b = document.createElement('b'); b.textContent = n.no + ' ' + n.name;
+            sp.appendChild(b); sp.appendChild(document.createTextNode(' ' + n.text));
+            nb.appendChild(sp);
+          });
+          page.appendChild(nb);
+        }
+      } else {
+        var mini = document.createElement('div');
+        mini.className = 'wash-mini';
+        mini.textContent = '세탁공정 · ' + isoDate(state.selectedDate) + ' (' + wd + ') · ' + (pi + 1) + '/' + pages.length + '쪽';
+        page.appendChild(mini);
+      }
+
+      var body = document.createElement('div');
+      body.className = 'wash-cols';
+      pg.cols.forEach(function (colRows) {
+        var tbl = document.createElement('table');
+        tbl.className = 'wash-table';
+        tbl.innerHTML =
+          '<colgroup><col style="width:11%"><col style="width:10%"><col style="width:12%"><col style="width:40%"><col style="width:11%"><col style="width:16%"></colgroup>' +
+          '<thead><tr><th>합세탁<br>그룹</th><th>코스</th><th>번호</th><th>약칭</th><th>수량</th><th>세탁<br><span class="th-sub">기-회차</span></th></tr></thead>';
+        var tb = document.createElement('tbody');
+        colRows.forEach(function (r) {
+          var tr = document.createElement('tr');
+          tr.className = 'wg-' + r.g;
+          if (r.type === 'sub') {
+            tr.classList.add('wash-sub');
+            var c = document.createElement('td'); c.colSpan = 6;
+            c.textContent = (r.g === 'N' ? '☐' : r.g) + ' ' + WASH_GROUPS[r.g].name + ' ' + r.n + '곳';
+            tr.appendChild(c);
+          } else {
+            tr.classList.add('wash-item');
+            tr.appendChild(td(r.g === 'N' ? '☐' : r.g, 'wc-group'));
+            tr.appendChild(td(washCourseLetter(r.it.course), 'wc-course'));
+            tr.appendChild(td(r.it.companyNumber, 'wc-no'));
+            var nm = td(r.it.nickname, 'wc-name');
+            var len = String(r.it.nickname || '').length;
+            if (len > 7) nm.style.fontSize = Math.max(8.5, 13.5 * 7 / len).toFixed(1) + 'pt';
+            if (r.g === 'N') { var sm = document.createElement('div'); sm.className = 'wash-nchk'; sm.textContent = '☐흰수건 ☐로고 ☐이름표OK'; nm.appendChild(sm); }
+            tr.appendChild(nm);
+            tr.appendChild(td('', 'wc-qty'));
+            tr.appendChild(td('', 'wc-wash'));
+          }
+          tb.appendChild(tr);
+        });
+        tbl.appendChild(tb);
+        body.appendChild(tbl);
+      });
+      page.appendChild(body);
+
+      if (pi === pages.length - 1) {
+        var foot = document.createElement('div');
+        foot.className = 'wash-foot';
+        foot.innerHTML =
+          '<div class="wash-cycle"><b>세탁기별 사이클</b>　① ____회　② ____회　③ ____회　④ ____회<span class="wash-cycle-sum">합계 ____회</span></div>' +
+          '<div class="wash-foot-line"><span>이상(섞임·오염·냄새·분실) 시 ✗ 표시 후 단톡방 · ☐ 업체는 흰/로고/이름표 확인</span><span>세탁 완료 후 사진 → 단톡방</span></div>';
+        page.appendChild(foot);
+      }
+      container.appendChild(page);
+    });
+    return container;
+  }
+
   var ADDRESSALL_COL_WIDTHS = [7, 8, 8, 11, 32, 10, 16, 8];
   var ADDRESSALL_TEMPLATE =
     '<table class="doc-table addressall-table">' +
@@ -1652,6 +1919,11 @@
       requestAnimationFrame(fitPreviewPages);
       return;
     }
+    if (state.docType === 'wash') {
+      previewSurface.appendChild(buildPageFrame(buildWashDoc(state.merged), true));
+      requestAnimationFrame(fitPreviewPages);
+      return;
+    }
     if (state.docType === 'all_address') {
       var addrAllNode = buildAddressAllDoc(state.merged);
       previewSurface.appendChild(buildPageFrame(addrAllNode, true));
@@ -1676,6 +1948,7 @@
     if (state.docType === 'address') appendDoc('address');
     else if (state.docType === 'status') appendDoc('status');
     else { appendDoc('status'); appendDoc('address'); }
+    if (state.docType === 'status_address_wash') previewSurface.appendChild(buildPageFrame(buildWashDoc(state.merged), true));
 
     requestAnimationFrame(fitPreviewPages);
   }
@@ -1950,6 +2223,11 @@
       printCloser.appendChild(buildCloserDoc(allCourses, state.merged));
       return;
     }
+    if (kind === 'wash') {
+      printWash.innerHTML = '';
+      printWash.appendChild(buildWashDoc(state.merged));
+      return;
+    }
     if (kind === 'addressAll') {
       printAddressAll.innerHTML = '';
       printAddressAll.appendChild(buildAddressAllDoc(state.merged));
@@ -2031,6 +2309,8 @@
     if (state.docType === 'closer') { printCloserDoc(); return; }
     if (state.docType === 'all_address') { printAddressAllDoc(); return; }
     if (state.docType === 'closer_all_address') { closerAllGuideModal.classList.add('show'); return; }
+    if (state.docType === 'wash') { printWashDoc(); return; }
+    if (state.docType === 'status_address_wash') { washGuideModal.classList.add('show'); return; }
     printSingle(state.docType);
   });
   guideStatusBtn.addEventListener('click', function () { printSingle('status'); guideStatusBtn.classList.add('done'); });
@@ -2046,6 +2326,31 @@
     closerAllGuideModal.classList.remove('show');
     closerAllStep1Btn.classList.remove('done'); closerAllStep2Btn.classList.remove('done');
   });
+
+  var washGuideModal = $('washGuideModal');
+  var washStepBtns = [$('washGuideStep1Btn'), $('washGuideStep2Btn'), $('washGuideStep3Btn')];
+  washStepBtns[0].addEventListener('click', function () { printSingle('status'); washStepBtns[0].classList.add('done'); });
+  washStepBtns[1].addEventListener('click', function () { printSingle('address'); washStepBtns[1].classList.add('done'); });
+  washStepBtns[2].addEventListener('click', function () { printWashDoc(); washStepBtns[2].classList.add('done'); });
+  $('washGuideClose').addEventListener('click', function () {
+    washGuideModal.classList.remove('show');
+    washStepBtns.forEach(function (b) { b.classList.remove('done'); });
+  });
+
+  function printWashDoc() {
+    if (!state.freshPacking) { withFreshPacked(printWashDoc); return; }
+    if (!state.merged || state.merged.closedDay) return;
+    renderPrintDoc('wash');
+    var expected = state.merged.totalCount;
+    var actual = printWash.querySelectorAll('tr.wash-item').length;
+    if (expected !== actual) {
+      alert('세탁공정 인쇄 오류: 전체 업체 수(' + expected + ')와 실제 인쇄될 행 수(' + actual + ')가 일치하지 않습니다. 인쇄를 중단했습니다.');
+      return;
+    }
+    if (!hasPrintableContent(printWash)) { alert(t('nothingToPrint')); return; }
+    // 세탁공정은 출력본(변경내역 기준)을 바꾸지 않는다 — saveSnapshot이 status/closer만 저장한다.
+    doPrint('printing-wash', function () { recordPrint('wash', state.merged.courses); });
+  }
 
   function printCloserDoc() {
     if (!state.freshPacking) { withFreshPacked(printCloserDoc); return; }

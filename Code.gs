@@ -22,14 +22,15 @@ const WEB_SHEET_NAME = "세탁물 현황";
 const DATA_START_ROW = 4;
 
 /***** 열 위치 (실제 시트 헤더 행을 읽어 확인한 값) *****
- * H=구역 I=코스 J=기사명 K=업체번호 L=약칭 M=업종 N=포대 배송 O=수건 배송
+ * H=구역 I=코스 J=합세탁(가능/체크 등, 세탁공정 문서용 — 기사명 아님) K=업체번호 L=약칭 M=업종 N=포대 배송 O=수건 배송
  * P=수거량(중요!) Q=사이즈 R=출고 S=포장 담당자 T~Z=요일별 플래그
  * AD=배송 주소 AE=수거방식 AF=배송 코멘트 AG=거래처 번호(전화번호)
  * (I·R은 예전 출력 스크립트가 코스코드/출고번호를 임시로 써넣던 칸이라
  * 원본 값을 신뢰하지 않고 이 스크립트가 직접 계산한다.)
  */
 const COL_REGION = 8;      // H
-const COL_DRIVER = 10;     // J
+const COL_DRIVER = 10;     // J (과거 기사명 열 — 이제 기사명 보조로 읽지 않는다)
+const COL_COMBINED_WASH = 10; // J 합세탁 (가능 / 체크·신규·확인 / 공백)
 const COL_COMPANY_NO = 11; // K
 const COL_NICKNAME = 12;   // L
 const COL_BIZ_TYPE = 13;   // M
@@ -131,6 +132,18 @@ function findDayCodeColumn_(sheet, fullDayName) {
     }
   }
   return -1;
+}
+
+// 합세탁 그룹: A 헬스장·필라테스 / B 미용실 / C 피부관리·마사지 / X 단독 / N 신규·미확인(단독+체크)
+function washGroupOf_(washRaw, bizRaw) {
+  var w = String(washRaw === null || washRaw === undefined ? "" : washRaw).replace(/\s+/g, "");
+  var biz = String(bizRaw === null || bizRaw === undefined ? "" : bizRaw).replace(/\s+/g, "");
+  if (w === "체크" || w === "신규" || w === "확인") return "N";
+  if (w !== "가능") return "X";
+  if (/헬스|필라테스/.test(biz)) return "A";
+  if (/미용실/.test(biz)) return "B";
+  if (/피부관리|마사지/.test(biz)) return "C";
+  return "X";
 }
 
 // 셀 값을 항상 문자열로. "30_3" 같은 값이 날짜/숫자로 바뀌는 일이 없게 하고,
@@ -261,6 +274,8 @@ function buildDayData_(weekday, explicitDate) {
         sheetRow: DATA_START_ROW + i,
         sortKey: suffixNum,
         driver: cellStr_(row[COL_DRIVER - 1]),
+        combinedWash: cellStr_(row[COL_COMBINED_WASH - 1]),
+        washGroup: washGroupOf_(row[COL_COMBINED_WASH - 1], row[COL_BIZ_TYPE - 1]),
         companyNumber: cellStr_(row[COL_COMPANY_NO - 1]),
         nickname: cellStr_(row[COL_NICKNAME - 1]),
         businessType: cellStr_(row[COL_BIZ_TYPE - 1]),
@@ -318,6 +333,8 @@ function buildDayData_(weekday, explicitDate) {
         shippingNumber: shipSeq,
         row: item.sheetRow,
         driver: item.resolvedDriver,
+        combinedWash: item.combinedWash,
+        washGroup: item.washGroup,
         companyNumber: item.companyNumber,
         nickname: item.nickname,
         businessType: item.businessType,
