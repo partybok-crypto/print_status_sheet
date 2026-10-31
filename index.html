@@ -113,6 +113,7 @@
   }
   .primary-doc-btn .pdb-title { font-size: 17.5px; font-weight: 800; color: inherit; }
   .primary-doc-btn .pdb-sub { font-size: 12.5px; font-weight: 600; color: var(--text-sub); }
+  .primary-doc-btn .pdb-title[data-no]::before { content: attr(data-no) ' '; }
   .primary-doc-btn:hover { background: var(--blue-bg); }
   .primary-doc-btn.selected { background: var(--blue-dark); border-color: var(--blue-dark); color: #fff; }
   .primary-doc-btn.selected .pdb-sub { color: rgba(255,255,255,.85); }
@@ -445,19 +446,19 @@
         <div class="section-label" data-i18n="sec3">3. 자주 사용하는 출력</div>
         <div class="primary-doc-list" id="primaryDocList">
           <button class="primary-doc-btn" data-doc="status_address_wash">
-            <span class="pdb-title" data-i18n="pdbStatusAddrWash">현황지 + 주소지 + 세탁공정</span>
+            <span class="pdb-title" data-no="①" data-i18n="pdbStatusAddrWash">현황지 + 주소지 + 세탁공정</span>
             <span class="pdb-sub" data-i18n="pdbStatusAddrWashSub">배송기사용 + 세탁팀용 · 3개 문서 연속 출력</span>
           </button>
           <button class="primary-doc-btn" data-doc="wash">
-            <span class="pdb-title" data-i18n="pdbWash">세탁공정</span>
+            <span class="pdb-title" data-no="②" data-i18n="pdbWash">세탁공정</span>
             <span class="pdb-sub" data-i18n="pdbWashSub">세탁팀용 · 합세탁 체크표 출력</span>
           </button>
           <button class="primary-doc-btn" data-doc="closer_all_address">
-            <span class="pdb-title" data-i18n="pdbCloserAll">마감자용 수량표 + 전체주소지</span>
+            <span class="pdb-title" data-no="③" data-i18n="pdbCloserAll">마감자용 수량표 + 전체주소지</span>
             <span class="pdb-sub" data-i18n="pdbCloserAllSub">세탁 마감용 · 2개 문서 연속 출력</span>
           </button>
           <button class="primary-doc-btn" data-doc="changes" id="changesDocBtn">
-            <span class="pdb-title"><span data-i18n="pdbChanges">출력 후 라벨코스 변경내역</span> <span class="pdb-badge" id="changesBadge"></span></span>
+            <span class="pdb-title" data-no="④"><span data-i18n="pdbChanges">출력 후 라벨코스 변경내역</span> <span class="pdb-badge" id="changesBadge"></span></span>
             <span class="pdb-sub" id="changesSub">출력본과 비교하는 중...</span>
           </button>
         </div>
