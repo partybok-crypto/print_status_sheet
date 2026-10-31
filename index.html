@@ -490,12 +490,16 @@
             <span class="pdb-title" data-no="②" data-i18n="pdbWash">세탁공정</span>
             <span class="pdb-sub" data-i18n="pdbWashSub">세탁팀용 · 합세탁 체크표 출력</span>
           </button>
+          <button class="primary-doc-btn" data-doc="washCheck">
+            <span class="pdb-title" data-no="③" data-i18n="pdbWashCheck">합세탁 체크표</span>
+            <span class="pdb-sub" data-i18n="pdbWashCheckSub">마감자용 · 합세탁 가능 여부 체크</span>
+          </button>
           <button class="primary-doc-btn" data-doc="closer_all_address">
-            <span class="pdb-title" data-no="③" data-i18n="pdbCloserAll">마감자용 수량표 + 전체주소지 + 합세탁 체크표</span>
-            <span class="pdb-sub" data-i18n="pdbCloserAllSub">세탁 마감용 · 3개 문서 연속 출력</span>
+            <span class="pdb-title" data-no="④" data-i18n="pdbCloserAll">마감자용 수량표 + 전체주소지</span>
+            <span class="pdb-sub" data-i18n="pdbCloserAllSub">세탁 마감용 · 2개 문서 연속 출력</span>
           </button>
           <button class="primary-doc-btn" data-doc="changes" id="changesDocBtn">
-            <span class="pdb-title" data-no="④"><span data-i18n="pdbChanges">출력 후 라벨코스 변경내역</span> <span class="pdb-badge" id="changesBadge"></span></span>
+            <span class="pdb-title" data-no="⑤"><span data-i18n="pdbChanges">출력 후 라벨코스 변경내역</span> <span class="pdb-badge" id="changesBadge"></span></span>
             <span class="pdb-sub" id="changesSub">출력본과 비교하는 중...</span>
           </button>
         </div>
@@ -508,7 +512,6 @@
           <button class="other-doc-btn" data-doc="address" data-i18n="odAddress">주소지만</button>
           <button class="other-doc-btn" data-doc="status" data-i18n="odStatus">현황지만</button>
           <button class="other-doc-btn" data-doc="closer" data-i18n="odCloser">마감자용 수량표만</button>
-          <button class="other-doc-btn" data-doc="washCheck" data-i18n="odWashCheck">합세탁 체크표만</button>
           <button class="other-doc-btn" data-doc="all_address" data-i18n="odAllAddr">전체주소지만</button>
           <button class="other-doc-btn" data-doc="status_address" data-i18n="pdbStatusAddr">현황지 + 주소지</button>
         </div>
@@ -605,11 +608,10 @@
 <div class="modal-overlay no-print" id="closerAllGuideModal">
   <div class="modal-box">
     <div class="modal-title" data-i18n="closerTitle">세탁 마감용 문서 출력</div>
-    <div class="modal-body" data-i18n-html="closerBody">1. 마감자용 수량표<br>2. 전체주소지<br>3. 합세탁 체크표<br><br>세 문서를 순서대로 출력해주세요.</div>
+    <div class="modal-body" data-i18n-html="closerBody">1. 마감자용 수량표<br>2. 전체주소지<br><br>두 문서를 순서대로 출력해주세요.</div>
     <div class="guide-steps">
       <button id="closerAllStep1Btn" data-i18n="closerStep1">1. 마감자용 수량표 인쇄</button>
       <button id="closerAllStep2Btn" data-i18n="closerStep2">2. 전체주소지 인쇄</button>
-      <button id="closerAllStep3Btn" data-i18n="closerStep3">3. 합세탁 체크표 인쇄</button>
     </div>
     <div class="modal-actions">
       <button class="confirm" id="closerAllDone" data-i18n="closerDone">출력 완료</button>
@@ -631,8 +633,8 @@
       pdbStatusAddrWash: '현황지 + 주소지 + 세탁공정', pdbStatusAddrWashSub: '배송기사용 + 세탁팀용 · 3개 문서 연속 출력',
       pdbWash: '세탁공정', pdbWashSub: '세탁팀용 · 합세탁 체크표 출력', lblWash: '세탁공정', btnWash: '세탁공정 인쇄', btnStatusAddrWash: '현황지 + 주소지 + 세탁공정 출력',
       washGuideBody: '현황지, 주소지, 세탁공정을 각각 안정적으로 출력합니다. 아래 순서대로 눌러주세요.', washStep3: '3. 세탁공정 인쇄', bWash: '세탁공정 · A4 세로',
-      pdbCloserAll: '마감자용 수량표 + 전체주소지 + 합세탁 체크표', pdbCloserAllSub: '세탁 마감용 · 3개 문서 연속 출력',
-      odWashCheck: '합세탁 체크표만', lblWashCheck: '합세탁 체크표', btnWashCheck: '합세탁 체크표 인쇄', bWashCheck: '합세탁 체크표 · A4 세로', closerStep3: '3. 합세탁 체크표 인쇄',
+      pdbCloserAll: '마감자용 수량표 + 전체주소지', pdbCloserAllSub: '세탁 마감용 · 2개 문서 연속 출력',
+      pdbWashCheck: '합세탁 체크표', pdbWashCheckSub: '마감자용 · 합세탁 가능 여부 체크', lblWashCheck: '합세탁 체크표', btnWashCheck: '합세탁 체크표 인쇄', bWashCheck: '합세탁 체크표 · A4 세로',
       pdbChanges: '출력 후 라벨코스 변경내역',
       otherTitle: '기타 출력', otherSub: '필요할 때만 선택하세요',
       odAddress: '주소지만', odStatus: '현황지만', odCloser: '마감자용 수량표만', odAllAddr: '전체주소지만',
@@ -640,7 +642,7 @@
       openAdmin: '🔗 관리·편집 화면 열기', previewTitle: '인쇄 미리보기',
       guideTitle: '인쇄 순서 안내', guideBody: '현황지와 주소지를 각각 안정적으로 출력합니다. 아래 순서대로 눌러주세요.',
       guideStep1: '1. 현황지 인쇄', guideStep2: '2. 주소지 인쇄',
-      closerTitle: '세탁 마감용 문서 출력', closerBody: '1. 마감자용 수량표<br>2. 전체주소지<br>3. 합세탁 체크표<br><br>세 문서를 순서대로 출력해주세요.',
+      closerTitle: '세탁 마감용 문서 출력', closerBody: '1. 마감자용 수량표<br>2. 전체주소지<br><br>두 문서를 순서대로 출력해주세요.',
       closerStep1: '1. 마감자용 수량표 인쇄', closerStep2: '2. 전체주소지 인쇄', closerDone: '출력 완료',
       connPending: '연결 확인 중', connOk: '원본 데이터 연결됨', connErr: '데이터 연결 오류',
       errTimeout: '요청이 너무 오래 걸려 중단됐어요. 다시 시도해주세요.', errGas: 'GAS 연결을 확인해주세요.', errLoad: '데이터를 불러오지 못했습니다.',
@@ -650,11 +652,11 @@
       all: '전체', courseFmt: '{c}코스', infoAll: 'ℹ 전체 · {n}개 코스 · {c}곳', infoPick: 'ℹ 코스를 선택해주세요.',
       noDriver: '기사 미배정', infoCourse: 'ℹ {course} · {driver} · {c}곳', pickCoursePreview: '코스를 선택해주세요.',
       lblAll: '전체', lblAddress: '주소지', lblStatus: '현황지', lblCloser: '마감자용 수량표', lblAllAddr: '전체 주소지',
-      lblCloserAll: '마감자용 수량표+전체주소지+합세탁 체크표', lblChanges: '출력 후 라벨코스 변경내역', lblStatusAddr: '현황지+주소지',
+      lblCloserAll: '마감자용 수량표+전체주소지', lblChanges: '출력 후 라벨코스 변경내역', lblStatusAddr: '현황지+주소지',
       btnChangesTest: '변경내역 인쇄 (테스트)', btnChanges: '변경내역 인쇄', btnCloser: '마감자용 전체 수량표 인쇄',
-      btnAllAddr: '전체 주소지 인쇄', btnCloserAll: '마감자용 + 전체주소지 + 합세탁 체크표 출력', btnStatusAddr: '현황지 + 주소지 출력', btnPrintSuffix: ' 인쇄',
+      btnAllAddr: '전체 주소지 인쇄', btnCloserAll: '마감자용 + 전체주소지 출력', btnStatusAddr: '현황지 + 주소지 출력', btnPrintSuffix: ' 인쇄',
       bAllBiz: '전체 업체', bAllCourse: '전체 코스', bA4P: 'A4 세로', bA4L: 'A4 가로', bA4P2: 'A4 세로 2종', bPL: '세로+가로',
-      bCloserAll: '마감자용 + 전체주소지 + 합세탁 체크표',
+      bCloserAll: '마감자용 + 전체주소지',
       chHas: '(있습니다.)', chNone: '(없습니다.)', chFail: '(확인 실패)',
       chSubHas: '마지막 출력({d}) 이후 {n}건 달라짐 · 눌러서 확인', chSubLoading: '출력본과 비교하는 중...',
       chSubFail: '출력본 확인 실패 · 눌러서 다시 시도', chSubNoSnap: '출력본 없음 · 출력하면 기준으로 저장', chSubSame: '마지막 출력본과 같음',
@@ -676,7 +678,7 @@
       openAdmin: '🔗 Buka layar kelola/ubah', previewTitle: 'Pratinjau cetak',
       guideTitle: 'Urutan cetak', guideBody: 'Lembar status dan daftar alamat dicetak satu per satu agar stabil. Tekan sesuai urutan di bawah.',
       guideStep1: '1. Cetak lembar status', guideStep2: '2. Cetak daftar alamat',
-      closerTitle: 'Cetak dokumen penutupan cucian', closerBody: '1. Tabel jumlah penutupan<br>2. Semua alamat<br>3. 합세탁 체크표<br><br>Cetak ketiga dokumen sesuai urutan.',
+      closerTitle: 'Cetak dokumen penutupan cucian', closerBody: '1. Tabel jumlah penutupan<br>2. Semua alamat<br><br>Cetak kedua dokumen sesuai urutan.',
       closerStep1: '1. Cetak tabel jumlah penutupan', closerStep2: '2. Cetak semua alamat', closerDone: 'Selesai mencetak',
       connPending: 'Memeriksa koneksi', connOk: 'Data asli terhubung', connErr: 'Kesalahan koneksi data',
       errTimeout: 'Permintaan terlalu lama dan dihentikan. Silakan coba lagi.', errGas: 'Periksa koneksi GAS.', errLoad: 'Gagal memuat data.',
@@ -712,7 +714,7 @@
       openAdmin: '🔗 Mở màn hình quản lý/chỉnh sửa', previewTitle: 'Xem trước khi in',
       guideTitle: 'Thứ tự in', guideBody: 'Bảng tình hình và danh sách địa chỉ được in riêng từng bản để ổn định. Hãy bấm theo thứ tự bên dưới.',
       guideStep1: '1. In bảng tình hình', guideStep2: '2. In danh sách địa chỉ',
-      closerTitle: 'In tài liệu chốt giặt', closerBody: '1. Bảng số lượng chốt<br>2. Tất cả địa chỉ<br>3. 합세탁 체크표<br><br>Hãy in ba tài liệu theo thứ tự.',
+      closerTitle: 'In tài liệu chốt giặt', closerBody: '1. Bảng số lượng chốt<br>2. Tất cả địa chỉ<br><br>Hãy in hai tài liệu theo thứ tự.',
       closerStep1: '1. In bảng số lượng chốt', closerStep2: '2. In tất cả địa chỉ', closerDone: 'In xong',
       connPending: 'Đang kiểm tra kết nối', connOk: 'Đã kết nối dữ liệu gốc', connErr: 'Lỗi kết nối dữ liệu',
       errTimeout: 'Yêu cầu quá lâu nên đã bị dừng. Vui lòng thử lại.', errGas: 'Vui lòng kiểm tra kết nối GAS.', errLoad: 'Không tải được dữ liệu.',
@@ -2059,7 +2061,6 @@
     if (state.docType === 'closer' || state.docType === 'closer_all_address') {
       var closerNode = buildCloserDoc(state.merged.courses.slice(), state.merged);
       previewSurface.appendChild(buildPageFrame(closerNode, true));
-      if (state.docType === 'closer_all_address') previewSurface.appendChild(buildPageFrame(buildWashCheckDoc(state.merged.courses.slice(), state.merged), true));
       requestAnimationFrame(fitPreviewPages);
       return;
     }
@@ -2477,11 +2478,9 @@
 
   closerAllStep1Btn.addEventListener('click', function () { printCloserDoc(); closerAllStep1Btn.classList.add('done'); });
   closerAllStep2Btn.addEventListener('click', function () { printAddressAllDoc(); closerAllStep2Btn.classList.add('done'); });
-  var closerAllStep3Btn = $('closerAllStep3Btn');
-  closerAllStep3Btn.addEventListener('click', function () { printWashCheckDoc(); closerAllStep3Btn.classList.add('done'); });
   closerAllDone.addEventListener('click', function () {
     closerAllGuideModal.classList.remove('show');
-    closerAllStep1Btn.classList.remove('done'); closerAllStep2Btn.classList.remove('done'); closerAllStep3Btn.classList.remove('done');
+    closerAllStep1Btn.classList.remove('done'); closerAllStep2Btn.classList.remove('done');
   });
 
   var washGuideModal = $('washGuideModal');
