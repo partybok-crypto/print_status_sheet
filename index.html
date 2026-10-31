@@ -1697,8 +1697,12 @@
 
   function washGroupOfItem(it) {
     var g = it && it.washGroup;
-    return WASH_GROUPS.hasOwnProperty(g) ? g : 'X';
+    g = String(g || '').toUpperCase();
+    return (/^[ABC]\d{0,2}$/.test(g) || g === 'X' || g === 'N') ? g : 'X';
   }
+  // B1·B2처럼 숫자가 붙은 합세탁 코드: 색·이름은 앞 글자(B)를 따르고, 묶음(소계)은 B1·B2로 따로 나눈다.
+  function washBase(g) { return String(g).charAt(0); }
+  function washNum(g) { return parseInt(String(g).slice(1), 10) || 0; }
   // 수거일(선택한 배송일) → 세탁일(다음 영업일; 월요일은 휴무라 건너뜀)
   function washDateText() {
     var d = state.selectedDate;
@@ -1715,8 +1719,8 @@
       (merged.byCourse[course] || []).forEach(function (it, ii) { list.push({ it: it, g: washGroupOfItem(it), ci: ci, ii: ii }); });
     });
     list.sort(function (a, b) {
-      var d = WASH_ORDER.indexOf(a.g) - WASH_ORDER.indexOf(b.g);
-      return d || (a.ci - b.ci) || (a.ii - b.ii);
+      var d = WASH_ORDER.indexOf(washBase(a.g)) - WASH_ORDER.indexOf(washBase(b.g));
+      return d || (washNum(a.g) - washNum(b.g)) || (a.ci - b.ci) || (a.ii - b.ii);
     });
     var counts = {};
     list.forEach(function (r) { counts[r.g] = (counts[r.g] || 0) + 1; });
@@ -1831,11 +1835,11 @@
         var tb = document.createElement('tbody');
         colRows.forEach(function (r) {
           var tr = document.createElement('tr');
-          tr.className = 'wg-' + r.g;
+          tr.className = 'wg-' + washBase(r.g);
           if (r.type === 'sub') {
             tr.classList.add('wash-sub');
             var c = document.createElement('td'); c.colSpan = 7;
-            c.textContent = (r.g === 'N' ? '☐' : r.g) + ' ' + WASH_GROUPS[r.g].name + ' ' + r.n + '곳';
+            c.textContent = (r.g === 'N' ? '☐' : r.g) + ' ' + WASH_GROUPS[washBase(r.g)].name + ' ' + r.n + '곳';
             tr.appendChild(c);
           } else {
             tr.classList.add('wash-item');

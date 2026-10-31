@@ -145,7 +145,7 @@ function washGroupOf_(washRaw, bizRaw) {
   var biz = String(bizRaw === null || bizRaw === undefined ? "" : bizRaw).replace(/\s+/g, "");
   // 1단계: J열에 A/B/C(또는 X)를 직접 적으면 그게 우선 — 업종표에 없는 곳·예외 업체는 시트에서 직접 지정
   var direct = w.toUpperCase();
-  if (direct === "A" || direct === "B" || direct === "C" || direct === "X") return direct;
+  if (/^[ABC]\d{0,2}$/.test(direct) || direct === "X") return direct; // B1·B2처럼 번호를 붙이면 같은 B색이지만 따로 묶음
   if (w === "체크" || w === "신규" || w === "확인") return "N";
   // 2단계: 가능이면 업종으로 자동
   if (w !== "가능") return "X";
@@ -172,54 +172,9 @@ function washDateOf_(dateObj) {
   return w;
 }
 
-// 작성자: 먼저 "주차별 쉬프트"(이번 주)에서 찾고, 없으면 지난 주 보관 탭("40주차" 등)에서 찾는다.
-function getFirstWorkerName_(dateObj) {
-  var n = getFirstWorkerNameCurrent_(dateObj);
-  if (n) return n;
-  return getFirstWorkerNameArchive_(dateObj);
-}
-
-// 보관 탭("N주차")은 날짜 칸(예: "10-03-금") 아래 [출근시간 | 포지션 | 이름 | ...] 행이 이어지고 한 줄씩 건너뛴다.
-// 요일 글자는 탭마다 틀린 경우가 있어 월-일만 맞춰 찾는다. 휴무 제외, 출근이 가장 이른 사람.
-function getFirstWorkerNameArchive_(dateObj) {
-  try {
-    var ss = SpreadsheetApp.openById(SCHEDULE_SPREADSHEET_ID);
-    var mm = dateObj.getMonth() + 1, dd = dateObj.getDate();
-    var pat = /^\s*(\d{1,2})\s*-\s*(\d{1,2})\s*-\s*[월화수목금토일]\s*$/;
-    var sheets = ss.getSheets();
-    for (var si = 0; si < sheets.length; si++) {
-      if (!/^\d+주차$/.test(sheets[si].getName())) continue;
-      var lastCol = sheets[si].getLastColumn();
-      if (lastCol < 1) continue;
-      var top = sheets[si].getRange(1, 1, 4, lastCol).getDisplayValues();
-      var fr = -1, fc = -1;
-      for (var r = 0; r < top.length && fc < 0; r++) {
-        for (var c = 0; c < top[r].length; c++) {
-          var m = pat.exec(top[r][c]);
-          if (m && Number(m[1]) === mm && Number(m[2]) === dd) { fr = r; fc = c; break; }
-        }
-      }
-      if (fc < 0) continue;
-      var v = sheets[si].getRange(fr + 1, fc + 1, 60, 3).getDisplayValues();
-      var best = "", bestHour = null;
-      for (var i = 3; i < v.length; i++) {
-        if (pat.test(v[i][0])) break; // 다음 블록
-        var name = String(v[i][2] || "").trim();
-        var pos = String(v[i][1] || "");
-        var h = scheduleHour_(v[i][0]);
-        if (!name || h === null) continue;
-        if (pos.indexOf("휴무") !== -1 || name.indexOf("휴무") !== -1) continue;
-        if (bestHour === null || h < bestHour) { bestHour = h; best = name; }
-      }
-      if (best) return best;
-    }
-  } catch (err) {}
-  return "";
-}
-
 // 그 날짜 일정표 블록(날짜 칸 "10-31-토" + 바로 아래 머리글 출근/종료/포지션/이름/작업)에서
 // 휴무가 아닌 사람 중 출근이 가장 이른 사람의 이름을 돌려준다(같으면 시트 순서). 못 찾거나 접근이 안 되면 "".
-function getFirstWorkerNameCurrent_(dateObj) {
+function getFirstWorkerName_(dateObj) {
   try {
     var sh = SpreadsheetApp.openById(SCHEDULE_SPREADSHEET_ID).getSheetByName(SCHEDULE_SHEET_NAME);
     if (!sh) return "";
