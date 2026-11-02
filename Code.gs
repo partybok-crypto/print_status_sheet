@@ -175,6 +175,15 @@ function washDateOf_(dateObj) {
 // 그 날짜 일정표 블록(날짜 칸 "10-31-토" + 바로 아래 머리글 출근/종료/포지션/이름/작업)에서
 // 휴무가 아닌 사람 중 출근이 가장 이른 사람의 이름을 돌려준다(같으면 시트 순서). 못 찾거나 접근이 안 되면 "".
 function getFirstWorkerName_(dateObj) {
+  // 다른 스프레드시트를 열어 읽는 데 몇 초 걸리므로 날짜별로 30분간 기억한다(찾은 이름만 기억 - 못 찾으면 매번 다시 시도).
+  var cache = null, ckey = "washWriter:" + toIsoDate_(dateObj);
+  try { cache = CacheService.getScriptCache(); var hit = cache.get(ckey); if (hit) return hit; } catch (e0) {}
+  var found = getFirstWorkerNameUncached_(dateObj);
+  if (found) { try { cache.put(ckey, found, 1800); } catch (e1) {} }
+  return found;
+}
+
+function getFirstWorkerNameUncached_(dateObj) {
   try {
     var sh = SpreadsheetApp.openById(SCHEDULE_SPREADSHEET_ID).getSheetByName(SCHEDULE_SHEET_NAME);
     if (!sh) return "";
@@ -260,6 +269,7 @@ function buildTradeAssignmentMap_(weekday) {
 // 문제가 있었다. 날짜와 요일이 서로 다른 요일을 가리키면 오류로 처리한다.
 // =============================================
 function buildDayData_(weekday, explicitDate) {
+  var buildStart = Date.now(), writerMs = 0;
   var fullName = WEEKDAY_FULL_NAME[weekday];
   if (!fullName) throw new Error("요일 값이 올바르지 않습니다: " + weekday);
 
@@ -360,7 +370,9 @@ function buildDayData_(weekday, explicitDate) {
 
   // "거래처" 시트의 요일별 배정표(업체코드 → {course, driver}) — 기사명의
   // 진짜 출처. 세탁물 현황 J열은 이 값이 없을 때만 보조로 쓴다.
+  var tTrade0 = Date.now();
   var tradeMap = buildTradeAssignmentMap_(weekday);
+  var tradeMs = Date.now() - tTrade0;
 
   var drivers = {};
   var items = [];
@@ -423,11 +435,12 @@ function buildDayData_(weekday, explicitDate) {
     weekNumber: getIsoWeekNumber_(dateObj) + "주차",
     origin: origin,
     courses: order,
-    washWriter: getFirstWorkerName_(washDateOf_(dateObj)),
+    washWriter: (function () { var t0 = Date.now(); var w = getFirstWorkerName_(washDateOf_(dateObj)); writerMs = Date.now() - t0; return w; })(),
     drivers: drivers,
     items: items,
     count: items.length,
     closedDay: false,
+    timing: { tradeMs: tradeMs, writerMs: writerMs, totalMs: Date.now() - buildStart },
     fetchedAt: new Date().toISOString()
   };
 }
