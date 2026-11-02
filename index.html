@@ -980,10 +980,10 @@
   });
 
   // ================= GAS 호출 =================
-  function callGAS(payload) {
+  function callGAS(payload, timeoutMs) {
     var url = getGasUrl();
     var controller = new AbortController();
-    var timeoutId = setTimeout(function () { controller.abort(); }, FETCH_TIMEOUT_MS);
+    var timeoutId = setTimeout(function () { controller.abort(); }, timeoutMs || FETCH_TIMEOUT_MS);
     return fetch(url, { method: 'POST', body: JSON.stringify(payload), signal: controller.signal })
       .then(function (res) {
         clearTimeout(timeoutId);
@@ -1048,7 +1048,16 @@
     // 포장수량·출력본은 현황지 데이터와 상관없이 조회되므로 같이 출발시킨다(순서대로 기다리면 느려 보임).
     state.prefetch = { date: dateIso, snap: loadSnapshot(dateIso), packed: loadPackedCount(dateIso) };
 
-    callGAS({ action: 'getData', weekday: weekday, date: dateIso })
+    // Apps Script가 가끔 응답 없이 멈춘다 - 오래 기다리지 말고 짧게 끊고 다시 요청한다(보통 두 번째는 바로 된다).
+    var ATTEMPT_TIMEOUTS = [10000, 12000, 20000];
+    function fetchWithRetry(i) {
+      return callGAS({ action: 'getData', weekday: weekday, date: dateIso }, ATTEMPT_TIMEOUTS[i])
+        .catch(function (err) {
+          if (i + 1 >= ATTEMPT_TIMEOUTS.length || isoDate(state.selectedDate) !== dateIso) throw err;
+          return fetchWithRetry(i + 1);
+        });
+    }
+    fetchWithRetry(0)
       .then(function (data) {
         if (!data || !data.success) throw new Error((data && data.message) || t('errLoad'));
         if (data.requestedDate !== dateIso) {
@@ -1056,10 +1065,22 @@
         }
         if (isoDate(state.selectedDate) !== dateIso) return;
         state.rawCache[dateIso] = data;
+        try { localStorage.setItem('ps_lastgood_' + dateIso, JSON.stringify({ at: Date.now(), data: data })); } catch (e) {}
         applyRawData(data, dateIso);
         setConn('ok', 'connOk');
       })
       .catch(function (err) {
+        // 끝내 못 불러왔으면 이 날짜로 마지막에 성공했던 데이터를 보여주되 오래된 것임을 알린다.
+        try {
+          var lg = JSON.parse(localStorage.getItem('ps_lastgood_' + dateIso) || 'null');
+          if (lg && lg.data && lg.data.requestedDate === dateIso && isoDate(state.selectedDate) === dateIso) {
+            applyRawData(lg.data, dateIso);
+            var tm = new Date(lg.at);
+            setConn('err', 'connErr');
+            showInlineError('서버 응답이 없어 ' + (tm.getMonth() + 1) + '/' + tm.getDate() + ' ' + tm.getHours() + ':' + String(tm.getMinutes()).padStart(2, '0') + '에 불러왔던 이전 데이터를 보여줍니다. 출력 전에 「다시 시도」를 눌러 최신으로 바꿔주세요.');
+            return;
+          }
+        } catch (e2) {}
         setConn('err', 'connErr');
         var msg = (err && err.name === 'AbortError')
           ? t('errTimeout')
