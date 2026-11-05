@@ -319,73 +319,77 @@
   .guide-steps button:hover { background: var(--blue-bg); }
   .guide-steps button.done { border-color: var(--green); color: var(--green); background: #ecfdf3; }
 
-  /* ================= 세탁공정(세탁기 배정표) — A4 가로, 18차 디자인 기준 ================= */
-  .w2-doc { width: 283mm; color: #142438; font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; font-size: 16px; line-height: 1.25; }
+  /* ================= 세탁공정(세탁기 배정표) — A4 세로, 2열 (18차 디자인을 세로 폭에 맞춰 줄임) ================= */
+  .w2-doc { width: 194mm; color: #142438; font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; font-size: 14px; line-height: 1.25; }
   .w2-doc, .w2-doc * { box-sizing: border-box; }
-  .w2-page { width: 283mm; background: #fff; }
+  .w2-page { width: 194mm; background: #fff; }
   .w2-page + .w2-page { margin-top: 10mm; padding-top: 4mm; border-top: 2px dashed #b9c2cf; }
-  .w2-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #1d3c63; padding-bottom: 8px; }
-  .w2-head h1 { font-size: 30px; margin: 0; font-weight: 900; }
-  .w2-head small { font-size: 19px; font-weight: 700; }
-  .w2-mini { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 3px solid #1d3c63; padding-bottom: 5px; margin-bottom: 8px; font-size: 20px; font-weight: 900; }
-  .w2-mini small { font-size: 16px; font-weight: 700; }
-  .w2-legend { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
-  .w2-legend span { padding: 4px 10px; font-size: 17px; font-weight: 900; border-radius: 4px; }
+  .w2-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #1d3c63; padding-bottom: 6px; gap: 8px; }
+  .w2-head h1 { font-size: 23px; margin: 0; font-weight: 900; }
+  .w2-head small { font-size: 13px; font-weight: 700; text-align: right; }
+  .w2-mini { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #1d3c63; padding-bottom: 4px; margin-bottom: 6px; font-size: 16px; font-weight: 900; }
+  .w2-mini small { font-size: 13px; font-weight: 700; }
+  .w2-legend { display: flex; flex-wrap: wrap; gap: 5px; margin: 7px 0; }
+  .w2-legend span { padding: 3px 7px; font-size: 12.5px; font-weight: 900; border-radius: 4px; }
   .w2-a { background: #c6dfff; } .w2-b { background: #c8f0d8; } .w2-b2 { background: #a6e4dc; } .w2-c { background: #ffe59a; } .w2-u { background: #ffd1d1; }
-  .w2-notice { display: flex; align-items: center; gap: 18px; background: #fff8db; border: 4px solid #d69c20; border-radius: 8px; padding: 7px 16px; margin: 8px 0 5px; color: #422c09; }
-  .w2-notice-icon { font-size: 36px; flex: none; }
-  .w2-notice strong { font-size: 25px; }
-  .w2-notice b { color: #a02b14; font-size: 23px; }
-  .w2-notice small { display: block; font-size: 16px; margin-top: 2px; font-weight: 700; }
-  .w2-guide { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; font-size: 15px; margin: 5px 0 4px; padding: 5px 10px; background: #f2f5f9; border-radius: 5px; }
-  .w2-guide b { margin-right: 7px; font-size: 19px; }
-  .w2-tag { display: inline-block; border-radius: 4px; padding: 4px 7px; font-size: 16px; font-weight: 900; vertical-align: middle; white-space: nowrap; }
+  .w2-notice { display: flex; align-items: center; gap: 12px; background: #fff8db; border: 3px solid #d69c20; border-radius: 8px; padding: 6px 12px; margin: 7px 0 5px; color: #422c09; }
+  .w2-notice-icon { font-size: 30px; flex: none; }
+  .w2-notice strong { font-size: 19px; }
+  .w2-notice b { color: #a02b14; font-size: 17px; }
+  .w2-notice small { display: block; font-size: 12.5px; margin-top: 2px; font-weight: 700; }
+  .w2-guide { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; font-size: 11.5px; margin: 5px 0 4px; padding: 4px 8px; background: #f2f5f9; border-radius: 5px; }
+  .w2-guide b { margin-right: 5px; font-size: 13px; }
+  .w2-tag { display: inline-block; border-radius: 4px; padding: 3px 5px; font-size: 12px; font-weight: 900; vertical-align: middle; white-space: nowrap; }
   .w2-tag-ai { background: #eef1f5; color: #35475e; border: 2px solid #9ca9b8; }
   .w2-tag-driver { background: #e4f3e8; color: #1a643a; border: 2px solid #78b28d; }
   .w2-tag-need { background: #fff1f1; color: #a01620; border: 2px solid #d52a32; }
-  .w2-stats { font-size: 19px; font-weight: 900; margin: 6px 0; }
-  .w2-stats small { font-size: 16px; font-weight: 700; color: #42546a; }
-  .w2-cols { display: flex; gap: 8px; align-items: flex-start; }
-  .w2-col { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+  .w2-stats { font-size: 15px; font-weight: 900; margin: 6px 0; }
+  .w2-stats small { font-size: 12px; font-weight: 700; color: #42546a; }
+  .w2-cols { display: flex; gap: 6px; align-items: flex-start; }
+  .w2-col { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
   .w2-machine { border: 3px solid #1d3c63; border-radius: 7px; overflow: hidden; }
-  .w2-machine-head { background: #1d3c63; color: #fff; padding: 6px 13px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  .w2-machine-head strong { font-size: 32px; white-space: nowrap; }
-  .w2-machine-head span { font-size: 17px; font-weight: bold; text-align: right; white-space: nowrap; }
-  .w2-cycle { padding: 8px 6px 9px; border-top: 9px solid #1d3c63; position: relative; }
+  .w2-machine-head { background: #1d3c63; color: #fff; padding: 5px 9px; display: flex; justify-content: space-between; align-items: center; gap: 4px; }
+  .w2-machine-head strong { font-size: 22px; white-space: nowrap; }
+  .w2-machine-head span { font-size: 12px; font-weight: bold; text-align: right; white-space: nowrap; }
+  .w2-cycle { padding: 6px 4px 7px; border-top: 7px solid #1d3c63; position: relative; }
   .w2-cycle.first { border-top: 0; }
-  .w2-cycle-top { background: #ffffffb8; border-radius: 6px; padding: 4px 6px; margin-bottom: 4px; display: flex; justify-content: space-between; gap: 4px; align-items: center; border-bottom: 2px solid #0002; font-size: 19px; font-weight: 900; }
-  .w2-cycle-index { background: #1d3c63; color: #fff; border-radius: 5px; padding: 5px 8px; margin-right: 3px; }
-  .w2-cycle-right { display: flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 17px; }
-  .w2-done { display: inline-flex; align-items: center; background: #fff; border: 2px solid #1d3c63; border-radius: 5px; padding: 3px 8px; font-size: 16px; font-weight: 900; }
-  .w2-route-group { display: grid; grid-template-columns: 62px minmax(0, 1fr); align-items: stretch; gap: 4px; margin: 3px 0; }
-  .w2-route-tall { display: flex; align-items: center; justify-content: center; background: #fff9; border: 1.5px solid #314866; border-radius: 6px; font-size: 18px; font-weight: 900; color: #17304d; min-height: 44px; padding: 2px 1px; white-space: nowrap; letter-spacing: -.7px; }
+  .w2-cycle-top { background: #ffffffb8; border-radius: 6px; padding: 3px 4px; margin-bottom: 3px; display: flex; justify-content: space-between; gap: 3px; align-items: center; border-bottom: 2px solid #0002; font-size: 13.5px; font-weight: 900; }
+  .w2-cycle-index { background: #1d3c63; color: #fff; border-radius: 5px; padding: 3px 6px; margin-right: 2px; }
+  .w2-cycle-right { display: flex; align-items: center; gap: 4px; white-space: nowrap; font-size: 12.5px; }
+  .w2-done { display: inline-flex; align-items: center; background: #fff; border: 2px solid #1d3c63; border-radius: 5px; padding: 2px 5px; font-size: 12.5px; font-weight: 900; }
+  .w2-route-group { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: stretch; gap: 3px; margin: 3px 0; }
+  .w2-route-tall { display: flex; align-items: center; justify-content: center; background: #fff9; border: 1.5px solid #314866; border-radius: 6px; font-size: 13px; font-weight: 900; color: #17304d; min-height: 34px; padding: 2px 1px; white-space: nowrap; letter-spacing: -.8px; }
   .w2-route-entries { min-width: 0; }
-  .w2-cust { display: flex; flex-wrap: nowrap; align-items: center; min-width: 0; gap: 4px; padding: 3px 2px; white-space: nowrap; }
+  .w2-cust { display: flex; flex-wrap: nowrap; align-items: center; min-width: 0; gap: 3px; padding: 3px 1px; white-space: nowrap; }
   .w2-cust + .w2-cust { border-top: 1px solid #ffffff99; }
-  .w2-no { font-size: 28px; font-weight: 900; width: 66px; flex: 0 0 66px; letter-spacing: -1.4px; white-space: nowrap; }
-  .w2-name { font-size: 18px; font-weight: 900; flex: 1 1 auto; min-width: 0; white-space: nowrap; letter-spacing: -.8px; }
-  .w2-qty { display: flex; align-items: center; gap: 2px; font-size: 18px; font-weight: 900; flex: 0 0 auto; white-space: nowrap; }
-  .w2-qty .w2-tag { font-size: 11px; margin-left: 1px; padding: 2px 3px; border-width: 1px; letter-spacing: -.5px; }
-  .w2-badge { display: inline-flex; align-items: center; background: #c61d26; color: #fff; border: 1px solid #8f1018; border-radius: 5px; padding: 2px 3px; font-size: 12px; font-weight: 900; white-space: nowrap; letter-spacing: -.5px; flex: 0 0 auto; }
+  .w2-no { font-size: 21px; font-weight: 900; width: 46px; flex: 0 0 46px; letter-spacing: -1.2px; white-space: nowrap; }
+  .w2-name { font-size: 14px; font-weight: 900; flex: 1 1 auto; min-width: 0; white-space: nowrap; letter-spacing: -.8px; }
+  .w2-qty { display: flex; align-items: center; gap: 2px; font-size: 14px; font-weight: 900; flex: 0 0 auto; white-space: nowrap; }
+  .w2-qty .w2-tag { font-size: 9px; margin-left: 1px; padding: 1px 2px; border-width: 1px; letter-spacing: -.6px; }
+  .w2-badge { display: inline-flex; align-items: center; background: #c61d26; color: #fff; border: 1px solid #8f1018; border-radius: 4px; padding: 1px 2px; font-size: 9.5px; font-weight: 900; white-space: nowrap; letter-spacing: -.6px; flex: 0 0 auto; }
   .w2-badge.solo { background: #4a4a4a; border-color: #222; }
   .w2-cust.is-unclassified { background: #fff1f1; border-left: 4px solid #d52a32; padding-left: 2px; border-radius: 3px; }
-  .w2-flag { font-size: 15px; color: #9c321b; font-weight: 900; padding: 5px 0 0; }
-  .w2-notes { font-size: 14px; border-top: 3px solid #1d3c63; margin-top: 8px; padding-top: 6px; line-height: 1.35; }
+  .w2-flag { font-size: 11px; color: #9c321b; font-weight: 900; padding: 3px 0 0; }
+  .w2-notes { font-size: 12px; border-top: 3px solid #1d3c63; margin-top: 8px; padding-top: 6px; line-height: 1.35; }
   .w2-pending { background: #f2f4f7; padding: 5px 8px; margin-top: 5px; border-radius: 4px; }
   .w2-pending.need { background: #fff1f1; border: 3px solid #d52a32; font-weight: 800; }
-  .w2-warnline { margin-top: 6px; font-size: 16px; font-weight: 800; color: #9c321b; }
+  .w2-warnline { margin-top: 5px; font-size: 12px; font-weight: 800; color: #9c321b; }
   .w2-strong { font-weight: 900; color: #a03816; }
-  .w2-msg { margin: 24px 0; padding: 22px 24px; border: 4px solid #1d3c63; border-radius: 8px; font-size: 24px; font-weight: 800; line-height: 1.5; }
+  .w2-msg { margin: 20px 0; padding: 18px 20px; border: 4px solid #1d3c63; border-radius: 8px; font-size: 20px; font-weight: 800; line-height: 1.5; }
   .w2-msg.err { border-color: #c61d26; background: #fff1f1; }
-  .w2-msg ul { margin: 10px 0 0 22px; padding: 0; font-size: 19px; font-weight: 700; }
-  .w2-msg button { margin-top: 12px; font-size: 18px; font-weight: 800; padding: 8px 18px; background: #163e75; color: #fff; border: 0; border-radius: 5px; cursor: pointer; }
+  .w2-msg ul { margin: 10px 0 0 22px; padding: 0; font-size: 15px; font-weight: 700; }
+  .w2-msg button { margin-top: 12px; font-size: 16px; font-weight: 800; padding: 8px 18px; background: #163e75; color: #fff; border: 0; border-radius: 5px; cursor: pointer; }
   .w2-screen { font-family: "Malgun Gothic", sans-serif; }
-  .w2-screen-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; background: #eef3fb; border: 2px solid #b8c9e4; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 17px; font-weight: 700; }
-  .w2-screen-bar button { font-size: 17px; font-weight: 800; padding: 7px 14px; background: #163e75; color: #fff; border: 0; border-radius: 5px; cursor: pointer; }
-  .w2-screen-bar input[type=time] { font-size: 17px; padding: 4px 6px; border: 2px solid #8aa0c4; border-radius: 5px; }
-  .w2-screen-bar .note { flex: 1 1 100%; font-size: 15px; font-weight: 700; color: #4a5b73; }
-  .w2-basis { margin-top: 14px; font-size: 15px; }
-  .w2-basis summary { cursor: pointer; font-size: 17px; font-weight: 800; padding: 6px 0; }
+  .w2-screen-bar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; background: #eef3fb; border: 2px solid #b8c9e4; border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; font-size: 14px; font-weight: 700; }
+  .w2-screen-bar button { font-size: 14px; font-weight: 800; padding: 6px 12px; background: #163e75; color: #fff; border: 0; border-radius: 5px; cursor: pointer; }
+  .w2-screen-bar input[type=time] { font-size: 14px; padding: 3px 5px; border: 2px solid #8aa0c4; border-radius: 5px; }
+  .w2-screen-bar .note { flex: 1 1 100%; font-size: 12.5px; font-weight: 700; color: #4a5b73; }
+  .w2-changed { flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; background: #fff3cd; border: 3px solid #e0a100; border-radius: 8px; padding: 8px 12px; font-size: 15px; font-weight: 900; color: #5c3b00; animation: w2Blink 450ms ease-in-out infinite alternate; }
+  .w2-changed button { background: #b36b00; }
+  .w2-changed small { flex: 1 1 100%; font-size: 12.5px; font-weight: 700; }
+  @keyframes w2Blink { from { background: #fff3cd; } to { background: #ffd978; } }
+  .w2-basis { margin-top: 14px; font-size: 12.5px; }
+  .w2-basis summary { cursor: pointer; font-size: 15px; font-weight: 800; padding: 6px 0; }
   .w2-basis table { border-collapse: collapse; width: 100%; }
   .w2-basis td, .w2-basis th { border: 1px solid #b9c2cf; padding: 3px 6px; text-align: left; }
   .w2-basis th { background: #eef1f5; }
@@ -462,7 +466,7 @@
     body.printing-closer #printCloser { display: block !important; page: portraitPage; }
     body.printing-address-all #printAddressAll { display: block !important; page: portraitPage; }
     body.printing-changes #printChanges { display: block !important; page: portraitPage; }
-    body.printing-wash #printWash { display: block !important; page: landscapePage; }
+    body.printing-wash #printWash { display: block !important; page: portraitPage; }
     body.printing-wash-check #printWashCheck { display: block !important; page: portraitPage; }
 
     .print-course { break-before: page; page-break-before: always; }
@@ -665,8 +669,8 @@
       today: '오늘', nextBiz: '다음 영업일',
       pdbStatusAddr: '현황지 + 주소지', pdbStatusAddrSub: '배송기사용 · 2개 문서 연속 출력',
       pdbStatusAddrWash: '현황지 + 주소지 + 세탁공정', pdbStatusAddrWashSub: '배송기사용 + 세탁팀용 · 3개 문서 연속 출력',
-      pdbWash: '세탁공정', pdbWashSub: '세탁팀용 · 세탁기별 자동 배정표 (A4 가로)', lblWash: '세탁공정', btnWash: '세탁공정 인쇄', btnStatusAddrWash: '현황지 + 주소지 + 세탁공정 출력',
-      washGuideBody: '현황지, 주소지, 세탁공정을 각각 안정적으로 출력합니다. 아래 순서대로 눌러주세요.', washStep3: '3. 세탁공정 인쇄', bWash: '세탁기 배정표 · A4 가로',
+      pdbWash: '세탁공정', pdbWashSub: '세탁팀용 · 세탁기별 자동 배정표 (A4 세로)', lblWash: '세탁공정', btnWash: '세탁공정 인쇄', btnStatusAddrWash: '현황지 + 주소지 + 세탁공정 출력',
+      washGuideBody: '현황지, 주소지, 세탁공정을 각각 안정적으로 출력합니다. 아래 순서대로 눌러주세요.', washStep3: '3. 세탁공정 인쇄', bWash: '세탁기 배정표 · A4 세로',
       pdbCloserAll: '마감자용 수량표 + 전체주소지', pdbCloserAllSub: '세탁 마감용 · 2개 문서 연속 출력',
       pdbWashCheck: '합세탁 체크표', pdbWashCheckSub: '마감자용 · 합세탁 가능 여부 체크', lblWashCheck: '합세탁 체크표', btnWashCheck: '합세탁 체크표 인쇄', bWashCheck: '합세탁 체크표 · A4 세로',
       pdbChanges: '출력 후 라벨코스 변경내역',
@@ -1755,8 +1759,8 @@
   // 수거량은 Apps Script(getWashHistory)가 "업체별 수거량" 탭에서 읽어 온다. 원본 시트에는 절대 쓰지 않는다.
   // 회차 완료 체크는 이 브라우저(localStorage)에만 저장된다 — 다른 작업자 화면과 공유되지 않는다.
   var WASH_START_KEY = 'ysc_wash_start_v1';
-  var W2_PAGE_CAP_PX = 715;       // A4 가로 한 쪽에 쓸 수 있는 높이(여백 제외, 약간 여유)
-  var W2_GAP_PX = 12, W2_BORDER_PX = 6;
+  var W2_PAGE_CAP_PX = 1030;      // A4 세로 한 쪽에 쓸 수 있는 높이(여백 제외, 약간 여유)
+  var W2_GAP_PX = 9, W2_BORDER_PX = 6;
 
   function washDateText() {
     var d = state.selectedDate;
@@ -1816,6 +1820,7 @@
       if (rec.status === 'error') return Promise.resolve();   // 오류는 [다시 계산] 버튼으로만 재시도
     }
     rec = { status: 'loading', requested: {}, loadedAt: 0 };
+    w2StartPoll();
     nos.forEach(function (n) { rec.requested[n] = true; });
     state.washHist[dateIso] = rec;
     rec.promise = callGAS({ action: 'getWashHistory', date: dateIso, weekday: weekday, companies: nos }, 25000)
@@ -1909,7 +1914,7 @@
     return box;
   }
   function w2Tag(source) {
-    var tag = w2El('span', 'w2-tag ' + (source === 'driver' ? 'w2-tag-driver' : 'w2-tag-ai'), source === 'driver' ? '기사 등록' : 'AI 예상');
+    var tag = w2El('span', 'w2-tag ' + (source === 'driver' ? 'w2-tag-driver' : 'w2-tag-ai'), source === 'driver' ? '기사 등록' : '기록 예상');
     return tag;
   }
   function w2BasisText(c) {
@@ -2000,7 +2005,7 @@
 
     var guide = w2El('div', 'w2-guide');
     guide.appendChild(w2El('b', '', '포대 수 출처'));
-    guide.appendChild(w2El('span', 'w2-tag w2-tag-ai', 'AI 예상'));
+    guide.appendChild(w2El('span', 'w2-tag w2-tag-ai', '기록 예상'));
     guide.appendChild(document.createTextNode('같은 요일 최근 4회 수거량의 중앙값'));
     guide.appendChild(w2El('span', 'w2-tag w2-tag-driver', '기사 등록'));
     guide.appendChild(document.createTextNode('기사 앱·배송입력 앱·수거량 시트에 입력된 실제 수량'));
@@ -2014,7 +2019,7 @@
     var txt = s.assignedCompanies + '거래처 · ' + s.bags + '포대 · 총 ' + s.cycles + '회차 · 최종 종료 예상 약 ' + s.makespanMin + '분';
     if (start) txt += ' (' + start + ' 시작 → ' + w2AddTime(start, s.makespanMin) + ' 종료 예정)';
     stats.appendChild(document.createTextNode(txt));
-    var det = ' 미분류끼리 합세탁 0건 · 기사 등록 ' + s.driverBags + '포대 · AI 예상 ' + s.aiBags + '포대';
+    var det = ' 미분류끼리 합세탁 0건 · 기사 등록 ' + s.driverBags + '포대 · 기록 예상 ' + s.aiBags + '포대';
     if (s.pending) det += ' · 수량 확인 필요 ' + s.pending + '곳(배정 제외)';
     stats.appendChild(w2El('small', '', det));
     top.appendChild(stats);
@@ -2035,12 +2040,6 @@
       need.appendChild(document.createTextNode(plan.pending.map(function (c) { return c.no + ' ' + c.name + '(' + c.course + '코스)'; }).join(' · ')));
       foot.appendChild(need);
     }
-    if (plan.zero.length) {
-      var z = w2El('div', 'w2-pending');
-      z.appendChild(w2El('b', '', '예상 0포대: '));
-      z.appendChild(document.createTextNode(plan.zero.map(function (c) { return c.no + ' ' + c.name + (c.source === 'driver' ? '(등록 0)' : ''); }).join(' · ') + ' — 수거가 있으면 배정표에 없으니 따로 확인'));
-      foot.appendChild(z);
-    }
     plan.warnings.forEach(function (w) { foot.appendChild(w2El('div', 'w2-warnline', '※ ' + w)); });
     return foot;
   }
@@ -2049,10 +2048,10 @@
   function w2FitNames(root) {
     Array.prototype.forEach.call(root.querySelectorAll('.w2-name'), function (el) {
       el.style.fontSize = ''; el.style.whiteSpace = ''; el.style.lineHeight = '';
-      var fs = 18;
-      while (el.scrollWidth > el.clientWidth + 0.5 && fs > 11) { fs -= 1; el.style.fontSize = fs + 'px'; }
+      var fs = 14;
+      while (el.scrollWidth > el.clientWidth + 0.5 && fs > 9) { fs -= 1; el.style.fontSize = fs + 'px'; }
       if (el.scrollWidth > el.clientWidth + 0.5) {
-        el.style.whiteSpace = 'normal'; el.style.fontSize = '13px'; el.style.lineHeight = '1.1'; el.style.letterSpacing = '-.5px';
+        el.style.whiteSpace = 'normal'; el.style.fontSize = '11px'; el.style.lineHeight = '1.1'; el.style.letterSpacing = '-.5px';
       }
     });
   }
@@ -2147,6 +2146,54 @@
     return m;
   }
 
+  // ---- 수량 변경 알림: 세탁공정을 보는 동안 1분마다 조용히 다시 읽어, 바뀐 게 있으면 띠로 알린다(자동 재배정은 하지 않음)
+  var w2PollTimer = null;
+  function w2StartPoll() { if (!w2PollTimer) w2PollTimer = setInterval(w2PollOnce, 60000); }
+  function w2QtyLabel(e) { return (e.qty === null ? '?' : e.qty + '포대') + (e.source === 'driver' ? '(기사 등록)' : e.source === 'ai' ? '(기록 예상)' : '(확인 필요)'); }
+  function w2Diff(oldData, newData) {
+    var out = [];
+    Object.keys(newData.companies || {}).forEach(function (no) {
+      var a = WashCore.estimateQty((oldData.companies || {})[no]), b = WashCore.estimateQty(newData.companies[no]);
+      if (a.qty !== b.qty || a.source !== b.source) out.push({ no: no, from: a, to: b });
+    });
+    return out;
+  }
+  function w2PollOnce() {
+    if (document.hidden || (state.docType !== 'wash' && state.docType !== 'status_address_wash') || !state.merged) return;
+    var dateIso = isoDate(state.selectedDate), rec = state.washHist[dateIso];
+    if (!rec || rec.status !== 'ok' || rec.polling) return;
+    rec.polling = true;
+    callGAS({ action: 'getWashHistory', date: dateIso, weekday: state.weekday, companies: Object.keys(rec.requested) }, 25000)
+      .then(function (data) {
+        if (!data || !data.success || data.date !== dateIso || state.washHist[dateIso] !== rec) return;
+        var diffs = w2Diff(rec.data, data);
+        rec.pending = diffs.length ? { data: data, diffs: diffs } : null;
+        w2ShowChanged(rec);
+      })
+      .catch(function () {})
+      .then(function () { rec.polling = false; });
+  }
+  function w2ShowChanged(rec) {
+    var slot = document.querySelector('#previewSurface .w2-changed-slot');
+    if (!slot) return;
+    slot.innerHTML = '';
+    if (!rec.pending) return;
+    var names = {};
+    if (state.merged) washItems(state.merged).forEach(function (it) { names[String(it.companyNumber)] = it.nickname; });
+    var box = w2El('div', 'w2-changed');
+    box.appendChild(w2El('span', '', '⚠ 수거량이 바뀌었습니다 (' + rec.pending.diffs.length + '곳) — 인쇄 전에 다시 계산하세요'));
+    var btn = w2El('button', '', '다시 계산');
+    btn.type = 'button';
+    btn.addEventListener('click', function () {
+      rec.data = rec.pending.data; rec.loadedAt = Date.now(); rec.pending = null; state.washMemo = null;
+      var sc = previewViewport.scrollTop; renderPreview(); previewViewport.scrollTop = sc;
+    });
+    box.appendChild(btn);
+    var list = rec.pending.diffs.slice(0, 6).map(function (d) { return d.no + ' ' + (names[d.no] || '') + ' ' + w2QtyLabel(d.from) + ' → ' + w2QtyLabel(d.to); });
+    if (rec.pending.diffs.length > 6) list.push('외 ' + (rec.pending.diffs.length - 6) + '곳');
+    box.appendChild(w2El('small', '', list.join(' · ')));
+    slot.appendChild(box);
+  }
   function w2ScreenBar(plan, rec) {
     var bar = w2El('div', 'w2-screen w2-screen-bar');
     var lab = w2El('label', '', '시작 시각 ');
@@ -2165,18 +2212,21 @@
     var t = new Date(rec.loadedAt);
     bar.appendChild(w2El('span', '', '수량 조회 ' + String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0')));
     bar.appendChild(w2El('div', 'note', '※ 완료 □ 칸은 인쇄한 뒤 손으로 체크합니다. 수량을 다시 읽으면(다시 계산) 배정이 바뀔 수 있으니 인쇄 전에 확정하세요.'));
+    var slot = w2El('div', 'w2-changed-slot'); slot.style.flex = '1 1 100%';
+    bar.appendChild(slot);
+    if (rec.pending) setTimeout(function () { w2ShowChanged(rec); }, 0);
     return bar;
   }
   function w2BasisEl(plan) {
     var det = w2El('details', 'w2-screen w2-basis');
-    det.appendChild(w2El('summary', '', '수량 근거 보기 (AI 예상·기사 등록·확인 필요 전체 ' + plan.companies.length + '곳)'));
+    det.appendChild(w2El('summary', '', '수량 근거 보기 (기록 예상·기사 등록·확인 필요 전체 ' + plan.companies.length + '곳)'));
     var tbl = w2El('table');
     var hr = w2El('tr');
     ['번호', '약칭', '코스', '수량', '출처', '근거'].forEach(function (h) { hr.appendChild(w2El('th', '', h)); });
     tbl.appendChild(hr);
     plan.companies.slice().sort(function (a, b) { return WashCore.numKey(a.no) - WashCore.numKey(b.no); }).forEach(function (c) {
       var tr = w2El('tr');
-      [c.no, c.name, c.course, c.qty === null ? '?' : c.qty + '포대', c.source === 'driver' ? '기사 등록' : c.source === 'ai' ? 'AI 예상' : '수량 확인 필요', w2BasisText(c)].forEach(function (v) { tr.appendChild(w2El('td', '', v)); });
+      [c.no, c.name, c.course, c.qty === null ? '?' : c.qty + '포대', c.source === 'driver' ? '기사 등록' : c.source === 'ai' ? '기록 예상' : '수량 확인 필요', w2BasisText(c)].forEach(function (v) { tr.appendChild(w2El('td', '', v)); });
       tbl.appendChild(tr);
     });
     det.appendChild(tbl);
