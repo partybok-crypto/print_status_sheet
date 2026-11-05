@@ -343,11 +343,12 @@
     levels.forEach(function (m) { perMachine[m.no] = []; });
     var failed = [];
     list.forEach(function (b) {
-      // 들어갈 수 있는 가장 작은 세탁기 먼저(큰 세탁기는 큰 물량에 남겨 둔다), 같으면 덜 찬 쪽
+      // 큰 물량부터 큰 세탁기에: 들어갈 수 있고 자리가 남은 세탁기 중 가장 큰 쪽(큰 세탁기에 1포대만 넣는 낭비를 막는다).
+      // 큰 물량을 먼저 놓으므로(내림차순) 뒤에 오는 작은 물량은 남은 어느 세탁기에나 들어가 배정이 막히지 않는다.
       var pick = -1;
-      for (var j = levels.length - 1; j >= 0; j--) {
+      for (var j = 0; j < levels.length; j++) {
         if (levels[j].cap < b.size || used[j] >= slots[j]) continue;
-        if (pick === -1 || levels[j].cap < levels[pick].cap || (levels[j].cap === levels[pick].cap && used[j] < used[pick])) pick = j;
+        if (pick === -1 || levels[j].cap > levels[pick].cap || (levels[j].cap === levels[pick].cap && used[j] < used[pick])) pick = j;
       }
       if (pick === -1) { failed.push(b); return; }
       used[pick]++;

@@ -170,3 +170,13 @@ test('수량 합계 불일치', function () {
 });
 
 console.log('\n' + passed + '개 통과' + (process.exitCode ? ' (실패 있음)' : ''));
+
+console.log('큰 세탁기 활용');
+test('포대 수가 많은 회차가 작은 세탁기에 있는데 큰 세탁기에 더 적은 회차가 있지 않다', function () {
+  var cyc = allCycles(plan);
+  cyc.forEach(function (a) {
+    cyc.forEach(function (b) {
+      if (a.m.cap > b.m.cap) assert.ok(!(b.c.qty > a.c.qty), a.m.no + '번(' + a.c.qty + '포대) 보다 ' + b.m.no + '번(' + b.c.qty + '포대)이 큼');
+    });
+  });
+});
