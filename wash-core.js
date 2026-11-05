@@ -107,7 +107,7 @@
   function estimateQty(entry, cfg) {
     cfg = cfg || DEFAULT_CONFIG;
     if (entry && entry.actual !== null && entry.actual !== undefined && entry.actual !== '') {
-      return { qty: Number(entry.actual), source: 'driver', basis: { values: [Number(entry.actual)], dates: [], median: null } };
+      return { qty: Number(entry.actual), source: 'driver', basis: { values: [Number(entry.actual)], dates: [], median: null, from: entry.actualFrom || '' } };
     }
     var values = [], dates = [];
     var hist = (entry && entry.history) || [];

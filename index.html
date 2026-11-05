@@ -389,6 +389,15 @@
   .w2-basis table { border-collapse: collapse; width: 100%; }
   .w2-basis td, .w2-basis th { border: 1px solid #b9c2cf; padding: 3px 6px; text-align: left; }
   .w2-basis th { background: #eef1f5; }
+  .ld-box { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 44px 20px; text-align: center; color: #1d3c63; font-family: "Malgun Gothic", sans-serif; }
+  .ld-spin { width: 56px; height: 56px; border: 6px solid #cfe0f7; border-top-color: #1d56d6; border-radius: 50%; animation: ldSpin .9s linear infinite; }
+  .ld-title { font-size: 22px; font-weight: 900; animation: ldPulse 1.6s ease-in-out infinite; }
+  .ld-bar { width: min(420px, 80%); height: 8px; background: #dbe6f5; border-radius: 6px; overflow: hidden; position: relative; }
+  .ld-bar::after { content: ''; position: absolute; top: 0; bottom: 0; width: 38%; background: #1d56d6; border-radius: 6px; animation: ldSlide 1.1s ease-in-out infinite; }
+  .ld-sub { font-size: 15px; font-weight: 700; color: #4a5b73; min-height: 20px; }
+  @keyframes ldSpin { to { transform: rotate(360deg); } }
+  @keyframes ldSlide { 0% { left: -40%; } 100% { left: 100%; } }
+  @keyframes ldPulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
   .w2-probe { position: absolute; left: -10000px; top: 0; visibility: hidden; pointer-events: none; }
   @media print {
     .w2-screen { display: none !important; }
@@ -1828,7 +1837,7 @@
   }
 
   // ---- 계산(기록이 같으면 다시 계산하지 않음) + 날짜·코스 검증
-  function washPlanState(merged) {
+  function washPlanState(merged, popts) {
     var dateIso = isoDate(state.selectedDate);
     var rec = state.washHist[dateIso];
     if (!rec || rec.status === 'loading') return { status: 'loading' };
@@ -1838,6 +1847,7 @@
     var sig = JSON.stringify([dateIso, rec.loadedAt, items.map(function (i) { return [i.companyNumber, i.course, i.washGroup, i.businessType, i.combinedWash, i.nickname]; }),
       Object.keys(locked).sort().map(function (k) { return [k, locked[k].items.map(function (x) { return x.no + ':' + x.qty; })]; })]);
     if (state.washMemo && state.washMemo.sig === sig) return state.washMemo.value;
+    if (popts && popts.noCompute) return { status: 'computing' };   // 계산은 무거우니 로딩 표시를 먼저 그린 뒤 한다
 
     var built = WashCore.buildCompanies(items, rec.data);
     // 수량·그룹이 그대로면 직전에 계산한 배정(기준안)을 유지한다 — 한 회차를 체크할 때 다른 회차가 뒤섞이지 않게.
@@ -1850,7 +1860,8 @@
     var errs = built.errors.slice();
     if (rec.data.date !== dateIso) errs.push('수량 이력 날짜(' + rec.data.date + ')가 선택한 날짜(' + dateIso + ')와 다릅니다.');
     if (merged.weekday && merged.weekday !== weekdayFromDate(state.selectedDate)) errs.push('불러온 요일(' + merged.weekday + ')이 선택한 날짜의 요일과 다릅니다.');
-    if (!rec.data.rowFound) errs.push('"업체별 수거량" 시트에서 ' + dateIso.slice(5) + ' 날짜 행을 찾지 못했습니다. 수량을 예상할 수 없습니다.');
+    if (!rec.data.rowFound) plan.warnings.push('"업체별 수거량" 시트에 ' + dateIso.slice(5) + ' 날짜 행이 없어 그 시트의 값은 쓰지 못했습니다.');
+    if (!rec.data.fieldOk) plan.warnings.push('현장입력 시트(기사 앱 수거량)를 읽지 못했습니다 — 기사가 등록한 실제 수량이 반영되지 않았을 수 있습니다. ' + (rec.data.fieldError || ''));
     items.forEach(function (it) { if (!String(it.course || '').replace(/^-+/, '')) errs.push('거래처 ' + it.companyNumber + ' 의 배송 코스가 비어 있습니다.'); });
     if (built.companies.length + built.errors.filter(function (e) { return /중복/.test(e); }).length !== items.length) errs.push('불러온 거래처 수(' + items.length + ')와 배정 대상 수(' + built.companies.length + ')가 다릅니다.');
     if (rec.data.notFound && rec.data.notFound.length) plan.warnings.push('"업체별 수거량" 시트에 열이 없는 거래처(수량 확인 필요): ' + rec.data.notFound.join(', '));
@@ -1863,6 +1874,24 @@
   }
 
   // ---- 화면 조각
+  // 로딩 표시: 돌아가는 원 + 움직이는 막대 + 경과 초. 화면이 멈춘 게 아니라는 걸 보여준다.
+  // (일부러 prefers-reduced-motion 으로 끄지 않는다 — 현장 PC는 그 설정이 켜져 있다)
+  function w2Loader(title, sub, steps) {
+    var box = w2El('div', 'ld-box');
+    box.appendChild(w2El('div', 'ld-spin'));
+    box.appendChild(w2El('div', 'ld-title', title));
+    box.appendChild(w2El('div', 'ld-bar'));
+    var line = w2El('div', 'ld-sub', sub || '');
+    box.appendChild(line);
+    var t0 = Date.now();
+    var timer = setInterval(function () {
+      if (!box.isConnected && Date.now() - t0 > 1500) { clearInterval(timer); return; }
+      var sec = Math.floor((Date.now() - t0) / 1000);
+      var step = steps && steps.length ? steps[Math.min(steps.length - 1, Math.floor(sec / 4))] : '';
+      line.textContent = (step ? step + ' · ' : '') + sec + '초 경과' + (sec >= 8 ? ' · 시트가 느릴 때는 최대 30초 걸립니다. 기다려 주세요' : '');
+    }, 500);
+    return box;
+  }
   function w2Message(title, lines, isErr, retry) {
     var box = w2El('div', 'w2-msg' + (isErr ? ' err' : ''));
     box.appendChild(w2El('div', '', title));
@@ -1885,7 +1914,7 @@
   }
   function w2BasisText(c) {
     var b = c.basis || {};
-    if (c.source === 'driver') return '그날 수거량 시트에 입력된 실제 수량';
+    if (c.source === 'driver') return '실제 수량 — ' + ((b && b.from) || '수거량 입력값');
     if (c.source === 'unknown') return '같은 요일 기록이 없어 예상할 수 없음 — 수량 확인 필요';
     return '같은 요일 최근 ' + b.values.length + '회 (' + b.dates.join(', ') + ') 값 ' + b.values.join(', ') + ' → 중앙값 ' + b.median;
   }
@@ -1974,7 +2003,7 @@
     guide.appendChild(w2El('span', 'w2-tag w2-tag-ai', 'AI 예상'));
     guide.appendChild(document.createTextNode('같은 요일 최근 4회 수거량의 중앙값'));
     guide.appendChild(w2El('span', 'w2-tag w2-tag-driver', '기사 등록'));
-    guide.appendChild(document.createTextNode('그날 수거량 시트에 입력된 실제 수량 (기사 앱 연동 전)'));
+    guide.appendChild(document.createTextNode('기사 앱·배송입력 앱·수거량 시트에 입력된 실제 수량'));
     guide.appendChild(w2El('span', 'w2-tag w2-tag-need', '수량 확인 필요'));
     guide.appendChild(document.createTextNode('기록 없음 · 배정 제외'));
     top.appendChild(guide);
@@ -2157,13 +2186,24 @@
   function buildWashDoc(merged, opts) {
     opts = opts || {};
     var wrap = w2El('div', 'w2-doc');
-    var ps = washPlanState(merged);
+    var ps = washPlanState(merged, { noCompute: !opts.print && !state.washAllow });
     var page = w2El('div', 'w2-page');
     var title = (merged.dayOfWeek || '') + ' · 세탁기 배정표';
     if (ps.status === 'loading') {
       page.appendChild(w2El('div', 'w2-head')).appendChild(w2El('h1', '', title));
-      page.appendChild(w2Message('수거량 이력을 시트에서 불러오는 중입니다…', [], false, false));
+      page.appendChild(w2Loader('수거량을 시트에서 불러오는 중입니다', '기사 앱·배송입력 앱 수거량과 최근 기록을 읽는 중', ['수거량 읽는 중', '최근 기록 확인 중', '거의 다 됐습니다']));
       wrap.appendChild(page); return wrap;
+    }
+    if (ps.status === 'computing') {
+      page.appendChild(w2El('div', 'w2-head')).appendChild(w2El('h1', '', title));
+      page.appendChild(w2Loader('세탁기 배정표를 만드는 중입니다', '안전 규칙을 지키면서 가장 빨리 끝나는 배정을 찾는 중', ['배정 계산 중', '검증 중']));
+      wrap.appendChild(page);
+      setTimeout(function () {
+        if (state.docType !== 'wash' && state.docType !== 'status_address_wash') return;
+        state.washAllow = true;
+        try { renderPreview(); } finally { state.washAllow = false; }
+      }, 80);
+      return wrap;
     }
     if (ps.status === 'error') {
       page.appendChild(w2El('div', 'w2-head')).appendChild(w2El('h1', '', title));
@@ -2355,7 +2395,8 @@
   function renderPreview() {
     previewSurface.innerHTML = '';
     if (!state.merged) {
-      var loading = document.createElement('div'); loading.className = 'preview-empty'; loading.textContent = t('loadingDocs');
+      var loading = document.createElement('div'); loading.className = 'preview-empty';
+      loading.appendChild(w2Loader(t('loadingDocs'), '', ['시트에서 거래처 목록 읽는 중', '코스·기사 정보 확인 중', '거의 다 됐습니다']));
       previewSurface.appendChild(loading); return;
     }
     if (state.merged.closedDay) {

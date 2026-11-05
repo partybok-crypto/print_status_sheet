@@ -465,6 +465,41 @@ function collectQty_(v) {
   return n;
 }
 
+// 최신 수거량은 "세탁공장 현장입력" 시트에 먼저 들어온다(업체별 수거량 탭은 며칠 늦게 채워짐):
+//   기사링크_수거량 = 기사 앱(수거 당일 저녁부터, 방문완료만) / 포대수량 = 배송입력 앱(다음날 아침 반영)
+// 같은 날 같은 업체가 둘 다 있으면 기사링크_수거량 > 포대수량 순으로 쓴다.
+const FIELD_SPREADSHEET_ID = "1efKO9y_-00VyBqdqOEJM_QeNgwQsrra6V5QrO5eM444";
+
+function fieldRead_(sheetName, wanted) {
+  var sh = SpreadsheetApp.openById(FIELD_SPREADSHEET_ID).getSheetByName(sheetName);
+  if (!sh) throw new Error("현장입력 시트에 '" + sheetName + "' 탭이 없습니다.");
+  var v = sh.getDataRange().getDisplayValues();
+  if (v.length < 2) return [];
+  var idx = {};
+  v[0].forEach(function (h, i) { if (idx[String(h).trim()] === undefined) idx[String(h).trim()] = i; });
+  wanted.forEach(function (w) { if (idx[w] === undefined) throw new Error("'" + sheetName + "' 탭에 '" + w + "' 열이 없습니다."); });
+  return { idx: idx, rows: v.slice(1) };
+}
+
+// { link: {날짜: {업체번호: 포대수}}, pq: {...} } — 같은 날·업체가 여러 줄이면 마지막 줄
+function readFieldQty_() {
+  var out = { link: {}, pq: {} };
+  var l = fieldRead_("기사링크_수거량", ["업체번호", "포대수", "운행일", "방문상태"]);
+  l.rows.forEach(function (r) {
+    if (String(r[l.idx["방문상태"]]).trim() !== "방문완료") return;
+    var q = collectQty_(r[l.idx["포대수"]]); var d = String(r[l.idx["운행일"]]).trim(); var no = String(r[l.idx["업체번호"]]).trim();
+    if (q === null || !d || !no) return;
+    (out.link[d] = out.link[d] || {})[no] = q;
+  });
+  var p = fieldRead_("포대수량", ["날짜", "업체번호", "포대수"]);
+  p.rows.forEach(function (r) {
+    var q = collectQty_(r[p.idx["포대수"]]); var d = String(r[p.idx["날짜"]]).trim(); var no = String(r[p.idx["업체번호"]]).trim();
+    if (q === null || !d || !no) return;
+    (out.pq[d] = out.pq[d] || {})[no] = q;
+  });
+  return out;
+}
+
 function getWashHistory_(dateIso, weekday, companyNos) {
   var t0 = Date.now();
   var dateObj = parseIsoDate_(dateIso);
@@ -476,7 +511,7 @@ function getWashHistory_(dateIso, weekday, companyNos) {
   if (!sh) throw new Error("'" + COLLECT_SHEET_NAME + "' 시트를 찾을 수 없습니다.");
   var lastRow = sh.getLastRow(), lastCol = sh.getLastColumn();
 
-  // 머리글(3행 업체번호, 5행 거래처명)로 업체번호 → 열 위치
+  // 머리글(3행 업체번호)로 업체번호 → 열 위치. 같은 번호가 뒤쪽 정산 영역에 또 있어 가장 앞 열만 쓴다.
   var head = sh.getRange(1, 1, 5, lastCol).getDisplayValues();
   var colOf = {};
   for (var c = 4; c < lastCol; c++) {
@@ -484,7 +519,7 @@ function getWashHistory_(dateIso, weekday, companyNos) {
     if (no && colOf[no] === undefined) colOf[no] = c;
   }
 
-  // 날짜 열 전체에서 선택 날짜의 행을 찾는다 (예: "11-06-금")
+  // 업체별 수거량 탭에서 선택 날짜 행("MM-DD-요일")을 찾는다
   var mm = dateObj.getMonth() + 1, dd = dateObj.getDate();
   var dates = sh.getRange(COLLECT_FIRST_DATA_ROW, 4, Math.max(lastRow - COLLECT_FIRST_DATA_ROW + 1, 1), 1).getDisplayValues();
   var targetIdx = -1;
@@ -492,33 +527,57 @@ function getWashHistory_(dateIso, weekday, companyNos) {
     var m = /^\s*(\d{1,2})\s*-\s*(\d{1,2})\s*-\s*([월화수목금토일])/.exec(dates[i][0]);
     if (m && Number(m[1]) === mm && Number(m[2]) === dd && m[3] === weekday) { targetIdx = i; break; }
   }
-  var result = { success: true, date: dateIso, weekday: weekday, rowFound: targetIdx >= 0, companies: {}, notFound: [], rows: [] };
-  if (targetIdx < 0) { result.timing = { totalMs: Date.now() - t0 }; return result; }
-
-  // 선택 날짜 행과 거슬러 올라간 같은 요일 행들의 값을 한 번에 읽는다
-  var firstIdx = Math.max(0, targetIdx - 7 * COLLECT_LOOKBACK_WEEKS);
-  var block = sh.getRange(COLLECT_FIRST_DATA_ROW + firstIdx, 1, targetIdx - firstIdx + 1, lastCol).getValues();
-  var targetRow = block[block.length - 1];
-  var rowIdxs = [];   // 최신순: 선택 날짜 7행 전, 14행 전 ...
-  for (var k = 1; k <= COLLECT_LOOKBACK_WEEKS; k++) {
-    var idx = targetIdx - 7 * k;
-    if (idx < 0) break;
-    var label = String(dates[idx][0]);
-    var mw = /([월화수목금토일])\s*$/.exec(label.trim());
-    if (!mw || mw[1] !== weekday) continue;   // 행이 빠져 요일이 어긋난 곳은 건너뜀
-    rowIdxs.push({ idx: idx, label: label.trim() });
+  var block = null, firstIdx = 0;
+  if (targetIdx >= 0) {
+    firstIdx = Math.max(0, targetIdx - 7 * COLLECT_LOOKBACK_WEEKS);
+    block = sh.getRange(COLLECT_FIRST_DATA_ROW + firstIdx, 1, targetIdx - firstIdx + 1, lastCol).getValues();
   }
-  result.rows = rowIdxs.map(function (r) { return r.label; });
+  function sheetQty(k, col) {  // 업체별 수거량 탭의 k주 전 같은 요일 값(없으면 null)
+    if (!block || col === undefined) return null;
+    var idx = targetIdx - 7 * k;
+    if (idx < firstIdx) return null;
+    var lbl = String(dates[idx][0]).trim();
+    var d2 = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate() - 7 * k);
+    var mk = /^(\d{1,2})-(\d{1,2})-([월화수목금토일])/.exec(lbl);
+    if (!mk || Number(mk[1]) !== d2.getMonth() + 1 || Number(mk[2]) !== d2.getDate() || mk[3] !== weekday) return null;
+    return collectQty_(block[idx - firstIdx][col]);
+  }
 
+  // 현장입력 시트(기사 앱·배송입력 앱)
+  var field = null, fieldError = "";
+  try { field = readFieldQty_(); } catch (e) { fieldError = String(e && e.message || e); }
+  function fieldQty(d, no) {
+    if (!field) return null;
+    if (field.link[d] && field.link[d][no] !== undefined) return { qty: field.link[d][no], from: "기사 앱(기사링크_수거량)" };
+    if (field.pq[d] && field.pq[d][no] !== undefined) return { qty: field.pq[d][no], from: "배송입력 앱(포대수량)" };
+    return null;
+  }
+
+  var isoDates = [];
+  for (var k = 1; k <= COLLECT_LOOKBACK_WEEKS; k++) isoDates.push(toIsoDate_(new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate() - 7 * k)));
+
+  var result = {
+    success: true, date: dateIso, weekday: weekday, rowFound: targetIdx >= 0, fieldOk: !!field, fieldError: fieldError,
+    fieldCount: field ? { link: Object.keys(field.link[dateIso] || {}).length, pq: Object.keys(field.pq[dateIso] || {}).length } : null,
+    companies: {}, notFound: [], rows: isoDates
+  };
   var wanted = companyNos && companyNos.length ? companyNos : Object.keys(colOf);
   wanted.forEach(function (rawNo) {
     var no = String(rawNo).trim();
     var col = colOf[no];
-    if (col === undefined) { result.notFound.push(no); return; }
-    var hist = rowIdxs.map(function (r) {
-      return { date: r.label, qty: collectQty_(block[r.idx - firstIdx][col]) };
+    // 그날 실수량: 기사 앱 > 업체별 수거량 시트(사람이 고친 값) > 배송입력 앱(포대수량)
+    var f0 = fieldQty(dateIso, no), sv0 = sheetQty(0, col);
+    var actual = null, actualFrom = "";
+    if (f0 && f0.from.indexOf("기사 앱") === 0) { actual = f0.qty; actualFrom = f0.from; }
+    else if (sv0 !== null) { actual = sv0; actualFrom = "업체별 수거량 시트"; }
+    else if (f0) { actual = f0.qty; actualFrom = f0.from; }
+    var hist = isoDates.map(function (d, i) {
+      var v = sheetQty(i + 1, col);
+      if (v === null) { var f = fieldQty(d, no); if (f) v = f.qty; }
+      return { date: d, qty: v };
     });
-    result.companies[no] = { actual: collectQty_(targetRow[col]), history: hist };
+    if (col === undefined && actual === null && hist.every(function (h) { return h.qty === null; })) { result.notFound.push(no); return; }
+    result.companies[no] = { actual: actual, actualFrom: actualFrom, history: hist };
   });
   result.timing = { totalMs: Date.now() - t0 };
   return result;
