@@ -66,6 +66,23 @@
     padding: 7px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px;
   }
   @media (max-width: 1100px) { :root { --left-w: 360px; } }
+  /* 모바일(폭 820px 이하): 왼쪽 메뉴와 미리보기를 위아래로 쌓고 화면 전체를 스크롤한다 */
+  @media screen and (max-width: 820px) {
+    html, body { height: auto; overflow: auto; }
+    .field-shell { height: auto; min-height: 100vh; overflow: visible; }
+    .app-header { flex: none; height: auto; flex-wrap: wrap; gap: 8px; padding: 10px 14px; }
+    .app-header-left { font-size: 18px; }
+    .app-header-right { gap: 8px; flex-wrap: wrap; }
+    .conn-text { font-size: 12.5px; }
+    .lang-btn { padding: 5px 9px; font-size: 12.5px; }
+    .field-body { flex-direction: column; }
+    .left-panel { flex: none; width: auto; border-right: 0; border-bottom: 6px solid var(--bg); overflow: visible; padding: 10px 14px 14px; }
+    .right-panel { flex: none; min-height: 70vh; }
+    .preview-head { flex: none; height: auto; flex-wrap: wrap; gap: 6px 10px; padding: 8px 12px; }
+    .preview-title { font-size: 15px; }
+    .preview-viewport { flex: none; min-height: 60vh; padding: 10px; overflow-x: auto; }
+    .w2-screen-bar { font-size: 13px; }
+  }
 
   .section-label { font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 4px; letter-spacing: .2px; }
 
