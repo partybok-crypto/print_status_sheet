@@ -356,12 +356,7 @@
   .w2-cycle-top { background: #ffffffb8; border-radius: 6px; padding: 4px 6px; margin-bottom: 4px; display: flex; justify-content: space-between; gap: 4px; align-items: center; border-bottom: 2px solid #0002; font-size: 19px; font-weight: 900; }
   .w2-cycle-index { background: #1d3c63; color: #fff; border-radius: 5px; padding: 5px 8px; margin-right: 3px; }
   .w2-cycle-right { display: flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 17px; }
-  .w2-done { display: inline-flex; align-items: center; gap: 3px; background: #fff; border: 2px solid #1d3c63; border-radius: 5px; padding: 3px 4px; font-size: 15px; cursor: pointer; user-select: none; }
-  .w2-done input { width: 19px; height: 19px; margin: 0; accent-color: #1d3c63; cursor: pointer; }
-  .w2-cycle.is-done .w2-done { background: #1d3c63; color: #fff; }
-  .w2-cycle.is-done .w2-cycle-top { box-shadow: inset 6px 0 0 #1d3c63; }
-  .w2-cycle.is-done .w2-routes { opacity: .5; }
-  .w2-cycle.is-done .w2-cycle-top > span:first-child::after { content: ' ✔'; }
+  .w2-done { display: inline-flex; align-items: center; background: #fff; border: 2px solid #1d3c63; border-radius: 5px; padding: 3px 8px; font-size: 16px; font-weight: 900; }
   .w2-route-group { display: grid; grid-template-columns: 62px minmax(0, 1fr); align-items: stretch; gap: 4px; margin: 3px 0; }
   .w2-route-tall { display: flex; align-items: center; justify-content: center; background: #fff9; border: 1.5px solid #314866; border-radius: 6px; font-size: 18px; font-weight: 900; color: #17304d; min-height: 44px; padding: 2px 1px; white-space: nowrap; letter-spacing: -.7px; }
   .w2-route-entries { min-width: 0; }
@@ -1750,7 +1745,6 @@
   // ================= 세탁공정(세탁기 배정표) — 계산은 wash-core.js, 여기는 화면·출력·저장만 =================
   // 수거량은 Apps Script(getWashHistory)가 "업체별 수거량" 탭에서 읽어 온다. 원본 시트에는 절대 쓰지 않는다.
   // 회차 완료 체크는 이 브라우저(localStorage)에만 저장된다 — 다른 작업자 화면과 공유되지 않는다.
-  var WASH_DONE_KEY = 'ysc_wash_done_v1';
   var WASH_START_KEY = 'ysc_wash_start_v1';
   var W2_PAGE_CAP_PX = 715;       // A4 가로 한 쪽에 쓸 수 있는 높이(여백 제외, 약간 여유)
   var W2_GAP_PX = 12, W2_BORDER_PX = 6;
@@ -1780,20 +1774,6 @@
     return list;
   }
 
-  // ---- 완료 체크 저장 (날짜 → "세탁기번호-회차" → 완료 당시 내용)
-  function washLoadDone(dateIso) {
-    try { var all = JSON.parse(localStorage.getItem(WASH_DONE_KEY) || '{}'); return all[dateIso] || {}; } catch (e) { return {}; }
-  }
-  function washSaveDone(dateIso, map) {
-    try {
-      var all = JSON.parse(localStorage.getItem(WASH_DONE_KEY) || '{}');
-      if (Object.keys(map).length) all[dateIso] = map; else delete all[dateIso];
-      var keys = Object.keys(all).sort();
-      while (keys.length > 60) delete all[keys.shift()];
-      localStorage.setItem(WASH_DONE_KEY, JSON.stringify(all));
-      return true;
-    } catch (e) { return false; }
-  }
   var WASH_BASE_KEY = 'ysc_wash_base_v1';
   function washLoadBase(dateIso) {
     try { var all = JSON.parse(localStorage.getItem(WASH_BASE_KEY) || '{}'); return all[dateIso] || null; } catch (e) { return null; }
@@ -1815,20 +1795,6 @@
     } catch (e) {}
   }
   function washStartTime() { try { return localStorage.getItem(WASH_START_KEY) || ''; } catch (e) { return ''; } }
-  function washToggleDone(cycle, checked) {
-    var dateIso = isoDate(state.selectedDate);
-    var map = washLoadDone(dateIso);
-    if (checked) {
-      map[cycle.key] = { at: new Date().toISOString(), items: cycle.items.map(function (it) {
-        return { no: it.no, name: it.name, course: it.course, industry: it.industry, group: it.group, unclassified: it.unclassified, solo: it.solo, qty: it.qty, source: it.source };
-      }) };
-    } else delete map[cycle.key];
-    if (!washSaveDone(dateIso, map)) alert('이 브라우저에 완료 체크를 저장하지 못했습니다(저장공간 차단). 체크는 화면을 닫으면 사라집니다.');
-    var sc = previewViewport.scrollTop;
-    renderPreview();
-    previewViewport.scrollTop = sc;
-  }
-
   // ---- 수거량 이력 조회 (Apps Script getWashHistory)
   function ensureWashHistory(force) {
     if (!state.merged || state.merged.closedDay) return Promise.resolve();
@@ -1868,7 +1834,7 @@
     if (!rec || rec.status === 'loading') return { status: 'loading' };
     if (rec.status === 'error') return { status: 'error', message: rec.error };
     var items = washItems(merged);
-    var locked = washLoadDone(dateIso);
+    var locked = {};
     var sig = JSON.stringify([dateIso, rec.loadedAt, items.map(function (i) { return [i.companyNumber, i.course, i.washGroup, i.businessType, i.combinedWash, i.nickname]; }),
       Object.keys(locked).sort().map(function (k) { return [k, locked[k].items.map(function (x) { return x.no + ':' + x.qty; })]; })]);
     if (state.washMemo && state.washMemo.sig === sig) return state.washMemo.value;
@@ -1925,8 +1891,7 @@
   }
 
   function w2CycleEl(m, c, opts) {
-    var done = !!washLoadDone(isoDate(state.selectedDate))[c.key];
-    var el = w2El('div', 'w2-cycle w2-' + c.groupClass + (done ? ' is-done' : ''));
+    var el = w2El('div', 'w2-cycle w2-' + c.groupClass);
     el.setAttribute('data-key', c.key);
     var top = w2El('div', 'w2-cycle-top');
     var left = w2El('span');
@@ -1934,14 +1899,7 @@
     left.appendChild(document.createTextNode(' ' + c.groupLabel + (c.industries.length ? ' / ' + c.industries.join('+') : '')));
     var right = w2El('span', 'w2-cycle-right');
     right.appendChild(w2El('span', '', c.qty + '/' + c.cap + '포대'));
-    var lab = w2El('label', 'w2-done');
-    var cb = document.createElement('input');
-    cb.type = 'checkbox'; cb.checked = done;
-    cb.setAttribute('aria-label', c.machineNo + '번 세탁기 ' + c.k + '차 투입 완료');
-    if (opts.print) cb.disabled = true;
-    else cb.addEventListener('change', function () { washToggleDone(c, cb.checked); });
-    lab.appendChild(cb);
-    lab.appendChild(w2El('span', '', '완료'));
+    var lab = w2El('span', 'w2-done', '□ 완료');
     right.appendChild(lab);
     top.appendChild(left); top.appendChild(right);
     el.appendChild(top);
@@ -2038,7 +1996,7 @@
     var foot = w2El('div', 'w2-notes');
     var p = w2El('div');
     p.appendChild(w2El('b', '', '작업 안내: '));
-    p.appendChild(document.createTextNode('각 회차 세탁기 투입 후 □ 완료 체크. 빨간 미분류 배지의 수건을 식별하면 '));
+    p.appendChild(document.createTextNode('각 회차 세탁기 투입 후 □ 완료 칸에 체크. 빨간 미분류 배지의 수건을 식별하면 '));
     p.appendChild(w2El('b', '', '사진 + 거래처번호 + 특징을 단톡방에 공유'));
     p.appendChild(document.createTextNode('해주세요. 관리자가 확인해 분류 정보를 등록합니다. 미분류끼리 합세탁하지 않으며, 조건부 조합은 식별·이염·냄새·세탁조건 확인 후 투입합니다.'));
     foot.appendChild(p);
@@ -2176,8 +2134,8 @@
     btn.addEventListener('click', function () { ensureWashHistory(true); renderPreview(); });
     bar.appendChild(btn);
     var t = new Date(rec.loadedAt);
-    bar.appendChild(w2El('span', '', '수량 조회 ' + String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0') + ' · 완료한 회차는 고정하고 나머지만 다시 배정합니다'));
-    bar.appendChild(w2El('div', 'note', '※ 완료 체크는 이 PC·브라우저에만 저장됩니다(다른 작업자 화면과 공유되지 않음). 인쇄하면 체크 상태가 함께 출력됩니다.'));
+    bar.appendChild(w2El('span', '', '수량 조회 ' + String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0')));
+    bar.appendChild(w2El('div', 'note', '※ 완료 □ 칸은 인쇄한 뒤 손으로 체크합니다. 수량을 다시 읽으면(다시 계산) 배정이 바뀔 수 있으니 인쇄 전에 확정하세요.'));
     return bar;
   }
   function w2BasisEl(plan) {
