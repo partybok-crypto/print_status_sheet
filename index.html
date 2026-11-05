@@ -384,6 +384,10 @@
   .w2-screen-bar button { font-size: 14px; font-weight: 800; padding: 6px 12px; background: #163e75; color: #fff; border: 0; border-radius: 5px; cursor: pointer; }
   .w2-screen-bar input[type=time] { font-size: 14px; padding: 3px 5px; border: 2px solid #8aa0c4; border-radius: 5px; }
   .w2-screen-bar .note { flex: 1 1 100%; font-size: 12.5px; font-weight: 700; color: #4a5b73; }
+  .w2-help { margin-bottom: 10px; font-size: 13px; }
+  .w2-help summary { cursor: pointer; font-size: 14px; font-weight: 800; padding: 4px 0; }
+  .w2-helpline { margin-top: 5px; font-size: 12.5px; font-weight: 700; color: #35475e; line-height: 1.45; }
+  .w2-notes-empty { height: 0; }
   .w2-changed { flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; background: #fff3cd; border: 3px solid #e0a100; border-radius: 8px; padding: 8px 12px; font-size: 15px; font-weight: 900; color: #5c3b00; animation: w2Blink 450ms ease-in-out infinite alternate; }
   .w2-changed button { background: #b36b00; }
   .w2-changed small { flex: 1 1 100%; font-size: 12.5px; font-weight: 700; }
@@ -1979,16 +1983,12 @@
     var top = w2El('div', 'w2-top');
     var head = w2El('div', 'w2-head');
     head.appendChild(w2El('h1', '', (merged.dayOfWeek || '') + ' · 코스 우선 세탁기 배정표'));
-    var sm = w2El('small');
-    sm.innerHTML = '';
-    sm.appendChild(document.createTextNode(washDateText() + ' · 작성 ' + (merged.washWriter || '________')));
-    sm.appendChild(document.createElement('br'));
-    sm.appendChild(document.createTextNode('수거량 출처 표시 · 세탁 1회 약 ' + plan.config.machines[0].cycleMin + '분'));
+    var sm = w2El('small', '', washDateText() + ' · 작성 ' + (merged.washWriter || '________'));
     head.appendChild(sm);
     top.appendChild(head);
 
     var legend = w2El('div', 'w2-legend');
-    [['w2-a', '가 그룹 · 헬스장 중심'], ['w2-b', '나 그룹 · 미용실 중심'], ['w2-b2', '나-2 그룹 · 별도 구분'], ['w2-c', '다 그룹 · 피부관리/마사지'], ['w2-u', '미분류 · 관리자에게 식별 특징 전달']].forEach(function (x) {
+    [['w2-a', '가 그룹 헬스장'], ['w2-b', '나 그룹 미용실'], ['w2-b2', '나-2 그룹'], ['w2-c', '다 그룹 피부·마사지'], ['w2-u', '미분류']].forEach(function (x) {
       legend.appendChild(w2El('span', x[0], x[1]));
     });
     top.appendChild(legend);
@@ -1996,52 +1996,54 @@
     var notice = w2El('div', 'w2-notice');
     notice.appendChild(w2El('span', 'w2-notice-icon', '📷'));
     var nb = w2El('div');
-    var s1 = w2El('strong', '', '미분류 수건을 알아보셨나요?');
-    nb.appendChild(s1); nb.appendChild(document.createElement('br'));
+    nb.appendChild(w2El('strong', '', '미분류 수건을 알아보셨나요? '));
     nb.appendChild(w2El('b', '', '사진을 찍어 단톡방에 올려주세요!'));
-    nb.appendChild(w2El('small', '', '거래처번호 + 수건 특징 함께 기재 → 관리자가 확인 후 분류 정보를 등록합니다.'));
+    nb.appendChild(w2El('small', '', '거래처번호 + 수건 특징 함께 기재'));
     notice.appendChild(nb);
     top.appendChild(notice);
-
-    var guide = w2El('div', 'w2-guide');
-    guide.appendChild(w2El('b', '', '포대 수 출처'));
-    guide.appendChild(w2El('span', 'w2-tag w2-tag-ai', '기록 예상'));
-    guide.appendChild(document.createTextNode('같은 요일 최근 4회 수거량의 중앙값'));
-    guide.appendChild(w2El('span', 'w2-tag w2-tag-driver', '기사 등록'));
-    guide.appendChild(document.createTextNode('기사 앱·배송입력 앱·수거량 시트에 입력된 실제 수량'));
-    guide.appendChild(w2El('span', 'w2-tag w2-tag-need', '수량 확인 필요'));
-    guide.appendChild(document.createTextNode('기록 없음 · 배정 제외'));
-    top.appendChild(guide);
 
     var s = plan.stats;
     var start = washStartTime();
     var stats = w2El('div', 'w2-stats');
-    var txt = s.assignedCompanies + '거래처 · ' + s.bags + '포대 · 총 ' + s.cycles + '회차 · 최종 종료 예상 약 ' + s.makespanMin + '분';
-    if (start) txt += ' (' + start + ' 시작 → ' + w2AddTime(start, s.makespanMin) + ' 종료 예정)';
+    var txt = s.assignedCompanies + '거래처 · ' + s.bags + '포대 · ' + s.cycles + '회차 · 약 ' + s.makespanMin + '분';
+    if (start) txt += ' (' + start + ' → ' + w2AddTime(start, s.makespanMin) + ')';
     stats.appendChild(document.createTextNode(txt));
-    var det = ' 미분류끼리 합세탁 0건 · 기사 등록 ' + s.driverBags + '포대 · 기록 예상 ' + s.aiBags + '포대';
-    if (s.pending) det += ' · 수량 확인 필요 ' + s.pending + '곳(배정 제외)';
-    stats.appendChild(w2El('small', '', det));
+    stats.appendChild(w2El('small', '', '  기록 예상 = 지난 기록 · 기사 등록 = 실제 수량'));
     top.appendChild(stats);
     return top;
   }
 
   function w2FootEl(plan) {
-    var foot = w2El('div', 'w2-notes');
-    var p = w2El('div');
-    p.appendChild(w2El('b', '', '작업 안내: '));
-    p.appendChild(document.createTextNode('각 회차 세탁기 투입 후 □ 완료 칸에 체크. 빨간 미분류 배지의 수건을 식별하면 '));
-    p.appendChild(w2El('b', '', '사진 + 거래처번호 + 특징을 단톡방에 공유'));
-    p.appendChild(document.createTextNode('해주세요. 관리자가 확인해 분류 정보를 등록합니다. 미분류끼리 합세탁하지 않으며, 조건부 조합은 식별·이염·냄새·세탁조건 확인 후 투입합니다.'));
-    foot.appendChild(p);
+    var foot = w2El('div', plan.pending.length ? 'w2-notes' : 'w2-notes-empty');
     if (plan.pending.length) {
       var need = w2El('div', 'w2-pending need');
-      need.appendChild(w2El('span', 'w2-strong', '⚠ 수량 확인 필요 (같은 요일 기록 없음 · 배정에서 제외): '));
+      need.appendChild(w2El('span', 'w2-strong', '⚠ 수량 확인 필요 (배정 제외): '));
       need.appendChild(document.createTextNode(plan.pending.map(function (c) { return c.no + ' ' + c.name + '(' + c.course + '코스)'; }).join(' · ')));
       foot.appendChild(need);
     }
-    plan.warnings.forEach(function (w) { foot.appendChild(w2El('div', 'w2-warnline', '※ ' + w)); });
     return foot;
+  }
+
+  // 화면 전용 설명(인쇄 안 됨): 출처 안내, 작업 안내, 경고
+  function w2HelpEl(plan) {
+    var box = w2El('div', 'w2-screen w2-help');
+    plan.warnings.forEach(function (w) { box.appendChild(w2El('div', 'w2-warnline', '※ ' + w)); });
+    var det = w2El('details');
+    det.appendChild(w2El('summary', '', '설명 보기 (인쇄에는 나오지 않습니다)'));
+    var guide = w2El('div', 'w2-guide');
+    guide.appendChild(w2El('b', '', '포대 수 출처'));
+    guide.appendChild(w2El('span', 'w2-tag w2-tag-ai', '기록 예상'));
+    guide.appendChild(document.createTextNode('같은 요일 최근 4회 수거량의 중앙값'));
+    guide.appendChild(w2El('span', 'w2-tag w2-tag-driver', '기사 등록'));
+    guide.appendChild(document.createTextNode('기사 앱·배송입력 앱·수거량 시트의 실제 수량'));
+    guide.appendChild(w2El('span', 'w2-tag w2-tag-need', '수량 확인 필요'));
+    guide.appendChild(document.createTextNode('기록 없음 · 배정 제외'));
+    det.appendChild(guide);
+    var s = plan.stats;
+    det.appendChild(w2El('div', 'w2-helpline', '기사 등록 ' + s.driverBags + '포대 · 기록 예상 ' + s.aiBags + '포대 · 미분류끼리 합세탁 0건 · 세탁 1회 약 ' + plan.config.machines[0].cycleMin + '분 가정'));
+    det.appendChild(w2El('div', 'w2-helpline', '작업 안내: 각 회차 세탁기 투입 후 □ 완료 칸에 체크합니다. 빨간 미분류 수건을 알아보면 사진 + 거래처번호 + 특징을 단톡방에 공유해 주세요(관리자가 분류 정보 등록). 미분류끼리는 합세탁하지 않고, 조건부 조합은 식별·이염·냄새·세탁조건 확인 후 투입합니다.'));
+    box.appendChild(det);
+    return box;
   }
 
   // 상호명을 가능한 한 한 줄로: 글자를 줄이고, 그래도 안 되면 두 줄로 내린다(자르지 않는다)
@@ -2267,6 +2269,7 @@
       wrap.appendChild(page); return wrap;
     }
     if (!opts.print) wrap.appendChild(w2ScreenBar(plan, ps.rec));
+    if (!opts.print) wrap.appendChild(w2HelpEl(plan));
     w2PagesFor(merged, plan, opts).forEach(function (p) { wrap.appendChild(p); });
     if (!opts.print) wrap.appendChild(w2BasisEl(plan));
     wrap.setAttribute('data-wash-ok', '1');
