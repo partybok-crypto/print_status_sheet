@@ -355,23 +355,25 @@
   .w2-cycle.first { border-top: 0; }
   .w2-cycle-top { background: #ffffffb8; border-radius: 6px; padding: 3px 4px; margin-bottom: 3px; display: flex; justify-content: space-between; gap: 3px; align-items: center; border-bottom: 2px solid #0002; font-size: 13.5px; font-weight: 900; }
   .w2-cycle-index { background: #1d3c63; color: #fff; border-radius: 5px; padding: 3px 6px; margin-right: 2px; }
-  .w2-cycle-right { display: flex; align-items: center; gap: 4px; white-space: nowrap; font-size: 12.5px; }
+  .w2-cycle-right { display: flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 13px; font-weight: 900; }
   .w2-done { display: inline-flex; align-items: center; background: #fff; border: 2px solid #1d3c63; border-radius: 5px; padding: 2px 5px; font-size: 12.5px; font-weight: 900; }
   .w2-route-group { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: stretch; gap: 3px; margin: 3px 0; }
   .w2-route-tall { display: flex; align-items: center; justify-content: center; background: #fff9; border: 1.5px solid #314866; border-radius: 6px; font-size: 13px; font-weight: 900; color: #17304d; min-height: 34px; padding: 2px 1px; white-space: nowrap; letter-spacing: -.8px; }
   .w2-route-entries { min-width: 0; }
-  .w2-cust { display: flex; flex-wrap: nowrap; align-items: center; min-width: 0; gap: 3px; padding: 3px 1px; white-space: nowrap; }
-  .w2-cust + .w2-cust { border-top: 1px solid #ffffff99; }
-  .w2-no { font-size: 21px; font-weight: 900; width: 46px; flex: 0 0 46px; letter-spacing: -1.2px; white-space: nowrap; }
-  .w2-name { font-size: 14px; font-weight: 900; flex: 1 1 auto; min-width: 0; white-space: nowrap; letter-spacing: -.8px; }
-  .w2-qty { display: flex; align-items: center; gap: 2px; font-size: 14px; font-weight: 900; flex: 0 0 auto; white-space: nowrap; }
-  .w2-qty .w2-tag { font-size: 9px; margin-left: 1px; padding: 1px 2px; border-width: 1px; letter-spacing: -.6px; }
+  .w2-cust { display: flex; flex-wrap: nowrap; align-items: center; min-width: 0; gap: 4px; padding: 4px 1px; white-space: nowrap; }
+  .w2-cust + .w2-cust { border-top: 2px solid #fff; }
+  .w2-no { font-size: 25px; font-weight: 900; width: 62px; flex: 0 0 62px; text-align: center; background: #fff; color: #000; border: 2px solid #142438; border-radius: 7px; padding: 1px 0; line-height: 1.15; letter-spacing: -1.4px; white-space: nowrap; }
+  .w2-name { font-size: 14px; font-weight: 800; color: #1b2a3c; flex: 1 1 auto; min-width: 0; white-space: nowrap; letter-spacing: -.8px; }
+  .w2-qty { display: flex; align-items: baseline; gap: 1px; font-weight: 900; flex: 0 0 auto; white-space: nowrap; }
+  .w2-q { font-size: 27px; line-height: 1; color: #000; min-width: 17px; text-align: right; }
+  .w2-unit { font-size: 11px; margin-right: 3px; }
+  .w2-qty .w2-tag { font-size: 10px; padding: 1px 3px; border-width: 1px; align-self: center; }
   .w2-badge { display: inline-flex; align-items: center; background: #c61d26; color: #fff; border: 1px solid #8f1018; border-radius: 4px; padding: 1px 2px; font-size: 9.5px; font-weight: 900; white-space: nowrap; letter-spacing: -.6px; flex: 0 0 auto; }
   .w2-badge.solo { background: #4a4a4a; border-color: #222; }
   .w2-cust.is-unclassified { background: #fff1f1; border-left: 4px solid #d52a32; padding-left: 2px; border-radius: 3px; }
   .w2-flag { font-size: 11px; color: #9c321b; font-weight: 900; padding: 3px 0 0; }
   .w2-notes { font-size: 12px; border-top: 3px solid #1d3c63; margin-top: 8px; padding-top: 6px; line-height: 1.35; }
-  .w2-pending { background: #f2f4f7; padding: 5px 8px; margin-top: 5px; border-radius: 4px; }
+  .w2-pending { background: #f2f4f7; padding: 5px 8px; margin: 5px 0 6px; border-radius: 4px; font-size: 13px; }
   .w2-pending.need { background: #fff1f1; border: 3px solid #d52a32; font-weight: 800; }
   .w2-warnline { margin-top: 5px; font-size: 12px; font-weight: 800; color: #9c321b; }
   .w2-strong { font-weight: 900; color: #a03816; }
@@ -1923,7 +1925,7 @@
     return box;
   }
   function w2Tag(source) {
-    var tag = w2El('span', 'w2-tag ' + (source === 'driver' ? 'w2-tag-driver' : 'w2-tag-ai'), source === 'driver' ? '기사 등록' : '기록 예상');
+    var tag = w2El('span', 'w2-tag ' + (source === 'driver' ? 'w2-tag-driver' : 'w2-tag-ai'), source === 'driver' ? '실제' : '예상');
     return tag;
   }
   function w2BasisText(c) {
@@ -1939,9 +1941,9 @@
     var top = w2El('div', 'w2-cycle-top');
     var left = w2El('span');
     left.appendChild(w2El('span', 'w2-cycle-index', c.k + '차'));
-    left.appendChild(document.createTextNode(' ' + c.groupLabel + (c.industries.length ? ' / ' + c.industries.join('+') : '')));
+    left.appendChild(document.createTextNode(' ' + c.groupLabel));
     var right = w2El('span', 'w2-cycle-right');
-    right.appendChild(w2El('span', '', c.qty + '/' + c.cap + '포대'));
+    right.appendChild(w2El('span', 'w2-cycle-qty', '합계 ' + c.qty + '포대'));
     var lab = w2El('span', 'w2-done', '□ 완료');
     right.appendChild(lab);
     top.appendChild(left); top.appendChild(right);
@@ -1959,7 +1961,8 @@
         if (it.solo) row.appendChild(w2El('span', 'w2-badge solo', '단독'));
         else if (it.unclassified) row.appendChild(w2El('span', 'w2-badge', '미분류'));
         var q = w2El('span', 'w2-qty');
-        q.appendChild(document.createTextNode(it.qty + '포대'));
+        q.appendChild(w2El('span', 'w2-q', String(it.qty)));
+        q.appendChild(w2El('span', 'w2-unit', '포대'));
         var tag = w2Tag(it.source);
         q.appendChild(tag);
         if (it.extra) q.appendChild(w2El('span', 'w2-tag w2-tag-need', '추가분'));
@@ -2011,20 +2014,19 @@
     var txt = s.assignedCompanies + '거래처 · ' + s.bags + '포대 · ' + s.cycles + '회차 · 약 ' + s.makespanMin + '분';
     if (start) txt += ' (' + start + ' → ' + w2AddTime(start, s.makespanMin) + ')';
     stats.appendChild(document.createTextNode(txt));
-    stats.appendChild(w2El('small', '', '  기록 예상 = 지난 기록 · 기사 등록 = 실제 수량'));
+    stats.appendChild(w2El('small', '', '  예상 = 지난 기록 · 실제 = 기사 등록 수량'));
     top.appendChild(stats);
-    return top;
-  }
-
-  function w2FootEl(plan) {
-    var foot = w2El('div', plan.pending.length ? 'w2-notes' : 'w2-notes-empty');
     if (plan.pending.length) {
       var need = w2El('div', 'w2-pending need');
       need.appendChild(w2El('span', 'w2-strong', '⚠ 수량 확인 필요 (배정 제외): '));
       need.appendChild(document.createTextNode(plan.pending.map(function (c) { return c.no + ' ' + c.name + '(' + c.course + '코스)'; }).join(' · ')));
-      foot.appendChild(need);
+      top.appendChild(need);
     }
-    return foot;
+    return top;
+  }
+
+  function w2FootEl(plan) {
+    return w2El('div', 'w2-notes-empty');   // 아래쪽 안내는 없앴다(수량 확인 필요는 위로 올림)
   }
 
   // 화면 전용 설명(인쇄 안 됨): 출처 안내, 작업 안내, 경고
