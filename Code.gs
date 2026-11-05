@@ -483,19 +483,21 @@ function fieldRead_(sheetName, wanted) {
 
 // { link: {날짜: {업체번호: 포대수}}, pq: {...} } — 같은 날·업체가 여러 줄이면 마지막 줄
 function readFieldQty_() {
-  var out = { link: {}, pq: {} };
-  var l = fieldRead_("기사링크_수거량", ["업체번호", "포대수", "운행일", "방문상태"]);
+  var out = { link: {}, pq: {}, info: {} };   // info: {날짜: {업체번호: {name, course}}} (목록에 없는 거래처를 추가할 때 쓴다)
+  var l = fieldRead_("기사링크_수거량", ["업체번호", "포대수", "운행일", "방문상태", "거래처명", "코스"]);
   l.rows.forEach(function (r) {
     if (String(r[l.idx["방문상태"]]).trim() !== "방문완료") return;
     var q = collectQty_(r[l.idx["포대수"]]); var d = String(r[l.idx["운행일"]]).trim(); var no = String(r[l.idx["업체번호"]]).trim();
     if (q === null || !d || !no) return;
     (out.link[d] = out.link[d] || {})[no] = q;
+    (out.info[d] = out.info[d] || {})[no] = { name: String(r[l.idx["거래처명"]] || "").trim(), course: String(r[l.idx["코스"]] || "").trim() };
   });
-  var p = fieldRead_("포대수량", ["날짜", "업체번호", "포대수"]);
+  var p = fieldRead_("포대수량", ["날짜", "업체번호", "포대수", "거래처명"]);
   p.rows.forEach(function (r) {
     var q = collectQty_(r[p.idx["포대수"]]); var d = String(r[p.idx["날짜"]]).trim(); var no = String(r[p.idx["업체번호"]]).trim();
     if (q === null || !d || !no) return;
     (out.pq[d] = out.pq[d] || {})[no] = q;
+    if (!(out.info[d] && out.info[d][no])) (out.info[d] = out.info[d] || {})[no] = { name: String(r[p.idx["거래처명"]] || "").trim(), course: "" };
   });
   return out;
 }
@@ -561,7 +563,35 @@ function getWashHistory_(dateIso, weekday, companyNos) {
     fieldCount: field ? { link: Object.keys(field.link[dateIso] || {}).length, pq: Object.keys(field.pq[dateIso] || {}).length } : null,
     companies: {}, notFound: [], rows: isoDates
   };
-  var wanted = companyNos && companyNos.length ? companyNos : Object.keys(colOf);
+  var wanted = companyNos && companyNos.length ? companyNos.slice() : Object.keys(colOf);
+
+  // 그날 목록에 없는데 실제로 수거된 거래처(기사 앱·배송입력 앱 기록)는 목록에 덧붙인다 — 포대가 있는데 배정표에 빠지면 안 된다.
+  var extras = [];
+  if (field && companyNos && companyNos.length) {
+    var listed = {}; companyNos.forEach(function (n) { listed[String(n).trim()] = true; });
+    var cand = {};
+    [field.link[dateIso] || {}, field.pq[dateIso] || {}].forEach(function (m) { Object.keys(m).forEach(function (n) { if (m[n] > 0 && !listed[n]) cand[n] = true; }); });
+    var candNos = Object.keys(cand);
+    if (candNos.length) {
+      var stSheet = ss.getSheetByName(WEB_SHEET_NAME);
+      var stRows = stSheet ? stSheet.getRange(DATA_START_ROW, 1, Math.max(stSheet.getLastRow() - 2 - DATA_START_ROW + 1, 1), READ_LAST_COL).getValues() : [];
+      candNos.forEach(function (n) {
+        var row = null;
+        for (var q = 0; q < stRows.length; q++) { if (cellStr_(stRows[q][COL_COMPANY_NO - 1]) === n) { row = stRows[q]; break; } }
+        var inf = (field.info[dateIso] && field.info[dateIso][n]) || { name: "", course: "" };
+        extras.push({
+          companyNumber: n,
+          nickname: row ? cellStr_(row[COL_NICKNAME - 1]) : inf.name,
+          businessType: row ? cellStr_(row[COL_BIZ_TYPE - 1]) : "",
+          course: inf.course || "?",
+          combinedWash: row ? cellStr_(row[COL_COMBINED_WASH - 1]) : "",
+          washGroup: row ? washGroupOf_(row[COL_COMBINED_WASH - 1], row[COL_BIZ_TYPE - 1]) : "X"
+        });
+        wanted.push(n);
+      });
+    }
+  }
+  result.extras = extras;
   wanted.forEach(function (rawNo) {
     var no = String(rawNo).trim();
     var col = colOf[no];

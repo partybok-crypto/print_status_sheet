@@ -140,7 +140,7 @@
       comps.push({
         no: no, name: it.nickname || '', industry: it.businessType || '', family: familyOf(it.businessType, cfg),
         course: String(it.course || '').replace(/^-+/, ''), group: group, unclassified: group === 'U', solo: solo,
-        qty: est.qty, source: est.source, basis: est.basis
+        qty: est.qty, source: est.source, basis: est.basis, added: !!it.addedExtra
       });
     });
     return { companies: comps, errors: errors };
@@ -366,7 +366,7 @@
     return {
       no: c.no, name: c.name, course: c.course, industry: c.industry, group: c.group,
       unclassified: c.unclassified, solo: !!c.solo, qty: c.qty, source: c.source,
-      extra: !!c.extra, split: !!c.split
+      extra: !!c.extra, split: !!c.split, added: !!c.added
     };
   }
 

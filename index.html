@@ -369,6 +369,8 @@
   .w2-unit { font-size: 11px; margin-right: 3px; }
   .w2-qty .w2-tag { font-size: 10px; padding: 1px 3px; border-width: 1px; align-self: center; }
   .w2-badge { display: inline-flex; align-items: center; background: #c61d26; color: #fff; border: 1px solid #8f1018; border-radius: 4px; padding: 1px 2px; font-size: 9.5px; font-weight: 900; white-space: nowrap; letter-spacing: -.6px; flex: 0 0 auto; }
+  .w2-badge-lg { font-size: 16px; padding: 2px 7px; border-radius: 5px; margin-right: 3px; vertical-align: 1px; }
+  .w2-legend .w2-badge-chip { font-size: 12.5px; padding: 3px 8px; border-radius: 4px; }
   .w2-badge.solo { background: #4a4a4a; border-color: #222; }
   .w2-cust.is-unclassified { background: #fff1f1; border-left: 4px solid #d52a32; padding-left: 2px; border-radius: 3px; }
   .w2-flag { font-size: 11px; color: #9c321b; font-weight: 900; padding: 3px 0 0; }
@@ -854,6 +856,7 @@
     snapshot: null,          // 이 배송일의 최종 출력본(서버) {date, courses:[...]}
     packedCount: null,       // { date, byCompany, byItems } (byItems: 헬스장 옷/수건 품목별 수) - 그 배송일에 나가는 업체별 포장 수(포대+수건)
     snapshotStatus: 'idle',  // idle | loading | ok | error
+    washSrc: {},             // 세탁공정: 수거일(전 영업일) 날짜 → { status, merged } 거래처 목록
     washHist: {},            // 세탁공정: 날짜 → 수거량 이력 조회 상태 { status, data, requested, loadedAt, error }
     washMemo: null,          // 세탁공정 계산 결과 캐시
     changes: { items: [], drivers: [], printedAt: '' },
@@ -1091,7 +1094,7 @@
       return;
     }
     if (state.isLoading) return;
-    if (force) { delete state.washHist[dateIso]; state.washMemo = null; }
+    if (force) { var wk0 = washKey(); delete state.washHist[wk0.pIso]; delete state.washSrc[wk0.pIso]; delete state.rawCache[wk0.pIso]; state.washMemo = null; }
 
     state.isLoading = true;
     hideInlineError();
@@ -1773,12 +1776,20 @@
   var W2_PAGE_CAP_PX = 1030;      // A4 세로 한 쪽에 쓸 수 있는 높이(여백 제외, 약간 여유)
   var W2_GAP_PX = 9, W2_BORDER_PX = 6;
 
+  // 선택한 날짜 = 세탁하는 날. 그날 세탁할 것은 전 영업일(월요일은 휴무라 건너뜀)에 수거한 것이다.
+  function washCollectDate(d) {
+    var p = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1);
+    if (p.getDay() === 1) p = new Date(p.getFullYear(), p.getMonth(), p.getDate() - 1);
+    return p;
+  }
+  function washKey() {
+    var P = washCollectDate(state.selectedDate);
+    return { P: P, pIso: isoDate(P), weekday: weekdayFromDate(P) };
+  }
   function washDateText() {
-    var d = state.selectedDate;
-    var w = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
-    if (w.getDay() === 1) w = new Date(w.getFullYear(), w.getMonth(), w.getDate() + 1);
+    var d = state.selectedDate, pp = washCollectDate(d);
     function f(x) { return (x.getMonth() + 1) + '/' + x.getDate() + '(' + weekdayFromDate(x) + ')'; }
-    return '수거 ' + f(d) + ' → 세탁 ' + f(w);
+    return '수거 ' + f(pp) + ' → 세탁 ' + f(d);
   }
   function w2El(tag, cls, text) {
     var e = document.createElement(tag);
@@ -1820,45 +1831,70 @@
   }
   function washStartTime() { try { return localStorage.getItem(WASH_START_KEY) || ''; } catch (e) { return ''; } }
   // ---- 수거량 이력 조회 (Apps Script getWashHistory)
+  // 수거일(전 영업일)의 거래처 목록을 따로 불러온다(화면에서 고른 날짜의 목록이 아니다)
+  function loadWashSource(pIso, weekday, force) {
+    var src = state.washSrc[pIso];
+    if (src && src.status === 'ok' && !force) return Promise.resolve(src.merged);
+    if (force) delete state.rawCache[pIso];
+    function build(raw) { src = { status: 'ok', merged: computeMerged(raw, loadDraft(pIso)) }; state.washSrc[pIso] = src; return src.merged; }
+    if (state.rawCache[pIso]) return Promise.resolve(build(state.rawCache[pIso]));
+    var T = [12000, 15000, 25000];
+    function go(i) { return callGAS({ action: 'getData', weekday: weekday, date: pIso }, T[i]).catch(function (e) { if (i + 1 >= T.length) throw e; return go(i + 1); }); }
+    return go(0).then(function (data) {
+      if (!data || !data.success) throw new Error((data && data.message) || '수거일 거래처 목록을 불러오지 못했습니다.');
+      if (data.requestedDate !== pIso) throw new Error('날짜 불일치: 요청 ' + pIso + ' / 응답 ' + data.requestedDate);
+      state.rawCache[pIso] = data;
+      return build(data);
+    });
+  }
+
   function ensureWashHistory(force) {
     if (!state.merged || state.merged.closedDay) return Promise.resolve();
-    var dateIso = isoDate(state.selectedDate), weekday = state.weekday;
-    var nos = washItems(state.merged).map(function (it) { return String(it.companyNumber); });
-    var rec = state.washHist[dateIso];
+    var k = washKey(), pIso = k.pIso;
+    var rec = state.washHist[pIso], src = state.washSrc[pIso];
     if (rec && !force) {
       if (rec.status === 'loading') return rec.promise;
-      if (rec.status === 'ok' && nos.every(function (n) { return rec.requested[n]; })) return Promise.resolve();
+      if (rec.status === 'ok' && src && src.status === 'ok' && washItems(src.merged).every(function (it) { return rec.requested[String(it.companyNumber)]; })) return Promise.resolve();
       if (rec.status === 'error') return Promise.resolve();   // 오류는 [다시 계산] 버튼으로만 재시도
     }
     rec = { status: 'loading', requested: {}, loadedAt: 0 };
     w2StartPoll();
-    nos.forEach(function (n) { rec.requested[n] = true; });
-    state.washHist[dateIso] = rec;
-    rec.promise = callGAS({ action: 'getWashHistory', date: dateIso, weekday: weekday, companies: nos }, 25000)
+    state.washHist[pIso] = rec;
+    rec.promise = loadWashSource(pIso, k.weekday, force)
+      .then(function (pm) {
+        var nos = washItems(pm).map(function (it) { return String(it.companyNumber); });
+        nos.forEach(function (n) { rec.requested[n] = true; });
+        return callGAS({ action: 'getWashHistory', date: pIso, weekday: k.weekday, companies: nos }, 25000);
+      })
       .then(function (data) {
         if (!data || !data.success) throw new Error((data && data.message) || '수량 이력 조회에 실패했습니다.');
-        if (data.date !== dateIso) throw new Error('날짜 불일치: 요청 ' + dateIso + ' / 응답 ' + data.date);
+        if (data.date !== pIso) throw new Error('날짜 불일치: 요청 ' + pIso + ' / 응답 ' + data.date);
         rec.data = data; rec.status = 'ok'; rec.loadedAt = Date.now();
       })
       .catch(function (err) {
         var msg = (err && err.message) || String(err);
         if (/알 수 없는 요청/.test(msg)) msg = 'Apps Script가 아직 세탁공정용으로 업데이트되지 않았습니다(getWashHistory 없음). Code.gs를 새 버전으로 배포해 주세요.';
-        else if (err && err.name === 'AbortError') msg = '수량 이력 조회 시간이 초과되었습니다. 잠시 후 [다시 계산]을 눌러 주세요.';
+        else if (err && err.name === 'AbortError') msg = '시트 조회 시간이 초과되었습니다. 잠시 후 [다시 계산]을 눌러 주세요.';
         rec.status = 'error'; rec.error = msg;
       })
       .then(function () {
-        if (isoDate(state.selectedDate) === dateIso && (state.docType === 'wash' || state.docType === 'status_address_wash')) renderPreview();
+        if (washKey().pIso === pIso && (state.docType === 'wash' || state.docType === 'status_address_wash')) renderPreview();
       });
     return rec.promise;
   }
 
   // ---- 계산(기록이 같으면 다시 계산하지 않음) + 날짜·코스 검증
-  function washPlanState(merged, popts) {
-    var dateIso = isoDate(state.selectedDate);
+  function washPlanState(selMerged, popts) {
+    var wk = washKey(), dateIso = wk.pIso;      // dateIso = 수거일
     var rec = state.washHist[dateIso];
     if (!rec || rec.status === 'loading') return { status: 'loading' };
     if (rec.status === 'error') return { status: 'error', message: rec.error };
-    var items = washItems(merged);
+    var src = state.washSrc[dateIso];
+    if (!src || src.status !== 'ok') return { status: 'loading' };
+    var merged = src.merged;                    // 수거일의 거래처 목록
+    var items = washItems(merged).concat(((rec.data && rec.data.extras) || []).map(function (e) {
+      return { companyNumber: e.companyNumber, nickname: e.nickname, businessType: e.businessType, course: e.course, washGroup: e.washGroup, combinedWash: e.combinedWash, addedExtra: true };
+    }));
     var locked = {};
     var sig = JSON.stringify([dateIso, rec.loadedAt, items.map(function (i) { return [i.companyNumber, i.course, i.washGroup, i.businessType, i.combinedWash, i.nickname]; }),
       Object.keys(locked).sort().map(function (k) { return [k, locked[k].items.map(function (x) { return x.no + ':' + x.qty; })]; })]);
@@ -1874,8 +1910,8 @@
     var plan = WashCore.buildPlan(built.companies, { locked: locked, frozen: frozen });
     if (!frozen) washSaveBase(dateIso, dataSig, plan);
     var errs = built.errors.slice();
-    if (rec.data.date !== dateIso) errs.push('수량 이력 날짜(' + rec.data.date + ')가 선택한 날짜(' + dateIso + ')와 다릅니다.');
-    if (merged.weekday && merged.weekday !== weekdayFromDate(state.selectedDate)) errs.push('불러온 요일(' + merged.weekday + ')이 선택한 날짜의 요일과 다릅니다.');
+    if (rec.data.date !== dateIso) errs.push('수량 이력 날짜(' + rec.data.date + ')가 수거일(' + dateIso + ')과 다릅니다.');
+    if (merged.weekday && merged.weekday !== wk.weekday) errs.push('불러온 요일(' + merged.weekday + ')이 수거일의 요일(' + wk.weekday + ')과 다릅니다.');
     if (!rec.data.rowFound) plan.warnings.push('"업체별 수거량" 시트에 ' + dateIso.slice(5) + ' 날짜 행이 없어 그 시트의 값은 쓰지 못했습니다.');
     if (!rec.data.fieldOk) plan.warnings.push('현장입력 시트(기사 앱 수거량)를 읽지 못했습니다 — 기사가 등록한 실제 수량이 반영되지 않았을 수 있습니다. ' + (rec.data.fieldError || ''));
     items.forEach(function (it) { if (!String(it.course || '').replace(/^-+/, '')) errs.push('거래처 ' + it.companyNumber + ' 의 배송 코스가 비어 있습니다.'); });
@@ -1884,7 +1920,7 @@
     plan.errors = errs.concat(plan.errors);
     plan.valid = plan.errors.length === 0;
     plan.companies = built.companies;
-    var value = { status: 'ok', plan: plan, rec: rec };
+    var value = { status: 'ok', plan: plan, rec: rec, src: src };
     state.washMemo = { sig: sig, value: value };
     return value;
   }
@@ -1965,7 +2001,8 @@
         q.appendChild(w2El('span', 'w2-unit', '포대'));
         var tag = w2Tag(it.source);
         q.appendChild(tag);
-        if (it.extra) q.appendChild(w2El('span', 'w2-tag w2-tag-need', '추가분'));
+        if (it.added) q.appendChild(w2El('span', 'w2-tag w2-tag-need', '추가'));
+        else if (it.extra) q.appendChild(w2El('span', 'w2-tag w2-tag-need', '추가분'));
         else if (it.split) q.appendChild(w2El('span', 'w2-tag w2-tag-need', '나눔'));
         row.appendChild(q);
         entries.appendChild(row);
@@ -1994,7 +2031,7 @@
     top.appendChild(head);
 
     var legend = w2El('div', 'w2-legend');
-    [['w2-a', '가 그룹 헬스장'], ['w2-b', '나 그룹 미용실'], ['w2-b2', '나-2 그룹'], ['w2-c', '다 그룹 피부·마사지'], ['w2-u', '미분류']].forEach(function (x) {
+    [['w2-a', '가 그룹 헬스장'], ['w2-b', '나 그룹 미용실'], ['w2-b2', '나-2 그룹'], ['w2-c', '다 그룹 피부·마사지'], ['w2-badge w2-badge-chip', '미분류']].forEach(function (x) {
       legend.appendChild(w2El('span', x[0], x[1]));
     });
     top.appendChild(legend);
@@ -2002,7 +2039,10 @@
     var notice = w2El('div', 'w2-notice');
     notice.appendChild(w2El('span', 'w2-notice-icon', '📷'));
     var nb = w2El('div');
-    nb.appendChild(w2El('strong', '', '미분류 수건을 알아보셨나요? '));
+    var strong = w2El('strong');
+    strong.appendChild(w2El('span', 'w2-badge w2-badge-lg', '미분류'));
+    strong.appendChild(document.createTextNode(' 수건을 알아보셨나요? '));
+    nb.appendChild(strong);
     nb.appendChild(w2El('b', '', '사진을 찍어 단톡방에 올려주세요!'));
     nb.appendChild(w2El('small', '', '거래처번호 + 수건 특징 함께 기재'));
     notice.appendChild(nb);
@@ -2167,10 +2207,10 @@
   }
   function w2PollOnce() {
     if (document.hidden || (state.docType !== 'wash' && state.docType !== 'status_address_wash') || !state.merged) return;
-    var dateIso = isoDate(state.selectedDate), rec = state.washHist[dateIso];
+    var wk = washKey(), dateIso = wk.pIso, rec = state.washHist[dateIso];
     if (!rec || rec.status !== 'ok' || rec.polling) return;
     rec.polling = true;
-    callGAS({ action: 'getWashHistory', date: dateIso, weekday: state.weekday, companies: Object.keys(rec.requested) }, 25000)
+    callGAS({ action: 'getWashHistory', date: dateIso, weekday: wk.weekday, companies: Object.keys(rec.requested) }, 25000)
       .then(function (data) {
         if (!data || !data.success || data.date !== dateIso || state.washHist[dateIso] !== rec) return;
         var diffs = w2Diff(rec.data, data);
@@ -2186,7 +2226,8 @@
     slot.innerHTML = '';
     if (!rec.pending) return;
     var names = {};
-    if (state.merged) washItems(state.merged).forEach(function (it) { names[String(it.companyNumber)] = it.nickname; });
+    var sm = state.washSrc[washKey().pIso];
+    if (sm && sm.merged) washItems(sm.merged).forEach(function (it) { names[String(it.companyNumber)] = it.nickname; });
     var box = w2El('div', 'w2-changed');
     box.appendChild(w2El('span', '', '⚠ 수거량이 바뀌었습니다 (' + rec.pending.diffs.length + '곳) — 인쇄 전에 다시 계산하세요'));
     var btn = w2El('button', '', '다시 계산');
@@ -2243,7 +2284,7 @@
   function buildWashDoc(merged, opts) {
     opts = opts || {};
     var wrap = w2El('div', 'w2-doc');
-    var ps = washPlanState(merged, { noCompute: !opts.print && !state.washAllow });
+    var ps = washPlanState(merged, { noCompute: !opts.print && !state.washAllow });   // merged = 선택한(세탁하는) 날짜의 자료
     var page = w2El('div', 'w2-page');
     var title = (merged.dayOfWeek || '') + ' · 세탁공정 참고표';
     if (ps.status === 'loading') {
@@ -2281,7 +2322,8 @@
       wrap.appendChild(scr);
       wrap.appendChild(w2El('div', 'w2-screen w2-paper-label', '▼ 아래부터 인쇄되는 세탁공정 참고표'));
     }
-    w2PagesFor(merged, plan, opts).forEach(function (p) { wrap.appendChild(p); });
+    var info = { dayOfWeek: merged.dayOfWeek, washWriter: (ps.src && ps.src.merged.washWriter) || '' };
+    w2PagesFor(info, plan, opts).forEach(function (p) { wrap.appendChild(p); });
     if (!opts.print) wrap.appendChild(w2BasisEl(plan));
     wrap.setAttribute('data-wash-ok', '1');
     return wrap;
@@ -2931,7 +2973,7 @@
   function printWashDoc() {
     if (!state.merged || state.merged.closedDay) return;
     // 인쇄 직전에 수거량을 다시 읽는다(5분 넘게 켜 둔 화면이면). 읽지 못했거나 검증에 실패하면 인쇄하지 않는다.
-    var dateIso = isoDate(state.selectedDate);
+    var dateIso = washKey().pIso;
     var rec = state.washHist[dateIso];
     var stale = !rec || rec.status !== 'ok' || (Date.now() - rec.loadedAt) > 5 * 60 * 1000;
     if (stale) {
