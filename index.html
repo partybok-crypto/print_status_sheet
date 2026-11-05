@@ -2059,7 +2059,7 @@
     var nb = w2El('div');
     var strong = w2El('strong');
     strong.appendChild(w2El('span', 'w2-badge w2-badge-lg', '미분류'));
-    strong.appendChild(document.createTextNode(' 로 표시된 거래처, 수건 특징이 확실하면 '));
+    strong.appendChild(document.createTextNode(' 로 표시된 거래처, 수건 특징이 확실하면 누구라도 '));
     nb.appendChild(strong);
     nb.appendChild(w2El('b', '', '번호와 특징을 단톡방에 남겨주세요!'));
     nb.appendChild(w2El('small', '', '미분류 수건을 그룹으로 나누려면 여러 사람의 도움이 필요해요 · 사진을 같이 올리면 더 좋아요'));
@@ -2104,7 +2104,7 @@
     det.appendChild(guide);
     var s = plan.stats;
     det.appendChild(w2El('div', 'w2-helpline', '기사 등록 ' + s.driverBags + '포대 · 기록 예상 ' + s.aiBags + '포대 · 미분류끼리 합세탁 0건 · 세탁 1회 약 ' + plan.config.machines[0].cycleMin + '분 가정'));
-    det.appendChild(w2El('div', 'w2-helpline', '작업 안내: 각 회차 세탁기 투입 후 □ 완료 칸에 체크합니다. 빨간 미분류로 표시된 거래처는 수건 특징이 확실하면 번호와 특징을 단톡방에 남겨 주세요(사진이 있으면 함께). 관리자가 모아서 그룹으로 등록합니다. 미분류끼리는 합세탁하지 않고, 조건부 조합은 식별·이염·냄새·세탁조건 확인 후 투입합니다.'));
+    det.appendChild(w2El('div', 'w2-helpline', '작업 안내: 각 회차 세탁기 투입 후 □ 완료 칸에 체크합니다. 빨간 미분류로 표시된 거래처는 수건 특징이 확실하면 누구라도 번호와 특징을 단톡방에 남겨 주세요(사진이 있으면 함께). 관리자가 모아서 그룹으로 등록합니다. 미분류끼리는 합세탁하지 않고, 조건부 조합은 식별·이염·냄새·세탁조건 확인 후 투입합니다.'));
     box.appendChild(det);
     return box;
   }
