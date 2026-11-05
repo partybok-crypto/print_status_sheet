@@ -446,7 +446,86 @@ function buildDayData_(weekday, explicitDate) {
 }
 
 // =============================================
-// 웹 앱 진입점 — getData 한 가지 요청만 지원하는 순수 읽기 전용 API.
+// 세탁공정 수량 이력 (읽기 전용)
+// "업체별 수거량" 탭: D열=날짜("11-06-금"), 3행=업체번호, 5행=거래처명, E열 이후=날짜별 수거량.
+// 거래처가 가로로 길게(수백 열) 늘어서 있으므로 머리글 행 전체를 읽어 업체번호 → 열 위치 표를 만든다.
+// 같은 업체번호가 뒤쪽 정산 영역에 또 나오므로 가장 앞 열만 쓴다.
+// 날짜 칸에는 연도가 없어서, 선택한 날짜("MM-DD-요일")가 있는 행을 찾고 거기서 7행씩 거슬러 올라가며 같은 요일을 읽는다.
+// 값이 비어 있으면 null(기록 없음), 0이면 0(실제로 0포대) — 둘을 반드시 구분한다.
+// =============================================
+const COLLECT_SHEET_NAME = "업체별 수거량";
+const COLLECT_FIRST_DATA_ROW = 6;
+const COLLECT_LOOKBACK_WEEKS = 8;
+const COLLECT_MAX_VALID_QTY = 30;
+
+function collectQty_(v) {
+  if (v === "" || v === null || v === undefined) return null;
+  var n = (typeof v === "number") ? v : (/^\d+$/.test(String(v).trim()) ? Number(String(v).trim()) : NaN);
+  if (isNaN(n) || n < 0 || n > COLLECT_MAX_VALID_QTY || Math.floor(n) !== n) return null;
+  return n;
+}
+
+function getWashHistory_(dateIso, weekday, companyNos) {
+  var t0 = Date.now();
+  var dateObj = parseIsoDate_(dateIso);
+  if (!dateObj) throw new Error("날짜 형식이 올바르지 않습니다: " + dateIso);
+  if (weekdayOfDate_(dateObj) !== weekday) throw new Error("날짜(" + dateIso + ")와 요일(" + weekday + ")이 일치하지 않습니다.");
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(COLLECT_SHEET_NAME);
+  if (!sh) throw new Error("'" + COLLECT_SHEET_NAME + "' 시트를 찾을 수 없습니다.");
+  var lastRow = sh.getLastRow(), lastCol = sh.getLastColumn();
+
+  // 머리글(3행 업체번호, 5행 거래처명)로 업체번호 → 열 위치
+  var head = sh.getRange(1, 1, 5, lastCol).getDisplayValues();
+  var colOf = {};
+  for (var c = 4; c < lastCol; c++) {
+    var no = String(head[2][c]).trim();
+    if (no && colOf[no] === undefined) colOf[no] = c;
+  }
+
+  // 날짜 열 전체에서 선택 날짜의 행을 찾는다 (예: "11-06-금")
+  var mm = dateObj.getMonth() + 1, dd = dateObj.getDate();
+  var dates = sh.getRange(COLLECT_FIRST_DATA_ROW, 4, Math.max(lastRow - COLLECT_FIRST_DATA_ROW + 1, 1), 1).getDisplayValues();
+  var targetIdx = -1;
+  for (var i = 0; i < dates.length; i++) {
+    var m = /^\s*(\d{1,2})\s*-\s*(\d{1,2})\s*-\s*([월화수목금토일])/.exec(dates[i][0]);
+    if (m && Number(m[1]) === mm && Number(m[2]) === dd && m[3] === weekday) { targetIdx = i; break; }
+  }
+  var result = { success: true, date: dateIso, weekday: weekday, rowFound: targetIdx >= 0, companies: {}, notFound: [], rows: [] };
+  if (targetIdx < 0) { result.timing = { totalMs: Date.now() - t0 }; return result; }
+
+  // 선택 날짜 행과 거슬러 올라간 같은 요일 행들의 값을 한 번에 읽는다
+  var firstIdx = Math.max(0, targetIdx - 7 * COLLECT_LOOKBACK_WEEKS);
+  var block = sh.getRange(COLLECT_FIRST_DATA_ROW + firstIdx, 1, targetIdx - firstIdx + 1, lastCol).getValues();
+  var targetRow = block[block.length - 1];
+  var rowIdxs = [];   // 최신순: 선택 날짜 7행 전, 14행 전 ...
+  for (var k = 1; k <= COLLECT_LOOKBACK_WEEKS; k++) {
+    var idx = targetIdx - 7 * k;
+    if (idx < 0) break;
+    var label = String(dates[idx][0]);
+    var mw = /([월화수목금토일])\s*$/.exec(label.trim());
+    if (!mw || mw[1] !== weekday) continue;   // 행이 빠져 요일이 어긋난 곳은 건너뜀
+    rowIdxs.push({ idx: idx, label: label.trim() });
+  }
+  result.rows = rowIdxs.map(function (r) { return r.label; });
+
+  var wanted = companyNos && companyNos.length ? companyNos : Object.keys(colOf);
+  wanted.forEach(function (rawNo) {
+    var no = String(rawNo).trim();
+    var col = colOf[no];
+    if (col === undefined) { result.notFound.push(no); return; }
+    var hist = rowIdxs.map(function (r) {
+      return { date: r.label, qty: collectQty_(block[r.idx - firstIdx][col]) };
+    });
+    result.companies[no] = { actual: collectQty_(targetRow[col]), history: hist };
+  });
+  result.timing = { totalMs: Date.now() - t0 };
+  return result;
+}
+
+// =============================================
+// 웹 앱 진입점 — 읽기 전용 API (getData, getWashHistory).
 // 원본 시트에 값을 쓰는 기능(과거의 saveComments 등)은 전부 제거했다.
 // =============================================
 function doPost(e) {
@@ -464,6 +543,14 @@ function doPost(e) {
       var data = buildDayData_(weekday, body.date ? String(body.date).trim() : "");
       data.queryMs = Date.now() - startedAt;
       return jsonOutput_(data);
+    }
+
+    if (action === "getWashHistory") {
+      var wd = String(body.weekday || "").trim();
+      if (!WEEKDAY_FULL_NAME[wd]) return jsonOutput_({ success: false, message: "요일 값이 올바르지 않습니다." });
+      var hist = getWashHistory_(String(body.date || "").trim(), wd, body.companies || []);
+      hist.queryMs = Date.now() - startedAt;
+      return jsonOutput_(hist);
     }
 
     return jsonOutput_({ success: false, message: "알 수 없는 요청입니다: " + action });
