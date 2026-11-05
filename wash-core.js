@@ -140,7 +140,8 @@
       comps.push({
         no: no, name: it.nickname || '', industry: it.businessType || '', family: familyOf(it.businessType, cfg),
         course: String(it.course || '').replace(/^-+/, ''), group: group, unclassified: group === 'U', solo: solo,
-        qty: est.qty, source: est.source, basis: est.basis, added: !!it.addedExtra
+        qty: est.qty, source: est.source, basis: est.basis, added: !!it.addedExtra,
+        otherDay: (map[no] && map[no].otherDay) || null
       });
     });
     return { companies: comps, errors: errors };
@@ -517,7 +518,7 @@
   }
 
   function pubCompany(c) {
-    return { no: c.no, name: c.name, industry: c.industry, course: c.course, group: c.group, qty: c.qty, source: c.source, basis: c.basis };
+    return { no: c.no, name: c.name, industry: c.industry, course: c.course, group: c.group, qty: c.qty, source: c.source, basis: c.basis, otherDay: c.otherDay || null };
   }
 
   function describeCycle(items, mach, k, isLocked, rules, memberObjs) {

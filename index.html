@@ -2077,12 +2077,21 @@
     if (plan.pending.length) {
       var need = w2El('div', 'w2-pending need');
       need.appendChild(w2El('span', 'w2-strong', '⚠ 수량 확인 필요 (배정 제외): '));
-      need.appendChild(document.createTextNode(plan.pending.map(function (c) { return c.no + ' ' + c.name + '(' + c.course + '코스)'; }).join(' · ')));
+      need.appendChild(document.createTextNode(plan.pending.map(function (c) { return c.no + ' ' + c.name + '(' + c.course + '코스' + w2OtherHint(c) + ')'; }).join(' · ')));
       top.appendChild(need);
     }
     return top;
   }
 
+  // 같은 요일 기록은 없지만 다른 요일에 수거 기록이 있으면 짐작할 수 있게 같이 보여 준다(예: ' · 11/4(수) 3포대 기록')
+  function w2OtherHint(c) {
+    var o = c && c.otherDay;
+    if (!o || o.qty === null || o.qty === undefined) return '';
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(o.date || '');
+    if (!m) return '';
+    var d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    return ' · ' + (d.getMonth() + 1) + '/' + d.getDate() + '(' + weekdayFromDate(d) + ') ' + o.qty + '포대 기록';
+  }
   function w2FootEl(plan) {
     return w2El('div', 'w2-notes-empty');   // 아래쪽 안내는 없앴다(수량 확인 필요는 위로 올림)
   }
@@ -2275,6 +2284,25 @@
     btn.type = 'button';
     btn.addEventListener('click', function () { ensureWashHistory(true); renderPreview(); });
     bar.appendChild(btn);
+    // 미분류 거래처 명단을 단톡방에 붙여 넣기 좋은 글로 복사한다 - 여러 사람이 특징을 남겨 그룹으로 나누는 일을 돕는다
+    var cbtn = w2El('button', '', '미분류 명단 복사 (단톡방용)');
+    cbtn.type = 'button';
+    cbtn.addEventListener('click', function () {
+      var list = plan.companies.filter(function (c) { return c.unclassified && (c.qty === null || c.qty > 0); })
+        .sort(function (a, b) { return WashCore.numKey(a.no) - WashCore.numKey(b.no); });
+      var lines = ['[' + washDateText() + ' 세탁 · 미분류 ' + list.length + '곳]', '수건 특징이 확실한 곳은 번호와 특징을 답글로 남겨 주세요 (사진이 있으면 함께)', ''];
+      list.forEach(function (c) { lines.push(c.no + ' ' + c.name + (c.industry ? ' (' + c.industry + ')' : '') + (c.qty ? ' · ' + c.qty + '포대' : '') + ' → '); });
+      var text = lines.join('\n');
+      function done(ok) { cbtn.textContent = ok ? '✔ 복사됨 (' + list.length + '곳)' : '복사 실패 - 직접 선택해 주세요'; setTimeout(function () { cbtn.textContent = '미분류 명단 복사 (단톡방용)'; }, 2500); }
+      function fallback() {
+        var ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px;top:0;';
+        document.body.appendChild(ta); ta.select();
+        var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta); done(ok);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { done(true); }, fallback); else fallback();
+    });
+    bar.appendChild(cbtn);
     var t = new Date(rec.loadedAt);
     bar.appendChild(w2El('span', '', '수량 조회 ' + String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0')));
     bar.appendChild(w2El('div', 'note', '※ 완료 □ 칸은 인쇄한 뒤 손으로 체크합니다. 수량을 다시 읽으면(다시 계산) 배정이 바뀔 수 있으니 인쇄 전에 확정하세요.'));

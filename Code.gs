@@ -606,8 +606,19 @@ function getWashHistory_(dateIso, weekday, companyNos) {
       if (v === null) { var f = fieldQty(d, no); if (f) v = f.qty; }
       return { date: d, qty: v };
     });
-    if (col === undefined && actual === null && hist.every(function (h) { return h.qty === null; })) { result.notFound.push(no); return; }
-    result.companies[no] = { actual: actual, actualFrom: actualFrom, history: hist };
+    var noHist = hist.every(function (h) { return h.qty === null; });
+    // 같은 요일 기록이 하나도 없으면 다른 요일의 가장 최근 기록(현장입력 시트)을 힌트로 붙인다 - 수량 확인 필요 거래처를 사람이 짐작하기 쉽게
+    var other = null;
+    if (actual === null && noHist && field) {
+      var dts = Object.keys(field.link).concat(Object.keys(field.pq)).filter(function (d) { return d < dateIso; });
+      dts.sort().reverse();
+      for (var di = 0; di < dts.length && !other; di++) {
+        var fq = fieldQty(dts[di], no);
+        if (fq) other = { date: dts[di], qty: fq.qty, from: fq.from };
+      }
+    }
+    if (col === undefined && actual === null && noHist && !other) { result.notFound.push(no); return; }
+    result.companies[no] = { actual: actual, actualFrom: actualFrom, history: hist, otherDay: other };
   });
   result.timing = { totalMs: Date.now() - t0 };
   return result;
