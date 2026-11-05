@@ -351,7 +351,7 @@
   .w2-machine-head { background: #1d3c63; color: #fff; padding: 5px 9px; display: flex; justify-content: space-between; align-items: center; gap: 4px; }
   .w2-machine-head strong { font-size: 22px; white-space: nowrap; }
   .w2-machine-head span { font-size: 12px; font-weight: bold; text-align: right; white-space: nowrap; }
-  .w2-cycle { padding: 6px 4px 7px; border-top: 7px solid #1d3c63; position: relative; }
+  .w2-cycle { padding: 6px 4px 7px; border-top: 7px solid #fff; position: relative; }
   .w2-cycle.first { border-top: 0; }
   .w2-cycle-top { background: #ffffffb8; border-radius: 6px; padding: 3px 4px; margin-bottom: 3px; display: flex; justify-content: space-between; gap: 3px; align-items: center; border-bottom: 2px solid #0002; font-size: 13.5px; font-weight: 900; }
   .w2-cycle-index { background: #1d3c63; color: #fff; border-radius: 5px; padding: 3px 6px; margin-right: 2px; }
@@ -406,6 +406,11 @@
   @keyframes ldSpin { to { transform: rotate(360deg); } }
   @keyframes ldSlide { 0% { left: -40%; } 100% { left: 100%; } }
   @keyframes ldPulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+  .w2-screen-zone { background: #f3f5f8; border: 2px dashed #9aa8bd; border-radius: 10px; padding: 8px 10px 4px; margin-bottom: 8px; }
+  .w2-screen-zone .w2-screen-bar, .w2-screen-zone .w2-help { margin-bottom: 8px; }
+  .w2-zone-label { display: inline-block; background: #5b6b84; color: #fff; font-size: 12px; font-weight: 800; padding: 2px 9px; border-radius: 10px; margin-bottom: 6px; }
+  .w2-paper-label { font-size: 13px; font-weight: 800; color: #5b6b84; padding: 2px 4px 6px; }
+  @media screen { .w2-page { box-shadow: 0 0 0 1px #aab4c4, 0 3px 12px rgba(20,36,56,.18); } .w2-page + .w2-page { border-top: 0; padding-top: 0; margin-top: 12mm; } }
   .w2-probe { position: absolute; left: -10000px; top: 0; visibility: hidden; pointer-events: none; }
   @media print {
     .w2-screen { display: none !important; }
@@ -1974,16 +1979,14 @@
   function w2MachineHeadEl(m, cont) {
     var head = w2El('div', 'w2-machine-head');
     head.appendChild(w2El('strong', '', m.no + '번 세탁기' + (cont ? ' (이어서)' : '')));
-    var lastK = m.cycles.reduce(function (x, c) { return Math.max(x, c.k); }, 0);
-    head.appendChild(w2El('span', '', '최대 ' + m.cap + '포대 · ' + m.cycles.length + '회 · 약 ' + (lastK * m.cycleMin) + '분'));
     return head;
   }
 
   function w2TopEl(merged, plan, opts) {
     var top = w2El('div', 'w2-top');
     var head = w2El('div', 'w2-head');
-    head.appendChild(w2El('h1', '', (merged.dayOfWeek || '') + ' · 코스 우선 세탁기 배정표'));
-    var sm = w2El('small', '', washDateText() + ' · 작성 ' + (merged.washWriter || '________'));
+    head.appendChild(w2El('h1', '', (merged.dayOfWeek || '') + ' · 세탁공정 참고표'));
+    var sm = w2El('small', '', washDateText() + ' · 오픈 ' + (merged.washWriter || '________'));
     head.appendChild(sm);
     top.appendChild(head);
 
@@ -2029,7 +2032,7 @@
     var box = w2El('div', 'w2-screen w2-help');
     plan.warnings.forEach(function (w) { box.appendChild(w2El('div', 'w2-warnline', '※ ' + w)); });
     var det = w2El('details');
-    det.appendChild(w2El('summary', '', '설명 보기 (인쇄에는 나오지 않습니다)'));
+    det.appendChild(w2El('summary', '', '설명 보기'));
     var guide = w2El('div', 'w2-guide');
     guide.appendChild(w2El('b', '', '포대 수 출처'));
     guide.appendChild(w2El('span', 'w2-tag w2-tag-ai', '기록 예상'));
@@ -2143,7 +2146,7 @@
   }
   function w2MiniEl(merged, p, n) {
     var m = w2El('div', 'w2-mini');
-    m.appendChild(w2El('span', '', (merged.dayOfWeek || '') + ' 세탁기 배정표 · ' + washDateText()));
+    m.appendChild(w2El('span', '', (merged.dayOfWeek || '') + ' 세탁공정 참고표 · ' + washDateText()));
     m.appendChild(w2El('small', '', p + ' / ' + n + '쪽'));
     return m;
   }
@@ -2240,7 +2243,7 @@
     var wrap = w2El('div', 'w2-doc');
     var ps = washPlanState(merged, { noCompute: !opts.print && !state.washAllow });
     var page = w2El('div', 'w2-page');
-    var title = (merged.dayOfWeek || '') + ' · 세탁기 배정표';
+    var title = (merged.dayOfWeek || '') + ' · 세탁공정 참고표';
     if (ps.status === 'loading') {
       page.appendChild(w2El('div', 'w2-head')).appendChild(w2El('h1', '', title));
       page.appendChild(w2Loader('수거량을 시트에서 불러오는 중입니다', '기사 앱·배송입력 앱 수거량과 최근 기록을 읽는 중', ['수거량 읽는 중', '최근 기록 확인 중', '거의 다 됐습니다']));
@@ -2268,8 +2271,14 @@
       page.appendChild(w2Message('배정표 검증에 실패해 표시하지 않습니다. 아래 내용을 확인하세요.', plan.errors, true, !opts.print));
       wrap.appendChild(page); return wrap;
     }
-    if (!opts.print) wrap.appendChild(w2ScreenBar(plan, ps.rec));
-    if (!opts.print) wrap.appendChild(w2HelpEl(plan));
+    if (!opts.print) {
+      var scr = w2El('div', 'w2-screen w2-screen-zone');
+      scr.appendChild(w2El('div', 'w2-zone-label', '화면 전용 · 인쇄되지 않습니다'));
+      scr.appendChild(w2ScreenBar(plan, ps.rec));
+      scr.appendChild(w2HelpEl(plan));
+      wrap.appendChild(scr);
+      wrap.appendChild(w2El('div', 'w2-screen w2-paper-label', '▼ 아래부터 인쇄되는 세탁공정 참고표'));
+    }
     w2PagesFor(merged, plan, opts).forEach(function (p) { wrap.appendChild(p); });
     if (!opts.print) wrap.appendChild(w2BasisEl(plan));
     wrap.setAttribute('data-wash-ok', '1');
