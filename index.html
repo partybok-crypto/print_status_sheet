@@ -1033,7 +1033,7 @@
       callGAS({ action: 'getData', weekday: weekday, date: dateIso })
         .then(function (data) {
           if (data && data.success && data.requestedDate === dateIso) {
-            state.rawCache[dateIso] = data;
+            data.__at = Date.now(); state.rawCache[dateIso] = data;
             if (data.closedDay && attempts < 8) { var nd2 = new Date(d); nd2.setDate(nd2.getDate() + 1); tryDate(nd2); return; }
             finish(d);
           } else if (attempts < 8) {
@@ -1103,11 +1103,19 @@
     updatePrintButton();
   }
 
+  // 창을 켜둔 채 시트가 수정돼도 반영되도록, 3분 넘게 지난 뒤 화면으로 돌아오면 다시 불러온다.
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden || !state.raw || state.isLoading) return;
+    var rc = state.rawCache[isoDate(state.selectedDate)];
+    if (!rc || !rc.__at || Date.now() - rc.__at >= 180000) loadDayData(true);
+  });
+
   function loadDayData(force) {
     var dateIso = isoDate(state.selectedDate);
     var weekday = state.weekday;
 
-    if (!force && state.rawCache[dateIso]) {
+    var rc = state.rawCache[dateIso];
+    if (!force && rc && rc.__at && Date.now() - rc.__at < 180000) {
       applyRawData(state.rawCache[dateIso], dateIso);
       return;
     }
@@ -1137,7 +1145,7 @@
           throw new Error('날짜 불일치: 요청 ' + dateIso + ' / 응답 ' + data.requestedDate);
         }
         if (isoDate(state.selectedDate) !== dateIso) return;
-        state.rawCache[dateIso] = data;
+        data.__at = Date.now(); state.rawCache[dateIso] = data;
         try { localStorage.setItem('ps_lastgood_' + dateIso, JSON.stringify({ at: Date.now(), data: data })); } catch (e) {}
         applyRawData(data, dateIso);
         setConn('ok', 'connOk');
