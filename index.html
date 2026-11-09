@@ -307,6 +307,11 @@
   .closer-table .badge-mini.add { background: #dcfce7; color: #15803d; }
   .closer-table .badge-mini.edit { background: #fef3c7; color: #92400e; }
   .chk-box { display: inline-block; width: 20px; height: 20px; border: 2px solid #000; vertical-align: middle; }
+  .closer-table td.cmb-A { background: #cfe6ff !important; } .closer-table td.cmb-B { background: #ffd3e6 !important; } .closer-table td.cmb-C { background: #cdf0c2 !important; }
+  .closer-table td.col-combine { text-align: center; line-height: 1.1; padding: 0 1mm; }
+  .closer-table .cmb-label { font-size: 9pt; font-weight: 800; color: #111; }
+  .closer-table .cmb-box { width: 18px; height: 18px; background: #fff; margin-top: 1px; }
+  .closer-table td.cmb-A, .closer-table td.cmb-B, .closer-table td.cmb-C { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .closer-summary { width: 210mm; border: 1px solid #000; border-top: 0; padding: 10px 16px; font-size: 11.5pt; break-inside: avoid; break-before: avoid; background: #fff; }
   .closer-summary .row { padding: 3px 0; break-inside: avoid; }
   .closer-summary .row.closer-footer span { font-weight: 700; margin-right: 26px; display: inline-block; }
@@ -1618,12 +1623,12 @@
     return wrap;
   }
 
-  var CLOSER_COL_WIDTHS = [9, 12, 10, 12, 10, 15, 15, 17];
+  var CLOSER_COL_WIDTHS = [8, 11, 9, 12, 9, 14, 14, 9, 14];
   var CLOSER_TABLE_TEMPLATE =
     '<table class="doc-table closer-table">' +
       '<colgroup>' + CLOSER_COL_WIDTHS.map(function (w) { return '<col style="width:' + w + '%">'; }).join('') + '</colgroup>' +
       '<thead>' +
-        '<tr class="closer-col-row"><th>배송순서</th><th>출고번호</th><th>업체번호</th><th>약칭</th><th>포대사이즈</th><th>포대배송<br><span class="th-sub">총수량 예상<br>(회색깔은 참고용)</span></th><th>수건배송</th><th>특이사항</th></tr>' +
+        '<tr class="closer-col-row"><th>배송순서</th><th>출고번호</th><th>업체번호</th><th>약칭</th><th>포대사이즈</th><th>포대배송<br><span class="th-sub">총수량 예상<br>(회색깔은 참고용)</span></th><th>수건배송</th><th>합세탁<br><span class="th-sub">가능 □ 체크</span></th><th>특이사항</th></tr>' +
       '</thead>' +
       '<tbody></tbody>' +
     '</table>';
@@ -1648,6 +1653,23 @@
     appendPackedGray(bagTd, towelTd, it.companyNumber);
     tr.appendChild(bagTd);
     tr.appendChild(towelTd);
+
+    // 합세탁 가능 업체: 그룹별 색(A 파랑·B 분홍·C 초록)으로 번호·약칭·합세탁 칸을 칠하고 체크 칸을 둔다
+    var gm = /^([ABC])/.exec(String(it.washGroup || it.combinedWash || '').replace(/\s+/g, '').toUpperCase());
+    if (!gm && String(it.combinedWash || '').replace(/\s+/g, '') === '가능') {
+      gm = /헬스|필라테스/.test(it.businessType || '') ? ['A', 'A'] : /미용실/.test(it.businessType || '') ? ['B', 'B'] : /피부관리|마사지/.test(it.businessType || '') ? ['C', 'C'] : null;
+    }
+    var combTd = td('', 'col-combine');
+    if (gm) {
+      var g = gm[1];
+      combTd.classList.add('cmb-' + g);
+      nickTd.classList.add('cmb-' + g);
+      tr.querySelector('.col-companyno').classList.add('cmb-' + g);
+      var lab = document.createElement('div'); lab.className = 'cmb-label'; lab.textContent = '합세탁 ' + g + (/\d{1,2}$/.test(String(it.washGroup || '')) ? String(it.washGroup).replace(/^[A-Za-z]/, '') : '');
+      var bx = document.createElement('span'); bx.className = 'chk-box cmb-box';
+      combTd.appendChild(lab); combTd.appendChild(bx);
+    }
+    tr.appendChild(combTd);
 
     var note = buildSpecialNote(it);
     var noteTd = td(note, 'col-note');
@@ -1780,7 +1802,7 @@
     summary.className = 'closer-summary';
 
     var guideRow = document.createElement('div'); guideRow.className = 'row';
-    guideRow.appendChild(document.createTextNode('업체별 포대·밴딩 수량을 기입하고 특이사항을 확인한 뒤 단톡방에 올려주세요.'));
+    guideRow.appendChild(document.createTextNode('업체별 포대·밴딩 수량을 기입하고 특이사항을 확인한 뒤 단톡방에 올려주세요. 색칠된 줄(A 파랑·B 분홍·C 초록)은 합세탁 가능 업체이니 합세탁 칸에 □ 체크하세요.'));
     summary.appendChild(guideRow);
 
     var footerRow = document.createElement('div'); footerRow.className = 'row closer-footer';
