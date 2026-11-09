@@ -307,11 +307,11 @@
   .closer-table .badge-mini.add { background: #dcfce7; color: #15803d; }
   .closer-table .badge-mini.edit { background: #fef3c7; color: #92400e; }
   .chk-box { display: inline-block; width: 20px; height: 20px; border: 2px solid #000; vertical-align: middle; }
-  .closer-table td.cmb-A { background: #cfe6ff !important; } .closer-table td.cmb-B { background: #ffd3e6 !important; } .closer-table td.cmb-C { background: #cdf0c2 !important; }
+  .closer-table td.cmb-a { background: #c6dfff !important; } .closer-table td.cmb-b { background: #c8f0d8 !important; } .closer-table td.cmb-b2 { background: #a6e4dc !important; } .closer-table td.cmb-c { background: #ffe59a !important; }
   .closer-table td.col-combine { text-align: center; line-height: 1.1; padding: 0 1mm; }
   .closer-table .cmb-label { font-size: 9pt; font-weight: 800; color: #111; }
   .closer-table .cmb-box { width: 18px; height: 18px; background: #fff; margin-top: 1px; }
-  .closer-table td.cmb-A, .closer-table td.cmb-B, .closer-table td.cmb-C { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .closer-table td.cmb-a, .closer-table td.cmb-b, .closer-table td.cmb-b2, .closer-table td.cmb-c { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .closer-summary { width: 210mm; border: 1px solid #000; border-top: 0; padding: 10px 16px; font-size: 11.5pt; break-inside: avoid; break-before: avoid; background: #fff; }
   .closer-summary .row { padding: 3px 0; break-inside: avoid; }
   .closer-summary .row.closer-footer span { font-weight: 700; margin-right: 26px; display: inline-block; }
@@ -1661,11 +1661,16 @@
     }
     var combTd = td('', 'col-combine');
     if (gm) {
-      var g = gm[1];
-      combTd.classList.add('cmb-' + g);
-      nickTd.classList.add('cmb-' + g);
-      tr.querySelector('.col-companyno').classList.add('cmb-' + g);
-      var lab = document.createElement('div'); lab.className = 'cmb-label'; lab.textContent = '합세탁 ' + g + (/\d{1,2}$/.test(String(it.washGroup || '')) ? String(it.washGroup).replace(/^[A-Za-z]/, '') : '');
+      // 세탁공정 참고표와 같은 색·이름: 가=파랑, 나=초록, 나-2=청록, 다=노랑
+      var gfull = String(it.washGroup || '').replace(/\s+/g, '').toUpperCase();
+      if (!/^[ABC]/.test(gfull)) gfull = gm[1];
+      var gnum = gfull.slice(1);
+      var cls = gfull.charAt(0) === 'A' ? 'a' : gfull.charAt(0) === 'C' ? 'c' : (gnum && gnum !== '1' ? 'b2' : 'b');
+      var kor = { A: '가', B: '나', C: '다' }[gfull.charAt(0)] + (gnum && gnum !== '1' ? '-' + gnum : '');
+      combTd.classList.add('cmb-' + cls);
+      nickTd.classList.add('cmb-' + cls);
+      tr.querySelector('.col-companyno').classList.add('cmb-' + cls);
+      var lab = document.createElement('div'); lab.className = 'cmb-label'; lab.textContent = '합세탁 ' + kor;
       var bx = document.createElement('span'); bx.className = 'chk-box cmb-box';
       combTd.appendChild(lab); combTd.appendChild(bx);
     }
@@ -1802,7 +1807,7 @@
     summary.className = 'closer-summary';
 
     var guideRow = document.createElement('div'); guideRow.className = 'row';
-    guideRow.appendChild(document.createTextNode('업체별 포대·밴딩 수량을 기입하고 특이사항을 확인한 뒤 단톡방에 올려주세요. 색칠된 줄(A 파랑·B 분홍·C 초록)은 합세탁 가능 업체이니 합세탁 칸에 □ 체크하세요.'));
+    guideRow.appendChild(document.createTextNode('업체별 포대·밴딩 수량을 기입하고 특이사항을 확인한 뒤 단톡방에 올려주세요. 색칠된 줄(가 파랑·나 초록·나-2 청록·다 노랑, 세탁공정표와 같은 색)은 합세탁 가능 업체이니 합세탁 칸에 □ 체크하세요.'));
     summary.appendChild(guideRow);
 
     var footerRow = document.createElement('div'); footerRow.className = 'row closer-footer';
