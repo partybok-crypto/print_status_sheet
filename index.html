@@ -3338,6 +3338,16 @@
     }
     // 띄어쓰기로 나눈 단어가 2개 이상이면 두 줄 길이가 가장 비슷해지는 곳에서 나눈다.
     // 안드로이드 출력 앱(NameTagRenderer.kt)은 아직 한 줄 방식이라, 앱으로 출력하는 안드로이드에서는 미리보기도 한 줄로 둔다.
+    // 주소 끝의 "3층·지하1층·2F" 를 찾아 층수 글자와 나머지 주소로 나눈다(안드로이드 앱은 아직 안 하므로 안드로이드에서는 그대로)
+    function extractFloor(addr) {
+      if (!addr || /Android/i.test(navigator.userAgent)) return null;
+      var re = /(지하\s*\d+\s*층|B\s*\d+\s*층?|\d+\s*층|\d+\s*F)/gi, m, last = null;
+      while ((m = re.exec(addr)) !== null) last = m;
+      if (!last) return null;
+      var text = last[1].replace(/\s+/g, '').replace(/F$/i, '층').replace(/^B(\d+)층?$/i, '지하$1층');
+      var rest = (addr.slice(0, last.index) + ' ' + addr.slice(last.index + last[0].length)).replace(/\s+/g, ' ').replace(/[\s\/,·\-]+$/, '').replace(/^[\s\/,·\-]+/, '');
+      return { text: text, rest: rest };
+    }
     function splitNameLines(text) {
       var words = String(text).trim().split(/\s+/);
       if (words.length < 2 || /Android/i.test(navigator.userAgent)) return [text];
@@ -3354,7 +3364,28 @@
       var topCenter = mm((NT.TOP_ROW_TOP + NT.TOP_ROW_BOTTOM) / 2);
       var typeW = drawText(tag.t, mm(NT.LEFT), topCenter, mm(36), mm(7), mm(4), '#000', 'left', ol);
       var addrLeft = mm(NT.LEFT) + typeW + mm(3);
-      drawText(tag.a, mm(NT.RIGHT), topCenter, mm(NT.RIGHT) - addrLeft, mm(4.2), mm(2.6), '#000', 'right');
+      var addrRight = mm(NT.RIGHT), addrText = tag.a;
+      var fl = extractFloor(tag.a);
+      if (fl) {
+        // 층수는 주소 줄에서 빼서 오른쪽 끝에 큰 둥근 상자로 따로 그린다
+        var rowH = mm(NT.TOP_ROW_BOTTOM - NT.TOP_ROW_TOP);
+        ctx.font = font(rowH * 0.78);
+        var bw = ctx.measureText(fl.text).width + mm(3.2), bx = mm(NT.RIGHT) - bw, by = topCenter - rowH / 2;
+        var lw = mm(0.5), r = rowH * 0.3;
+        ctx.strokeStyle = '#000'; ctx.lineWidth = lw; ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(bx + r, by + lw / 2);
+        ctx.arcTo(bx + bw - lw / 2, by + lw / 2, bx + bw - lw / 2, by + rowH - lw / 2, r);
+        ctx.arcTo(bx + bw - lw / 2, by + rowH - lw / 2, bx + lw / 2, by + rowH - lw / 2, r);
+        ctx.arcTo(bx + lw / 2, by + rowH - lw / 2, bx + lw / 2, by + lw / 2, r);
+        ctx.arcTo(bx + lw / 2, by + lw / 2, bx + bw - lw / 2, by + lw / 2, r);
+        ctx.closePath(); ctx.stroke();
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        paintText(fl.text, bx + bw / 2, topCenter, '#000', ol);
+        addrRight = bx - mm(2);
+        addrText = fl.rest;
+      }
+      drawText(addrText, addrRight, topCenter, addrRight - addrLeft, mm(4.2), mm(2.6), '#000', 'right');
       ctx.fillStyle = '#000';
       ctx.fillRect(0, mm(NT.RULE_TOP), W, mm(NT.RULE_BOTTOM - NT.RULE_TOP));
 
