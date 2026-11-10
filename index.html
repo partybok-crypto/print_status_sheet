@@ -3306,7 +3306,7 @@
       paintText(s, x, cy, color, outline);
       return Math.min(ctx.measureText(s).width, maxW);
     }
-    function fitFill(text, maxW, glyphH, stretch) {
+    function fitFill(text, maxW, glyphH, stretch, maxStretch) {
       ctx.textBaseline = 'alphabetic';
       ctx.font = font(100);
       var m100 = ctx.measureText(text);
@@ -3319,7 +3319,7 @@
         sx = Math.max(NT.MIN_SCALE_X, maxW / w);
         if (w * sx > maxW) { size = (size * maxW) / (w * sx); ctx.font = font(size); w = ctx.measureText(text).width; }
       } else if (stretch && w > 0) {
-        sx = maxW / w;
+        sx = Math.min(maxW / w, maxStretch || Infinity);
       }
       return { size: size, sx: sx, width: w * sx };
     }
@@ -3335,6 +3335,20 @@
       ctx.scale(fit.sx, 1);
       paintText(text, 0, 0, color, outline);
       ctx.restore();
+    }
+    // 띄어쓰기로 나눈 단어가 2개 이상이면 두 줄 길이가 가장 비슷해지는 곳에서 나눈다.
+    // 안드로이드 출력 앱(NameTagRenderer.kt)은 아직 한 줄 방식이라, 앱으로 출력하는 안드로이드에서는 미리보기도 한 줄로 둔다.
+    function splitNameLines(text) {
+      var words = String(text).trim().split(/\s+/);
+      if (words.length < 2 || /Android/i.test(navigator.userAgent)) return [text];
+      ctx.font = font(100);
+      var best = null, bestCost = Infinity;
+      for (var i = 1; i < words.length; i++) {
+        var a = words.slice(0, i).join(' '), b = words.slice(i).join(' ');
+        var cost = Math.max(ctx.measureText(a).width, ctx.measureText(b).width);
+        if (cost < bestCost) { bestCost = cost; best = [a, b]; }
+      }
+      return best;
     }
     function drawHalf() {
       var topCenter = mm((NT.TOP_ROW_TOP + NT.TOP_ROW_BOTTOM) / 2);
@@ -3364,7 +3378,15 @@
       }
       if (tag.m) {
         var nameW = mm(NT.RIGHT) - nameLeft;
-        drawFilled(tag.m, fitFill(tag.m, nameW, mainH * 0.96, true), nameLeft + nameW / 2, top, bottom, '#000', ol);
+        var nameLines = splitNameLines(tag.m);
+        if (nameLines.length === 2) {
+          // 약칭이 두 단어 이상이면 두 줄로 나눠 각 줄을 크게 채운다(예: 박승철 / 범계점)
+          var midY = top + mainH / 2, lineH = mainH * 0.45;
+          drawFilled(nameLines[0], fitFill(nameLines[0], nameW, lineH, true, 1.5), nameLeft + nameW / 2, top, midY, '#000', ol);
+          drawFilled(nameLines[1], fitFill(nameLines[1], nameW, lineH, true, 1.5), nameLeft + nameW / 2, midY, bottom, '#000', ol);
+        } else {
+          drawFilled(tag.m, fitFill(tag.m, nameW, mainH * 0.96, true), nameLeft + nameW / 2, top, bottom, '#000', ol);
+        }
       }
       drawText(tag.s, mm(50), mm(NT.TRADE_CENTER), mm(NT.RIGHT - NT.LEFT), mm(2.4), mm(2), '#000', 'center');
     }
