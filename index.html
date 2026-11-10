@@ -128,6 +128,29 @@
     color: var(--blue); text-align: left; padding: 8px 16px; display: flex; flex-direction: column;
     justify-content: center; gap: 2px;
   }
+  /* 이름표 출력 버튼: 문서 선택 카드가 아니라 창을 여는 버튼이라 .primary-doc-btn 과 클래스를 분리(선택 로직 제외) */
+  .nametag-open-btn {
+    width: 100%; min-height: 64px; border: 1.5px solid var(--blue); border-radius: 14px; background: #fff;
+    color: var(--blue); text-align: left; padding: 8px 16px; display: flex; flex-direction: column;
+    justify-content: center; gap: 2px; cursor: pointer;
+  }
+  .nametag-open-btn .pdb-title { font-size: 17.5px; font-weight: 800; color: inherit; }
+  .nametag-open-btn .pdb-title::before { content: '⑥ '; }
+  .nametag-open-btn .pdb-sub { font-size: 12.5px; font-weight: 600; color: var(--text-sub); }
+  .nametag-open-btn:hover { background: var(--blue-bg); }
+  .nt-box { width: 460px; }
+  .nt-search { display: flex; gap: 8px; margin-bottom: 8px; }
+  .nt-search input { flex: 1; height: 46px; padding: 0 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 16px; }
+  .nt-search button { height: 46px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--blue); color: #fff; font-weight: 700; font-size: 15px; }
+  .nt-msg { font-size: 13px; color: var(--text-sub); margin: 0 0 10px; min-height: 18px; }
+  .nt-canvas { display: none; width: 100%; max-width: 300px; aspect-ratio: 1 / 1; border: 1px solid var(--border); margin: 0 auto 12px; background: #fff; }
+  .nt-loaded .nt-canvas { display: block; }
+  .nt-fields { display: none; }
+  .nt-loaded .nt-fields { display: block; }
+  .nt-fields .modal-field { margin-bottom: 8px; }
+  .nt-fields .modal-field input { height: 40px; }
+  .nt-actions { flex-wrap: wrap; }
+  .nt-actions .confirm:disabled { opacity: .45; }
   .primary-doc-btn .pdb-title { font-size: 17.5px; font-weight: 800; color: inherit; }
   .primary-doc-btn .pdb-sub { font-size: 12.5px; font-weight: 600; color: var(--text-sub); }
   .primary-doc-btn .pdb-title[data-no]::before { content: attr(data-no) ' '; }
@@ -576,6 +599,10 @@
             <span class="pdb-title" data-no="⑤"><span data-i18n="pdbChanges">출력 후 라벨코스 변경내역</span> <span class="pdb-badge" id="changesBadge"></span></span>
             <span class="pdb-sub" id="changesSub">출력본과 비교하는 중...</span>
           </button>
+          <button type="button" class="nametag-open-btn" id="btnNameTag">
+            <span class="pdb-title" data-i18n="pdbNameTag">이름표 출력</span>
+            <span class="pdb-sub" data-i18n="pdbNameTagSub">업체번호 입력 · 라벨 프린터로 이름표 1장 출력</span>
+          </button>
         </div>
 
         <div class="other-doc-head">
@@ -678,6 +705,29 @@
 </div>
 
 <!-- 마감자용 수량표+전체주소지 인쇄 순서 안내 모달 -->
+<div class="modal-overlay no-print" id="nameTagModal">
+  <div class="modal-box nt-box" id="ntBox">
+    <div class="modal-title" data-i18n="pdbNameTag">이름표 출력</div>
+    <form class="nt-search" id="ntForm" autocomplete="off">
+      <input type="text" id="ntNo" inputmode="numeric" maxlength="10" data-i18n-placeholder="ntNo" placeholder="업체번호">
+      <button type="submit" data-i18n="ntLoad">불러오기</button>
+    </form>
+    <p class="nt-msg" id="ntMsg"></p>
+    <canvas class="nt-canvas" id="ntCanvas" width="800" height="800"></canvas>
+    <div class="nt-fields">
+      <div class="modal-field"><label data-i18n="ntType">업종</label><input type="text" id="ntType" maxlength="20"></div>
+      <div class="modal-field"><label data-i18n="ntAddr">주소</label><input type="text" id="ntAddr" maxlength="60"></div>
+      <div class="modal-field"><label data-i18n="ntShort">약칭</label><input type="text" id="ntShort" maxlength="20"></div>
+      <div class="modal-field"><label data-i18n="ntTrade">상호</label><input type="text" id="ntTrade" maxlength="30"></div>
+    </div>
+    <div class="modal-actions nt-actions">
+      <button class="confirm" id="ntPrint1" disabled data-i18n="ntPrint1">라벨 출력 1</button>
+      <button class="confirm" id="ntPrint2" disabled data-i18n="ntPrint2">라벨 출력 2</button>
+      <button class="cancel" id="ntClose" data-i18n="close">닫기</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay no-print" id="closerAllGuideModal">
   <div class="modal-box">
     <div class="modal-title" data-i18n="closerTitle">세탁 마감용 문서 출력</div>
@@ -710,6 +760,12 @@
       pdbCloserAll: '마감자용 수량표 + 전체주소지', pdbCloserAllSub: '세탁 마감용 · 2개 문서 연속 출력',
       pdbWashCheck: '합세탁 체크표', pdbWashCheckSub: '마감자용 · 합세탁 가능 여부 체크', lblWashCheck: '합세탁 체크표', btnWashCheck: '합세탁 체크표 인쇄', bWashCheck: '합세탁 체크표 · A4 세로',
       pdbChanges: '출력 후 라벨코스 변경내역',
+      pdbNameTag: '이름표 출력', pdbNameTagSub: '업체번호 입력 · 라벨 프린터로 이름표 1장 출력',
+      ntNo: '업체번호', ntLoad: '불러오기', ntType: '업종', ntAddr: '주소', ntShort: '약칭', ntTrade: '상호',
+      ntPrint1: '라벨 출력 1', ntPrint2: '라벨 출력 2', ntHint: '업체번호를 입력하고 불러오기를 누르세요. 내용은 고쳐서 출력할 수 있습니다.',
+      ntLoading: '불러오는 중...', ntReady: '확인 후 라벨 출력을 누르세요.', ntNoAddr: '주소가 시트에 없습니다. 직접 적거나 빈칸으로 출력하세요.',
+      ntInactive: '{n}번은 배차표에 없는(해지 등) 업체입니다.', ntNotFound: '{n}번 업체를 찾을 수 없습니다.',
+      ntFail: '업체 정보를 불러오지 못했습니다.', ntNet: '네트워크 오류로 불러오지 못했습니다.',
       otherTitle: '기타 출력', otherSub: '필요할 때만 선택하세요',
       odAddress: '주소지만', odStatus: '현황지만', odCloser: '마감자용 수량표만', odAllAddr: '전체주소지만',
       edit: '내용 수정', changesTest: '변경내역 테스트 출력', caption: '미리보기와 동일하게 출력됩니다',
@@ -746,6 +802,12 @@
       pdbStatusAddr: 'Lembar status + Daftar alamat', pdbStatusAddrSub: 'Untuk pengantar · cetak 2 dokumen berurutan',
       pdbCloserAll: 'Tabel jumlah penutupan + Semua alamat', pdbCloserAllSub: 'Untuk penutupan cucian · cetak 2 dokumen berurutan',
       pdbChanges: 'Perubahan rute label setelah cetak',
+      pdbNameTag: 'Cetak label nama', pdbNameTagSub: 'Masukkan nomor usaha · cetak 1 label nama di printer label',
+      ntNo: 'Nomor usaha', ntLoad: 'Muat', ntType: 'Jenis usaha', ntAddr: 'Alamat', ntShort: 'Singkatan', ntTrade: 'Nama usaha',
+      ntPrint1: 'Cetak label 1', ntPrint2: 'Cetak label 2', ntHint: 'Masukkan nomor usaha lalu tekan Muat. Isi bisa diubah sebelum dicetak.',
+      ntLoading: 'Memuat...', ntReady: 'Periksa lalu tekan cetak label.', ntNoAddr: 'Alamat tidak ada di sheet. Isi manual atau cetak kosong.',
+      ntInactive: 'Usaha nomor {n} tidak ada di tabel pengiriman (misalnya sudah berhenti).', ntNotFound: 'Usaha nomor {n} tidak ditemukan.',
+      ntFail: 'Gagal memuat data usaha.', ntNet: 'Gagal memuat karena kesalahan jaringan.',
       otherTitle: 'Cetakan lainnya', otherSub: 'Pilih hanya jika diperlukan',
       odAddress: 'Daftar alamat saja', odStatus: 'Lembar status saja', odCloser: 'Tabel jumlah penutupan saja', odAllAddr: 'Semua alamat saja',
       edit: 'Ubah isi', changesTest: 'Cetak uji perubahan', caption: 'Dicetak sama seperti pratinjau',
@@ -782,6 +844,12 @@
       pdbStatusAddr: 'Bảng tình hình + Danh sách địa chỉ', pdbStatusAddrSub: 'Dành cho tài xế giao hàng · in liên tiếp 2 tài liệu',
       pdbCloserAll: 'Bảng số lượng chốt + Tất cả địa chỉ', pdbCloserAllSub: 'Dành cho chốt giặt · in liên tiếp 2 tài liệu',
       pdbChanges: 'Thay đổi tuyến nhãn sau khi in',
+      pdbNameTag: 'In thẻ tên', pdbNameTagSub: 'Nhập số cơ sở · in 1 thẻ tên bằng máy in nhãn',
+      ntNo: 'Số cơ sở', ntLoad: 'Tải', ntType: 'Loại hình', ntAddr: 'Địa chỉ', ntShort: 'Tên viết tắt', ntTrade: 'Tên cơ sở',
+      ntPrint1: 'In nhãn 1', ntPrint2: 'In nhãn 2', ntHint: 'Nhập số cơ sở rồi bấm Tải. Có thể sửa nội dung trước khi in.',
+      ntLoading: 'Đang tải...', ntReady: 'Kiểm tra rồi bấm in nhãn.', ntNoAddr: 'Không có địa chỉ trong bảng. Hãy nhập tay hoặc in để trống.',
+      ntInactive: 'Cơ sở số {n} không có trong bảng giao hàng (ví dụ đã ngừng).', ntNotFound: 'Không tìm thấy cơ sở số {n}.',
+      ntFail: 'Không tải được thông tin cơ sở.', ntNet: 'Không tải được do lỗi mạng.',
       otherTitle: 'Bản in khác', otherSub: 'Chỉ chọn khi cần',
       odAddress: 'Chỉ danh sách địa chỉ', odStatus: 'Chỉ bảng tình hình', odCloser: 'Chỉ bảng số lượng chốt', odAllAddr: 'Chỉ tất cả địa chỉ',
       edit: 'Sửa nội dung', changesTest: 'In thử thay đổi', caption: 'In giống như bản xem trước',
@@ -826,6 +894,7 @@
     document.documentElement.lang = curLang;
     Array.prototype.forEach.call(document.querySelectorAll('[data-i18n]'), function (el) { el.textContent = t(el.getAttribute('data-i18n')); });
     Array.prototype.forEach.call(document.querySelectorAll('[data-i18n-html]'), function (el) { el.innerHTML = t(el.getAttribute('data-i18n-html')); });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-i18n-placeholder]'), function (el) { el.placeholder = t(el.getAttribute('data-i18n-placeholder')); });
     Array.prototype.forEach.call(document.querySelectorAll('[data-i18n-title]'), function (el) { el.title = t(el.getAttribute('data-i18n-title')); });
     Array.prototype.forEach.call(document.querySelectorAll('.lang-btn'), function (b) { b.classList.toggle('active', b.getAttribute('data-lang') === curLang); });
   }
@@ -3145,6 +3214,215 @@
     loadDayData(false);
     flushPendingSnapshots();
   }
+
+  // ================= 이름표 출력 (포장기록 프로그램의 이름표 출력과 동일) =================
+  // 그림 계산은 포장기록 static/js/app.js drawNameTag, 출력 앱 NameTagRenderer.kt 와 같다.
+  // (한쪽을 바꾸면 여기도 같이 맞출 것) 업체 정보는 포장기록 서버 /api/name-tag/<번호> 에서 가져온다.
+  var NAME_TAG_URL = 'https://yuseong-packing-production.up.railway.app/api/name-tag/';
+  var NT = { LEFT: 2, RIGHT: 98, TOP_ROW_TOP: 7.5, TOP_ROW_BOTTOM: 13.6, RULE_TOP: 14.1, RULE_BOTTOM: 14.8,
+    MAIN_TOP: 15.6, MAIN_BOTTOM: 46, TRADE_CENTER: 47.9, HALF: 50, NUMBER_BOX_MAX: 50, MIN_SCALE_X: 0.55 };
+  var ntModal = $('nameTagModal'), ntBox = $('ntBox'), ntNo = $('ntNo'), ntMsg = $('ntMsg'), ntCanvas = $('ntCanvas');
+  var ntType = $('ntType'), ntAddr = $('ntAddr'), ntShort = $('ntShort'), ntTrade = $('ntTrade');
+  var ntPrint1 = $('ntPrint1'), ntPrint2 = $('ntPrint2');
+  var ntCompanyNo = '';
+  var ntOutline = true;
+
+  function drawNameTag(canvas, tag) {
+    var ctx = canvas.getContext('2d');
+    var W = canvas.width;
+    function mm(v) { return (v * W) / 100; }
+    function font(px) { return 'bold ' + px + 'px Pretendard, "Malgun Gothic", sans-serif'; }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, W, W);
+
+    function fitSize(text, maxW, maxPx, minPx) {
+      var size = maxPx;
+      ctx.font = font(size);
+      while (size > minPx && ctx.measureText(text).width > maxW) { size -= 1; ctx.font = font(size); }
+      return size;
+    }
+    function ellipsize(text, maxW) {
+      if (ctx.measureText(text).width <= maxW) return text;
+      var s = text;
+      while (s.length > 1 && ctx.measureText(s + '…').width > maxW) s = s.slice(0, -1);
+      return s + '…';
+    }
+    var OUTLINE = mm(0.35);
+    var ol = !!tag.o;
+    function paintText(text, x, y, color, outline) {
+      if (outline) {
+        ctx.strokeStyle = color; ctx.lineWidth = OUTLINE; ctx.lineJoin = 'round';
+        ctx.strokeText(text, x, y);
+      } else {
+        ctx.fillStyle = color;
+        ctx.fillText(text, x, y);
+      }
+    }
+    function drawText(text, x, cy, maxW, maxPx, minPx, color, align, outline) {
+      if (!text || maxW <= 0) return 0;
+      fitSize(text, maxW, maxPx, minPx);
+      var s = ellipsize(text, maxW);
+      ctx.textAlign = align;
+      ctx.textBaseline = 'middle';
+      paintText(s, x, cy, color, outline);
+      return Math.min(ctx.measureText(s).width, maxW);
+    }
+    function fitFill(text, maxW, glyphH, stretch) {
+      ctx.textBaseline = 'alphabetic';
+      ctx.font = font(100);
+      var m100 = ctx.measureText(text);
+      var h = Math.max(1, m100.actualBoundingBoxAscent + m100.actualBoundingBoxDescent);
+      var size = (100 * glyphH) / h;
+      ctx.font = font(size);
+      var w = ctx.measureText(text).width;
+      var sx = 1;
+      if (w > maxW) {
+        sx = Math.max(NT.MIN_SCALE_X, maxW / w);
+        if (w * sx > maxW) { size = (size * maxW) / (w * sx); ctx.font = font(size); w = ctx.measureText(text).width; }
+      } else if (stretch && w > 0) {
+        sx = maxW / w;
+      }
+      return { size: size, sx: sx, width: w * sx };
+    }
+    function drawFilled(text, fit, cx, top, bottom, color, outline) {
+      ctx.textBaseline = 'alphabetic';
+      ctx.font = font(fit.size);
+      var m = ctx.measureText(text);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = color;
+      var baseline = (top + bottom) / 2 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
+      ctx.save();
+      ctx.translate(cx, baseline);
+      ctx.scale(fit.sx, 1);
+      paintText(text, 0, 0, color, outline);
+      ctx.restore();
+    }
+    function drawHalf() {
+      var topCenter = mm((NT.TOP_ROW_TOP + NT.TOP_ROW_BOTTOM) / 2);
+      var typeW = drawText(tag.t, mm(NT.LEFT), topCenter, mm(36), mm(7), mm(4), '#000', 'left', ol);
+      var addrLeft = mm(NT.LEFT) + typeW + mm(3);
+      drawText(tag.a, mm(NT.RIGHT), topCenter, mm(NT.RIGHT) - addrLeft, mm(4.2), mm(2.6), '#000', 'right');
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, mm(NT.RULE_TOP), W, mm(NT.RULE_BOTTOM - NT.RULE_TOP));
+
+      var top = mm(NT.MAIN_TOP), bottom = mm(NT.MAIN_BOTTOM), mainH = bottom - top;
+      var nameLeft = mm(NT.LEFT);
+      if (tag.n) {
+        var pad = mm(1.5);
+        var fit = fitFill(tag.n, mm(NT.NUMBER_BOX_MAX) - pad * 2, mainH * 0.86);
+        var boxRight = mm(NT.LEFT) + fit.width + pad * 2;
+        if (ol) {
+          ctx.strokeStyle = '#000';
+          ctx.lineWidth = OUTLINE;
+          ctx.strokeRect(mm(NT.LEFT) + OUTLINE / 2, top + OUTLINE / 2, boxRight - mm(NT.LEFT) - OUTLINE, mainH - OUTLINE);
+          drawFilled(tag.n, fit, (mm(NT.LEFT) + boxRight) / 2, top, bottom, '#000', true);
+        } else {
+          ctx.fillStyle = '#000';
+          ctx.fillRect(mm(NT.LEFT), top, boxRight - mm(NT.LEFT), mainH);
+          drawFilled(tag.n, fit, (mm(NT.LEFT) + boxRight) / 2, top, bottom, '#fff', false);
+        }
+        nameLeft = boxRight + mm(1.5);
+      }
+      if (tag.m) {
+        var nameW = mm(NT.RIGHT) - nameLeft;
+        drawFilled(tag.m, fitFill(tag.m, nameW, mainH * 0.96, true), nameLeft + nameW / 2, top, bottom, '#000', ol);
+      }
+      drawText(tag.s, mm(50), mm(NT.TRADE_CENTER), mm(NT.RIGHT - NT.LEFT), mm(2.4), mm(2), '#000', 'center');
+    }
+
+    drawHalf();
+    if (ol) drawText('출력 후 유성사인펜으로 덧대주세요', mm(50), mm(3.6), mm(NT.RIGHT - NT.LEFT), mm(4), mm(2.5), '#000', 'center');
+    ctx.save();
+    ctx.translate(W, W);
+    ctx.rotate(Math.PI);
+    drawHalf();
+    ctx.restore();
+
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = mm(0.5);
+    ctx.setLineDash([mm(2.5), mm(1.5)]);
+    ctx.beginPath();
+    ctx.moveTo(0, mm(NT.HALF));
+    ctx.lineTo(W, mm(NT.HALF));
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function currentNameTag() {
+    return { n: ntCompanyNo, m: ntShort.value.trim(), t: ntType.value.trim(), a: ntAddr.value.trim(), s: ntTrade.value.trim() };
+  }
+  function redrawNameTag() {
+    var tag = currentNameTag();
+    tag.o = ntOutline;
+    drawNameTag(ntCanvas, tag);
+  }
+  function setNtPrintEnabled(on) { ntPrint1.disabled = !on; ntPrint2.disabled = !on; }
+
+  function openNameTag() {
+    ntModal.classList.add('show');
+    ntBox.classList.remove('nt-loaded');
+    ntNo.value = '';
+    ntCompanyNo = '';
+    setNtPrintEnabled(false);
+    ntMsg.textContent = t('ntHint');
+    ntNo.focus();
+  }
+
+  function loadNameTag() {
+    var no = ntNo.value.trim();
+    if (!no) return;
+    setNtPrintEnabled(false);
+    ntBox.classList.remove('nt-loaded');
+    ntMsg.textContent = t('ntLoading');
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, FETCH_TIMEOUT_MS);
+    fetch(NAME_TAG_URL + encodeURIComponent(no), { signal: controller.signal })
+      .then(function (r) { return r.json().catch(function () { return null; }); })
+      .then(function (data) {
+        if (!data || !data.ok) { ntMsg.textContent = (data && data.error) || t('ntFail'); return; }
+        if (!data.found) { ntMsg.textContent = t(data.inactive ? 'ntInactive' : 'ntNotFound', { n: no }); return; }
+        ntCompanyNo = data.company_no;
+        ntType.value = data.company_type || '';
+        ntAddr.value = data.address || '';
+        ntShort.value = data.company_name || '';
+        ntTrade.value = data.trade_name || '';
+        ntBox.classList.add('nt-loaded');
+        redrawNameTag();
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(redrawNameTag);
+        setNtPrintEnabled(true);
+        ntMsg.textContent = data.address ? t('ntReady') : t('ntNoAddr');
+      })
+      .catch(function () { ntMsg.textContent = t('ntNet'); })
+      .then(function () { clearTimeout(timer); });
+  }
+
+  // 라벨 출력 앱(yuseongprint://) 호출 — 포장기록 label.js openPrinterAppForNameTag 와 같은 방식
+  function printNameTag(outline) {
+    if (!ntCompanyNo) return;
+    var tag = currentNameTag();
+    if (outline) tag.o = 1;
+    var obj = { kind: 'nametag', printJobId: (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : 'job-' + Date.now() + '-' + Math.random().toString(16).slice(2) };
+    Object.keys(tag).forEach(function (k) { obj[k] = tag[k]; });
+    var bytes = new TextEncoder().encode(JSON.stringify(obj));
+    var binary = '';
+    bytes.forEach(function (b) { binary += String.fromCharCode(b); });
+    var payload = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    var fallback = encodeURIComponent('https://yuseong-packing-production.up.railway.app/label-app-guide');
+    window.location.href = 'intent://print?payload=' + payload +
+      '#Intent;scheme=yuseongprint;package=kr.co.yuseong.labelprinter;S.browser_fallback_url=' + fallback + ';end';
+  }
+
+  [[ntPrint1, false], [ntPrint2, true]].forEach(function (p) {
+    ['pointerenter', 'pointerdown', 'focus'].forEach(function (ev) {
+      p[0].addEventListener(ev, function () { if (ntOutline !== p[1]) { ntOutline = p[1]; redrawNameTag(); } });
+    });
+    p[0].addEventListener('click', function () { printNameTag(p[1]); });
+  });
+  [ntType, ntAddr, ntShort, ntTrade].forEach(function (inp) { inp.addEventListener('input', redrawNameTag); });
+  $('btnNameTag').addEventListener('click', openNameTag);
+  $('ntClose').addEventListener('click', function () { ntModal.classList.remove('show'); });
+  $('ntForm').addEventListener('submit', function (e) { e.preventDefault(); loadNameTag(); });
 
   init();
 })();
