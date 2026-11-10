@@ -138,18 +138,23 @@
   .nametag-open-btn .pdb-title::before { content: '⑥ '; }
   .nametag-open-btn .pdb-sub { font-size: 12.5px; font-weight: 600; color: var(--text-sub); }
   .nametag-open-btn:hover { background: var(--blue-bg); }
-  .nt-box { width: 460px; }
-  .nt-search { display: flex; gap: 8px; margin-bottom: 8px; }
-  .nt-search input { flex: 1; height: 46px; padding: 0 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 16px; }
-  .nt-search button { height: 46px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--blue); color: #fff; font-weight: 700; font-size: 15px; }
-  .nt-msg { font-size: 13px; color: var(--text-sub); margin: 0 0 10px; min-height: 18px; }
-  .nt-canvas { display: none; width: 100%; max-width: 300px; aspect-ratio: 1 / 1; border: 1px solid var(--border); margin: 0 auto 12px; background: #fff; }
+  /* 이름표 창: 기본 크기의 약 2배(창·미리보기·글자·입력칸·버튼). 넓으면 미리보기+입력칸 가로 2단 */
+  .nt-box { width: 960px; max-width: 100%; max-height: 96vh; overflow-y: auto; padding: 40px; border-radius: 28px; }
+  .nt-box .modal-title { font-size: 36px; margin-bottom: 28px; }
+  .nt-search { display: flex; gap: 16px; margin-bottom: 16px; }
+  .nt-search input { flex: 1; height: 92px; padding: 0 24px; border: 2px solid var(--border); border-radius: 20px; font-size: 32px; }
+  .nt-search button { height: 92px; padding: 0 36px; border: 0; border-radius: 20px; background: var(--blue); color: #fff; font-weight: 700; font-size: 30px; }
+  .nt-msg { font-size: 26px; color: var(--text-sub); margin: 0 0 20px; min-height: 36px; line-height: 1.4; }
+  .nt-main { display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap; }
+  .nt-canvas { display: none; width: 100%; max-width: 560px; aspect-ratio: 1 / 1; border: 2px solid var(--border); background: #fff; flex: 0 0 auto; }
   .nt-loaded .nt-canvas { display: block; }
-  .nt-fields { display: none; }
+  .nt-fields { display: none; flex: 1 1 320px; min-width: 280px; }
   .nt-loaded .nt-fields { display: block; }
-  .nt-fields .modal-field { margin-bottom: 8px; }
-  .nt-fields .modal-field input { height: 40px; }
-  .nt-actions { flex-wrap: wrap; }
+  .nt-fields .modal-field { margin-bottom: 16px; }
+  .nt-fields .modal-field label { font-size: 26px; margin-bottom: 10px; }
+  .nt-fields .modal-field input { height: 80px; font-size: 30px; padding: 0 22px; border-radius: 20px; }
+  .nt-actions { flex-wrap: wrap; gap: 20px; margin-top: 32px; }
+  .nt-actions button { min-height: 92px; padding: 0 44px; border-radius: 20px; font-size: 30px; }
   .nt-actions .confirm:disabled { opacity: .45; }
   .primary-doc-btn .pdb-title { font-size: 17.5px; font-weight: 800; color: inherit; }
   .primary-doc-btn .pdb-sub { font-size: 12.5px; font-weight: 600; color: var(--text-sub); }
@@ -713,12 +718,14 @@
       <button type="submit" data-i18n="ntLoad">불러오기</button>
     </form>
     <p class="nt-msg" id="ntMsg"></p>
-    <canvas class="nt-canvas" id="ntCanvas" width="800" height="800"></canvas>
-    <div class="nt-fields">
-      <div class="modal-field"><label data-i18n="ntType">업종</label><input type="text" id="ntType" maxlength="20"></div>
-      <div class="modal-field"><label data-i18n="ntAddr">주소</label><input type="text" id="ntAddr" maxlength="60"></div>
-      <div class="modal-field"><label data-i18n="ntShort">약칭</label><input type="text" id="ntShort" maxlength="20"></div>
-      <div class="modal-field"><label data-i18n="ntTrade">상호</label><input type="text" id="ntTrade" maxlength="30"></div>
+    <div class="nt-main">
+      <canvas class="nt-canvas" id="ntCanvas" width="800" height="800"></canvas>
+      <div class="nt-fields">
+        <div class="modal-field"><label data-i18n="ntType">업종</label><input type="text" id="ntType" maxlength="20"></div>
+        <div class="modal-field"><label data-i18n="ntAddr">주소</label><input type="text" id="ntAddr" maxlength="60"></div>
+        <div class="modal-field"><label data-i18n="ntShort">약칭</label><input type="text" id="ntShort" maxlength="20"></div>
+        <div class="modal-field"><label data-i18n="ntTrade">상호</label><input type="text" id="ntTrade" maxlength="30"></div>
+      </div>
     </div>
     <div class="modal-actions nt-actions">
       <button class="confirm" id="ntPrint1" disabled data-i18n="ntPrint1">라벨 출력 1</button>
@@ -766,6 +773,15 @@
       ntLoading: '불러오는 중...', ntReady: '확인 후 라벨 출력을 누르세요.', ntNoAddr: '주소가 시트에 없습니다. 직접 적거나 빈칸으로 출력하세요.',
       ntInactive: '{n}번은 배차표에 없는(해지 등) 업체입니다.', ntNotFound: '{n}번 업체를 찾을 수 없습니다.',
       ntFail: '업체 정보를 불러오지 못했습니다.', ntNet: '네트워크 오류로 불러오지 못했습니다.',
+      wckKicker: '마감자용 · 합세탁 가능 여부 체크', wckTitle: '합세탁 체크표',
+      wckWarn: '※ 포장 끝나고 출고번호대로 깔린 수건을 보면서 체크', wckWriter: '작성 ______________',
+      wckLeg1a: '미확정 — 오늘 꼭 체크', wckLeg1b: '확정 — 바뀐 게 보일 때만 체크',
+      wckLeg2: '현재: 가능 → 합세탁 그룹 · 현재: 단독(불가) → 혼자 세탁 · 현재: 미확정 → 확인 전 · 단독',
+      wckRule1: '같은 색 · 로고/자수 없음 · 이름표 전부 있음 → <b>가능</b> ｜ 하나라도 아니면 → <b>불가</b> + 메모에 이유 (색섞임 / 로고 / 이름표) ｜ 수건이 적거나 애매하면 → <b>보류</b> (다음 수거 때 다시)',
+      wckRule2: '칸 아래 작은 글씨가 <b>현재 상태</b> · 현재 상태와 같으면 비워 두고, <b>바뀐 게 보이면</b> 새 상태에 체크 + 메모 (예: 수건 바뀜 · 로고 생김)',
+      wckThShip: '출고', wckThNo: '번호', wckThName: '약칭', wckThBiz: '업종', wckThSize: '포대<br>사이즈', wckThCheck: '합세탁 체크', wckThMemo: '메모',
+      wckOk: '가능', wckNo: '불가', wckHold: '보류', wckStOk: '현재: 가능', wckStNo: '현재: 단독(불가)', wckStUnk: '현재: 미확정', wckNew: '신규',
+      wckFoot1: '체크 후 사진 → 단톡방 · 관리운영에서 거래처 시트 합세탁(J열)에 반영', wckFoot2: '다음날 세탁공정표부터 그룹 반영됨',
       otherTitle: '기타 출력', otherSub: '필요할 때만 선택하세요',
       odAddress: '주소지만', odStatus: '현황지만', odCloser: '마감자용 수량표만', odAllAddr: '전체주소지만',
       edit: '내용 수정', changesTest: '변경내역 테스트 출력', caption: '미리보기와 동일하게 출력됩니다',
@@ -808,6 +824,15 @@
       ntLoading: 'Memuat...', ntReady: 'Periksa lalu tekan cetak label.', ntNoAddr: 'Alamat tidak ada di sheet. Isi manual atau cetak kosong.',
       ntInactive: 'Usaha nomor {n} tidak ada di tabel pengiriman (misalnya sudah berhenti).', ntNotFound: 'Usaha nomor {n} tidak ditemukan.',
       ntFail: 'Gagal memuat data usaha.', ntNet: 'Gagal memuat karena kesalahan jaringan.',
+      wckKicker: 'Untuk penutup · Cek kelayakan cuci gabung', wckTitle: 'Tabel Cek Cuci Gabung',
+      wckWarn: '※ Setelah pengemasan selesai, periksa sambil melihat handuk yang digelar sesuai nomor pengiriman', wckWriter: 'Ditulis oleh ______________',
+      wckLeg1a: 'Belum pasti — wajib dicek hari ini', wckLeg1b: 'Pasti — cek hanya jika terlihat ada perubahan',
+      wckLeg2: 'Saat ini: Bisa → grup cuci gabung · Saat ini: Sendiri (tidak bisa) → cuci sendiri · Saat ini: Belum pasti → belum dicek · sendiri',
+      wckRule1: 'Warna sama · tanpa logo/bordir · semua label nama ada → <b>Bisa</b> ｜ Jika ada satu saja yang tidak → <b>Tidak bisa</b> + alasan di memo (warna campur / logo / label nama) ｜ Jika handuk sedikit atau meragukan → <b>Tunda</b> (cek lagi saat pengambilan berikutnya)',
+      wckRule2: 'Tulisan kecil di bawah kotak adalah <b>status saat ini</b> · Jika sama dengan status saat ini, biarkan kosong; <b>jika terlihat berubah</b>, centang status baru + tulis memo (mis. handuk berganti · muncul logo)',
+      wckThShip: 'Kirim', wckThNo: 'No.', wckThName: 'Singkatan', wckThBiz: 'Jenis usaha', wckThSize: 'Ukuran<br>kantong', wckThCheck: 'Cek cuci gabung', wckThMemo: 'Memo',
+      wckOk: 'Bisa', wckNo: 'Tidak bisa', wckHold: 'Tunda', wckStOk: 'Saat ini: Bisa', wckStNo: 'Saat ini: Sendiri (tidak bisa)', wckStUnk: 'Saat ini: Belum pasti', wckNew: 'Baru',
+      wckFoot1: 'Setelah dicek, foto → grup chat · Dicatat di kolom J (cuci gabung) sheet pelanggan lewat menu manajemen operasional', wckFoot2: 'Grup berlaku mulai tabel proses cuci besok',
       otherTitle: 'Cetakan lainnya', otherSub: 'Pilih hanya jika diperlukan',
       odAddress: 'Daftar alamat saja', odStatus: 'Lembar status saja', odCloser: 'Tabel jumlah penutupan saja', odAllAddr: 'Semua alamat saja',
       edit: 'Ubah isi', changesTest: 'Cetak uji perubahan', caption: 'Dicetak sama seperti pratinjau',
@@ -850,6 +875,15 @@
       ntLoading: 'Đang tải...', ntReady: 'Kiểm tra rồi bấm in nhãn.', ntNoAddr: 'Không có địa chỉ trong bảng. Hãy nhập tay hoặc in để trống.',
       ntInactive: 'Cơ sở số {n} không có trong bảng giao hàng (ví dụ đã ngừng).', ntNotFound: 'Không tìm thấy cơ sở số {n}.',
       ntFail: 'Không tải được thông tin cơ sở.', ntNet: 'Không tải được do lỗi mạng.',
+      wckKicker: 'Dành cho người chốt · Kiểm tra khả năng giặt gộp', wckTitle: 'Bảng Kiểm Tra Giặt Gộp',
+      wckWarn: '※ Sau khi đóng gói xong, vừa nhìn khăn được trải theo số xuất vừa kiểm tra', wckWriter: 'Người lập ______________',
+      wckLeg1a: 'Chưa xác định — hôm nay nhất định phải kiểm', wckLeg1b: 'Đã xác định — chỉ kiểm khi thấy có thay đổi',
+      wckLeg2: 'Hiện tại: Được → nhóm giặt gộp · Hiện tại: Riêng (không được) → giặt riêng · Hiện tại: Chưa xác định → chưa kiểm · riêng',
+      wckRule1: 'Cùng màu · không logo/thêu · có đủ thẻ tên → <b>Được</b> ｜ Nếu thiếu dù chỉ một điều → <b>Không được</b> + ghi lý do vào ghi chú (lẫn màu / logo / thẻ tên) ｜ Nếu khăn ít hoặc không chắc → <b>Hoãn</b> (kiểm lại ở lần thu gom sau)',
+      wckRule2: 'Chữ nhỏ dưới ô là <b>trạng thái hiện tại</b> · Nếu giống trạng thái hiện tại thì để trống; <b>nếu thấy thay đổi</b> thì tích trạng thái mới + ghi chú (vd: đổi khăn · có logo)',
+      wckThShip: 'Xuất', wckThNo: 'Số', wckThName: 'Tên tắt', wckThBiz: 'Loại hình', wckThSize: 'Cỡ<br>túi', wckThCheck: 'Kiểm tra giặt gộp', wckThMemo: 'Ghi chú',
+      wckOk: 'Được', wckNo: 'Không được', wckHold: 'Hoãn', wckStOk: 'Hiện tại: Được', wckStNo: 'Hiện tại: Riêng (không được)', wckStUnk: 'Hiện tại: Chưa xác định', wckNew: 'Mới',
+      wckFoot1: 'Kiểm xong chụp ảnh → nhóm chat · Cập nhật vào cột J (giặt gộp) của bảng khách hàng qua mục quản lý vận hành', wckFoot2: 'Nhóm được áp dụng từ bảng quy trình giặt ngày mai',
       otherTitle: 'Bản in khác', otherSub: 'Chỉ chọn khi cần',
       odAddress: 'Chỉ danh sách địa chỉ', odStatus: 'Chỉ bảng tình hình', odCloser: 'Chỉ bảng số lượng chốt', odAllAddr: 'Chỉ tất cả địa chỉ',
       edit: 'Sửa nội dung', changesTest: 'In thử thay đổi', caption: 'In giống như bản xem trước',
@@ -2487,7 +2521,7 @@
     if (v === '불가' || v === '단독' || v === 'X') return 'no';
     return 'unk';
   }
-  var WASHCHECK_STATE_TEXT = { ok: '현재: 가능', no: '현재: 단독(불가)', unk: '현재: 미확정' };
+  var WASHCHECK_STATE_KEY = { ok: 'wckStOk', no: 'wckStNo', unk: 'wckStUnk' };
   var WASHCHECK_COL_WIDTHS = [8, 6, 15, 9, 6.5, 38.5, 17];
 
   function buildWashCheckDoc(allCourses, merged) {
@@ -2498,33 +2532,33 @@
     head.className = 'wck-head';
     head.innerHTML =
       '<div class="wck-head-left">' +
-        '<div class="wck-kicker">마감자용 · 합세탁 가능 여부 체크</div>' +
-        '<div class="wck-title">합세탁 체크표</div>' +
-        '<div class="wck-warn">※ 포장 끝나고 출고번호대로 깔린 수건을 보면서 체크</div>' +
+        '<div class="wck-kicker">' + t('wckKicker') + '</div>' +
+        '<div class="wck-title">' + t('wckTitle') + '</div>' +
+        '<div class="wck-warn">' + t('wckWarn') + '</div>' +
       '</div>' +
-      '<div class="wck-head-right"><div class="wck-date"></div><div class="wck-writer">작성 ______________</div></div>';
+      '<div class="wck-head-right"><div class="wck-date"></div><div class="wck-writer">' + t('wckWriter') + '</div></div>';
     head.querySelector('.wck-date').textContent = isoDate(state.selectedDate) + ' (' + weekdayFromDate(state.selectedDate) + ')';
     container.appendChild(head);
 
     var legend = document.createElement('div');
     legend.className = 'wck-legend';
     legend.innerHTML =
-      '<div class="wck-legend-1"><span class="wck-sw wck-sw-unk"></span>미확정 — 오늘 꼭 체크<span class="wck-sw wck-sw-ok"></span>확정 — 바뀐 게 보일 때만 체크</div>' +
-      '<div class="wck-legend-2">현재: 가능 → 합세탁 그룹 · 현재: 단독(불가) → 혼자 세탁 · 현재: 미확정 → 확인 전 · 단독</div>';
+      '<div class="wck-legend-1"><span class="wck-sw wck-sw-unk"></span>' + t('wckLeg1a') + '<span class="wck-sw wck-sw-ok"></span>' + t('wckLeg1b') + '</div>' +
+      '<div class="wck-legend-2">' + t('wckLeg2') + '</div>';
     container.appendChild(legend);
 
     var rule = document.createElement('div');
     rule.className = 'wck-rule';
     rule.innerHTML =
-      '<div>같은 색 · 로고/자수 없음 · 이름표 전부 있음 → <b>가능</b> ｜ 하나라도 아니면 → <b>불가</b> + 메모에 이유 (색섞임 / 로고 / 이름표) ｜ 수건이 적거나 애매하면 → <b>보류</b> (다음 수거 때 다시)</div>' +
-      '<div>칸 아래 작은 글씨가 <b>현재 상태</b> · 현재 상태와 같으면 비워 두고, <b>바뀐 게 보이면</b> 새 상태에 체크 + 메모 (예: 수건 바뀜 · 로고 생김)</div>';
+      '<div>' + t('wckRule1') + '</div>' +
+      '<div>' + t('wckRule2') + '</div>';
     container.appendChild(rule);
 
     var table = document.createElement('table');
     table.className = 'wck-table';
     table.innerHTML =
       '<colgroup>' + WASHCHECK_COL_WIDTHS.map(function (w) { return '<col style="width:' + w + '%">'; }).join('') + '</colgroup>' +
-      '<thead><tr><th>출고</th><th>번호</th><th>약칭</th><th>업종</th><th>포대<br>사이즈</th><th>합세탁 체크</th><th>메모</th></tr></thead>';
+      '<thead><tr><th>' + t('wckThShip') + '</th><th>' + t('wckThNo') + '</th><th>' + t('wckThName') + '</th><th>' + t('wckThBiz') + '</th><th>' + t('wckThSize') + '</th><th>' + t('wckThCheck') + '</th><th>' + t('wckThMemo') + '</th></tr></thead>';
     var tbody = document.createElement('tbody');
     allCourses.forEach(function (course, courseIdx) {
       (merged.byCourse[course] || []).forEach(function (it, itemIdx) {
@@ -2539,16 +2573,16 @@
         var chk = document.createElement('td');
         chk.className = 'wck-check';
         chk.innerHTML =
-          '<div class="wck-boxes"><span class="wck-box"></span>가능 <span class="wck-box"></span>불가 <span class="wck-box"></span>보류</div>' +
+          '<div class="wck-boxes"><span class="wck-box"></span>' + t('wckOk') + ' <span class="wck-box"></span>' + t('wckNo') + ' <span class="wck-box"></span>' + t('wckHold') + '</div>' +
           '<div class="wck-cur"></div>';
-        chk.querySelector('.wck-cur').textContent = WASHCHECK_STATE_TEXT[st];
+        chk.querySelector('.wck-cur').textContent = t(WASHCHECK_STATE_KEY[st]);
         tr.appendChild(chk);
         var note = buildSpecialNote(it);
         if (note === '-') note = '';
         var isNew = String(it.combinedWash || '').replace(/\s+/g, '') === '신규';
         var memo = document.createElement('td');
         memo.className = 'wck-memo';
-        memo.textContent = (isNew ? '신규 ' : '') + note;
+        memo.textContent = (isNew ? t('wckNew') + ' ' : '') + note;
         tr.appendChild(memo);
         tbody.appendChild(tr);
       });
@@ -2558,7 +2592,7 @@
 
     var foot = document.createElement('div');
     foot.className = 'wck-foot';
-    foot.innerHTML = '<span>체크 후 사진 → 단톡방 · 관리운영에서 거래처 시트 합세탁(J열)에 반영</span><span>다음날 세탁공정표부터 그룹 반영됨</span>';
+    foot.innerHTML = '<span>' + t('wckFoot1') + '</span><span>' + t('wckFoot2') + '</span>';
     container.appendChild(foot);
     return container;
   }
