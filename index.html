@@ -513,8 +513,9 @@
 
   /* ================= 인쇄 전용 ================= */
   .print-only { display: none; }
-  #printStatus, #printAddress, #printCloser, #printAddressAll, #printChanges, #printWash, #printWashCheck { display: none; }
+  #printStatus, #printAddress, #printCloser, #printAddressAll, #printChanges, #printWash, #printWashCheck, #printNameTag { display: none; }
 
+  @page nameTagPage { size: 100mm 100mm; margin: 0; }
   @page portraitPage { size: A4 portrait; margin: 8mm; }
   @page landscapePage { size: A4 landscape; margin: 7mm; }
 
@@ -524,7 +525,9 @@
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
 
     .print-only { display: block !important; }
-    #printStatus, #printAddress, #printCloser, #printAddressAll, #printChanges, #printWash, #printWashCheck { display: none !important; }
+    #printStatus, #printAddress, #printCloser, #printAddressAll, #printChanges, #printWash, #printWashCheck, #printNameTag { display: none !important; }
+    body.printing-name-tag #printNameTag { display: block !important; page: nameTagPage; }
+    #printNameTag img { display: block; width: 100mm; height: 100mm; }
     body.printing-status #printStatus { display: block !important; page: portraitPage; }
     body.printing-address #printAddress { display: block !important; page: landscapePage; }
     body.printing-closer #printCloser { display: block !important; page: portraitPage; }
@@ -661,6 +664,7 @@
   <div class="doc-page" id="printChanges"></div>
   <div class="doc-page" id="printWash"></div>
   <div class="doc-page" id="printWashCheck"></div>
+  <div class="print-only" id="printNameTag"><img id="printNameTagImg" alt=""></div>
 </div>
 
 <!-- 설정 모달 -->
@@ -3442,6 +3446,14 @@
     var binary = '';
     bytes.forEach(function (b) { binary += String.fromCharCode(b); });
     var payload = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    // PC(윈도우)에서는 출력 앱을 부를 수 없으므로 100x100mm 그림을 브라우저 인쇄로 보낸다(TSC TTP-247 등 PC에 연결된 라벨 프린터)
+    if (!/Android/i.test(navigator.userAgent)) {
+      var pt = currentNameTag(); pt.o = !!outline;
+      drawNameTag(ntCanvas, pt);
+      $('printNameTagImg').src = ntCanvas.toDataURL('image/png');
+      setTimeout(function () { doPrint('printing-name-tag', function () { ntOutline = !!outline; redrawNameTag(); }); }, 100);
+      return;
+    }
     var fallback = encodeURIComponent('https://yuseong-packing-production.up.railway.app/label-app-guide');
     window.location.href = 'intent://print?payload=' + payload +
       '#Intent;scheme=yuseongprint;package=kr.co.yuseong.labelprinter;S.browser_fallback_url=' + fallback + ';end';
