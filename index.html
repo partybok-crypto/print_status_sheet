@@ -3411,14 +3411,14 @@
           var nh = Math.max(1, nm100.actualBoundingBoxAscent + nm100.actualBoundingBoxDescent);
           var nsz = (100 * nGlyph) / nh;
           ctx.font = 'normal ' + nsz + 'px Pretendard, "Malgun Gothic", sans-serif';
-          var nwd = ctx.measureText(tag.n).width, nsx = nwd > maxWd ? maxWd / nwd : 1;
+          var nwd = ctx.measureText(tag.n).width, nsx = Math.min(maxWd / nwd, 1.5);
           ctx.textAlign = 'center'; ctx.fillStyle = '#000';
           ctx.save(); ctx.translate(W / 2, top + nm100.actualBoundingBoxAscent * nsz / 100); ctx.scale(nsx, 1);
           ctx.fillText(tag.n, 0, 0); ctx.restore();
         }
         if (tag.m) {
           var nameTop = top + nGlyph + gap, nameH = bottom - nameTop;
-          drawFilled(tag.m, fitFill(tag.m, maxWd, nameH * 0.92, true, 1.6), W / 2, nameTop, bottom, '#000', false);
+          drawFilled(tag.m, fitFill(tag.m, maxWd, nameH * 0.92, true, 2.0), W / 2, nameTop, bottom, '#000', false);
         }
       }
       if (tag.n && !tag.inv) {
