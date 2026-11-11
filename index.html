@@ -515,7 +515,8 @@
   .print-only { display: none; }
   #printStatus, #printAddress, #printCloser, #printAddressAll, #printChanges, #printWash, #printWashCheck, #printNameTag { display: none; }
 
-  @page nameTagPage { size: 100mm 100mm; margin: 0; }
+  /* TSC TTP-247 드라이버 기본 용지(404x394 = 102.62x100.08mm)와 똑같이 맞춘다. 100x100으로 보내면 드라이버가 거부해 빨간불만 들어옴 */
+  @page nameTagPage { size: 102.62mm 100.08mm; margin: 0; }
   @page portraitPage { size: A4 portrait; margin: 8mm; }
   @page landscapePage { size: A4 landscape; margin: 7mm; }
 
