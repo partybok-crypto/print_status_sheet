@@ -2,7 +2,7 @@
 # 이유: 크롬 인쇄는 이 프린터 드라이버에서 안 나오고(빨간불), 이 프린터는 가로로 이어진 꽉 찬 검은 면(약 35mm 이상)을
 #       못 찍는다. 그래서 검은 면을 40% 격자 망점으로 바꾸고 드라이버 기본 용지·1:1(203dpi)로 보낸다.
 # 사용: PC 시작 시 자동 실행(시작프로그램의 NameTagHelper.vbs). 127.0.0.1:9123 에서만 듣는다.
-param([string]$Printer = 'TSC TTP-247', [int]$Port = 9123, [int]$Budget = 60)
+param([string]$Printer = 'TSC TTP-247', [int]$Port = 9123, [int]$Budget = 85)
 Add-Type -AssemblyName System.Drawing
 Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @"
 using System;using System.Drawing;using System.Drawing.Imaging;
@@ -59,4 +59,5 @@ while ($l.IsListening) {
   } catch { try { $res.StatusCode=500; $m=[Text.Encoding]::UTF8.GetBytes("error: $($_.Exception.Message)"); $res.OutputStream.Write($m,0,$m.Length) } catch {} }
   finally { try { $res.Close() } catch {} }
 }
+
 
