@@ -781,7 +781,7 @@
       pdbNameTag: '이름표 출력', pdbNameTagSub: '업체번호 입력 · 라벨 프린터로 이름표 1장 출력',
       ntNo: '업체번호', ntLoad: '불러오기', ntType: '업종', ntAddr: '주소', ntShort: '약칭', ntTrade: '상호',
       ntPrint1: '라벨 출력 1', ntPrint2: '라벨 출력 2', ntHint: '업체번호를 입력하고 불러오기를 누르세요. 내용은 고쳐서 출력할 수 있습니다.',
-      ntLoading: '불러오는 중...', ntReady: '확인 후 라벨 출력을 누르세요.', ntNoAddr: '주소가 시트에 없습니다. 직접 적거나 빈칸으로 출력하세요.',
+      ntHelperSent: '라벨 프린터로 보냈습니다.', ntLoading: '불러오는 중...', ntReady: '확인 후 라벨 출력을 누르세요.', ntNoAddr: '주소가 시트에 없습니다. 직접 적거나 빈칸으로 출력하세요.',
       ntInactive: '{n}번은 배차표에 없는(해지 등) 업체입니다.', ntNotFound: '{n}번 업체를 찾을 수 없습니다.',
       ntFail: '업체 정보를 불러오지 못했습니다.', ntNet: '네트워크 오류로 불러오지 못했습니다.',
       wckKicker: '마감자용 · 합세탁 가능 여부 체크', wckTitle: '합세탁 체크표',
@@ -832,7 +832,7 @@
       pdbNameTag: 'Cetak label nama', pdbNameTagSub: 'Masukkan nomor usaha · cetak 1 label nama di printer label',
       ntNo: 'Nomor usaha', ntLoad: 'Muat', ntType: 'Jenis usaha', ntAddr: 'Alamat', ntShort: 'Singkatan', ntTrade: 'Nama usaha',
       ntPrint1: 'Cetak label 1', ntPrint2: 'Cetak label 2', ntHint: 'Masukkan nomor usaha lalu tekan Muat. Isi bisa diubah sebelum dicetak.',
-      ntLoading: 'Memuat...', ntReady: 'Periksa lalu tekan cetak label.', ntNoAddr: 'Alamat tidak ada di sheet. Isi manual atau cetak kosong.',
+      ntHelperSent: 'Dikirim ke printer label.', ntLoading: 'Memuat...', ntReady: 'Periksa lalu tekan cetak label.', ntNoAddr: 'Alamat tidak ada di sheet. Isi manual atau cetak kosong.',
       ntInactive: 'Usaha nomor {n} tidak ada di tabel pengiriman (misalnya sudah berhenti).', ntNotFound: 'Usaha nomor {n} tidak ditemukan.',
       ntFail: 'Gagal memuat data usaha.', ntNet: 'Gagal memuat karena kesalahan jaringan.',
       wckKicker: 'Untuk penutup · Cek kelayakan cuci gabung', wckTitle: 'Tabel Cek Cuci Gabung',
@@ -883,7 +883,7 @@
       pdbNameTag: 'In thẻ tên', pdbNameTagSub: 'Nhập số cơ sở · in 1 thẻ tên bằng máy in nhãn',
       ntNo: 'Số cơ sở', ntLoad: 'Tải', ntType: 'Loại hình', ntAddr: 'Địa chỉ', ntShort: 'Tên viết tắt', ntTrade: 'Tên cơ sở',
       ntPrint1: 'In nhãn 1', ntPrint2: 'In nhãn 2', ntHint: 'Nhập số cơ sở rồi bấm Tải. Có thể sửa nội dung trước khi in.',
-      ntLoading: 'Đang tải...', ntReady: 'Kiểm tra rồi bấm in nhãn.', ntNoAddr: 'Không có địa chỉ trong bảng. Hãy nhập tay hoặc in để trống.',
+      ntHelperSent: 'Đã gửi tới máy in nhãn.', ntLoading: 'Đang tải...', ntReady: 'Kiểm tra rồi bấm in nhãn.', ntNoAddr: 'Không có địa chỉ trong bảng. Hãy nhập tay hoặc in để trống.',
       ntInactive: 'Cơ sở số {n} không có trong bảng giao hàng (ví dụ đã ngừng).', ntNotFound: 'Không tìm thấy cơ sở số {n}.',
       ntFail: 'Không tải được thông tin cơ sở.', ntNet: 'Không tải được do lỗi mạng.',
       wckKicker: 'Dành cho người chốt · Kiểm tra khả năng giặt gộp', wckTitle: 'Bảng Kiểm Tra Giặt Gộp',
@@ -3512,11 +3512,22 @@
       var fontsReady = document.fonts ? document.fonts.ready : Promise.resolve();
       fontsReady.then(function () {
         drawNameTag(ntCanvas, tag);
-        var image = $('printNameTagImg');
-        image.src = ntCanvas.toDataURL('image/png');
-        return image.decode();
-      }).then(function () {
-        doPrint('printing-name-tag', function () { ntOutline = !!outline; redrawNameTag(); });
+        var dataUrl = ntCanvas.toDataURL('image/png');
+        // 1순위: 이 PC의 이름표 인쇄 도우미(127.0.0.1:9123). TTP-247 은 크롬 인쇄를 못 받고 넓은 검은 면에서 멈춰서,
+        //        도우미가 검은 면을 격자 망점으로 바꿔 드라이버로 직접 출력한다(tools/nametag_helper.ps1).
+        var ctl = (window.AbortController ? new AbortController() : null);
+        var to = setTimeout(function () { if (ctl) ctl.abort(); }, 4000);
+        return fetch('http://127.0.0.1:9123/print', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ png: dataUrl }), signal: ctl ? ctl.signal : undefined })
+          .then(function (r) { clearTimeout(to); if (!r.ok) throw new Error('helper ' + r.status); ntMsg.textContent = t('ntHelperSent'); ntOutline = !!outline; redrawNameTag(); })
+          .catch(function () {
+            clearTimeout(to);
+            // 도우미가 없거나 실패하면 예전처럼 브라우저 인쇄창으로 보낸다
+            var image = $('printNameTagImg');
+            image.src = dataUrl;
+            return image.decode().then(function () {
+              doPrint('printing-name-tag', function () { ntOutline = !!outline; redrawNameTag(); });
+            });
+          });
       });
       return;
     }
