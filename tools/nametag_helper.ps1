@@ -17,7 +17,7 @@ public static class NtHalftone{
    if(n>budget){
     // 점을 3개씩 붙여서(런) 찍는다: 한 줄 점 수는 budget 그대로, 흩어진 1점보다 잉크가 잘 옮겨붙어 더 진하다.
     // 위아래 2줄은 같은 위상으로 묶어 3x2 덩어리를 만든다.
-    int run=3;double period=(double)n*run/budget;if(period<run)period=run;
+    int run=4;double period=(double)n*run/budget;if(period<run)period=run;
     double ph=(((y/2)*0.6180339887)%1.0)*period;int k=0;
     for(int x=0;x<W;x++){if(row[x]){double pos=(k+ph)%period;k++;if(pos>=run)row[x]=false;}}}
    for(int x=0;x<W;x++)r.SetPixel(x,y,row[x]?Color.Black:Color.White);}
@@ -63,6 +63,7 @@ while ($l.IsListening) {
   } catch { try { $res.StatusCode=500; $m=[Text.Encoding]::UTF8.GetBytes("error: $($_.Exception.Message)"); $res.OutputStream.Write($m,0,$m.Length) } catch {} }
   finally { try { $res.Close() } catch {} }
 }
+
 
 
 
