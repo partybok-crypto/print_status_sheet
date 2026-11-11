@@ -3407,6 +3407,9 @@
           ctx.lineWidth = OUTLINE;
           ctx.strokeRect(mm(NT.LEFT) + OUTLINE / 2, top + OUTLINE / 2, boxRight - mm(NT.LEFT) - OUTLINE, mainH - OUTLINE);
           drawFilled(tag.n, fit, (mm(NT.LEFT) + boxRight) / 2, top, bottom, '#000', true);
+        } else if (tag.inv) {
+          // 이 PC의 라벨 프린터(도우미)용: 검은 상자 대신 흰 바탕에 검은 큰 번호 — 한 줄에 켜지는 점이 적어 흐려지지 않는다
+          drawFilled(tag.n, fit, (mm(NT.LEFT) + boxRight) / 2, top, bottom, '#000', false);
         } else {
           ctx.fillStyle = '#000';
           ctx.fillRect(mm(NT.LEFT), top, boxRight - mm(NT.LEFT), mainH);
@@ -3511,13 +3514,17 @@
       tag.o = !!outline;
       var fontsReady = document.fonts ? document.fonts.ready : Promise.resolve();
       fontsReady.then(function () {
+        // 도우미로 보낼 그림은 번호를 검은 글자로(inv). 도우미가 없어 브라우저 인쇄로 갈 때는 아래에서 원래 모양으로 다시 그린다.
+        var helperTag = Object.assign({}, tag, { inv: !outline });
+        drawNameTag(ntCanvas, helperTag);
+        var helperUrl = ntCanvas.toDataURL('image/png');
         drawNameTag(ntCanvas, tag);
         var dataUrl = ntCanvas.toDataURL('image/png');
         // 1순위: 이 PC의 이름표 인쇄 도우미(127.0.0.1:9123). TTP-247 은 크롬 인쇄를 못 받고 넓은 검은 면에서 멈춰서,
         //        도우미가 검은 면을 격자 망점으로 바꿔 드라이버로 직접 출력한다(tools/nametag_helper.ps1).
         var ctl = (window.AbortController ? new AbortController() : null);
         var to = setTimeout(function () { if (ctl) ctl.abort(); }, 4000);
-        return fetch('http://127.0.0.1:9123/print', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ png: dataUrl }), signal: ctl ? ctl.signal : undefined })
+        return fetch('http://127.0.0.1:9123/print', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ png: helperUrl }), signal: ctl ? ctl.signal : undefined })
           .then(function (r) { clearTimeout(to); if (!r.ok) throw new Error('helper ' + r.status); ntMsg.textContent = t('ntHelperSent'); ntOutline = !!outline; redrawNameTag(); })
           .catch(function () {
             clearTimeout(to);
