@@ -3409,9 +3409,6 @@
           ctx.lineWidth = OUTLINE;
           ctx.strokeRect(mm(NT.LEFT) + OUTLINE / 2, top + OUTLINE / 2, boxRight - mm(NT.LEFT) - OUTLINE, mainH - OUTLINE);
           drawFilled(tag.n, fit, (mm(NT.LEFT) + boxRight) / 2, top, bottom, '#000', true);
-        } else if (tag.inv) {
-          // 이 PC의 라벨 프린터(도우미)용: 검은 상자 대신 흰 바탕에 검은 큰 번호 — 한 줄에 켜지는 점이 적어 흐려지지 않는다
-          drawFilled(tag.n, fit, (mm(NT.LEFT) + boxRight) / 2, top, bottom, '#000', false);
         } else {
           ctx.fillStyle = '#000';
           ctx.fillRect(mm(NT.LEFT), top, boxRight - mm(NT.LEFT), mainH);
