@@ -3296,7 +3296,7 @@
     var OUTLINE = mm(tag.inv ? 0.5 : 0.35);
     var ol = !!tag.o;
     // 도우미용(inv): 번호는 꽉 찬 검정, 이름은 윤곽선 글자 — 한 줄에 켜지는 점을 줄여야 번호가 솎이지 않고 진하게 나온다
-    var nameOl = ol || !!tag.inv;
+    var nameOl = ol;
     function paintText(text, x, y, color, outline) {
       if (outline) {
         ctx.strokeStyle = color; ctx.lineWidth = OUTLINE; ctx.lineJoin = 'round';
@@ -3402,7 +3402,8 @@
       var nameLeft = mm(NT.LEFT);
       if (tag.n) {
         var pad = mm(1.5);
-        var fit = fitFill(tag.n, mm(NT.NUMBER_BOX_MAX) - pad * 2, mainH * 0.86);
+        // 도우미용(inv): 번호 글자를 70%로 줄여 상자 폭을 좁힌다 — 이름도 꽉 찬 검정이라 한 줄에 켜지는 점을 줄여야 한다
+        var fit = fitFill(tag.n, mm(NT.NUMBER_BOX_MAX) - pad * 2, mainH * (tag.inv ? 0.6 : 0.86));
         var boxRight = mm(NT.LEFT) + fit.width + pad * 2;
         if (ol) {
           ctx.strokeStyle = '#000';
