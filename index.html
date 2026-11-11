@@ -3400,7 +3400,28 @@
 
       var top = mm(NT.MAIN_TOP), bottom = mm(NT.MAIN_BOTTOM), mainH = bottom - top;
       var nameLeft = mm(NT.LEFT);
-      if (tag.n) {
+      if (tag.inv) {
+        // 이 PC의 라벨 프린터(도우미)용 배치: 큰 번호 위, 약칭 아래. 한 줄에 한 가지만 있게 해서(줄당 점 한도 ~110) 둘 다 솎지 않고 진하게 찍는다.
+        var gap = mm(1), maxWd = mm(NT.RIGHT - NT.LEFT);
+        var nGlyph = mainH * 0.66;
+        if (tag.n) {
+          ctx.textBaseline = 'alphabetic';
+          ctx.font = 'normal 100px Pretendard, "Malgun Gothic", sans-serif';
+          var nm100 = ctx.measureText(tag.n);
+          var nh = Math.max(1, nm100.actualBoundingBoxAscent + nm100.actualBoundingBoxDescent);
+          var nsz = (100 * nGlyph) / nh;
+          ctx.font = 'normal ' + nsz + 'px Pretendard, "Malgun Gothic", sans-serif';
+          var nwd = ctx.measureText(tag.n).width, nsx = nwd > maxWd ? maxWd / nwd : 1;
+          ctx.textAlign = 'center'; ctx.fillStyle = '#000';
+          ctx.save(); ctx.translate(W / 2, top + nm100.actualBoundingBoxAscent * nsz / 100); ctx.scale(nsx, 1);
+          ctx.fillText(tag.n, 0, 0); ctx.restore();
+        }
+        if (tag.m) {
+          var nameTop = top + nGlyph + gap, nameH = bottom - nameTop;
+          drawFilled(tag.m, fitFill(tag.m, maxWd, nameH * 0.92, true, 1.6), W / 2, nameTop, bottom, '#000', false);
+        }
+      }
+      if (tag.n && !tag.inv) {
         var pad = mm(1.5);
         // 도우미용(inv): 번호 글자를 70%로 줄여 상자 폭을 좁힌다 — 이름도 꽉 찬 검정이라 한 줄에 켜지는 점을 줄여야 한다
         var fit = fitFill(tag.n, mm(NT.NUMBER_BOX_MAX) - pad * 2, mainH * (tag.inv ? 0.6 : 0.86));
@@ -3417,8 +3438,8 @@
         }
         nameLeft = boxRight + mm(1.5);
       }
-      if (tag.m) {
-        var nameW = mm(NT.RIGHT) - nameLeft;
+      if (tag.m && !tag.inv) {
+        var nameW =mm(NT.RIGHT) - nameLeft;
         var nameLines = splitNameLines(tag.m);
         if (nameLines.length === 2) {
           // 약칭이 두 단어 이상이면 두 줄로 나눠 각 줄을 크게 채운다(예: 박승철 / 범계점)
