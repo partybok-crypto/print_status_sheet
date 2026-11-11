@@ -3293,8 +3293,10 @@
       while (s.length > 1 && ctx.measureText(s + '…').width > maxW) s = s.slice(0, -1);
       return s + '…';
     }
-    var OUTLINE = mm(0.35);
+    var OUTLINE = mm(tag.inv ? 0.5 : 0.35);
     var ol = !!tag.o;
+    // 도우미용(inv): 번호는 꽉 찬 검정, 이름은 윤곽선 글자 — 한 줄에 켜지는 점을 줄여야 번호가 솎이지 않고 진하게 나온다
+    var nameOl = ol || !!tag.inv;
     function paintText(text, x, y, color, outline) {
       if (outline) {
         ctx.strokeStyle = color; ctx.lineWidth = OUTLINE; ctx.lineJoin = 'round';
@@ -3423,10 +3425,10 @@
         if (nameLines.length === 2) {
           // 약칭이 두 단어 이상이면 두 줄로 나눠 각 줄을 크게 채운다(예: 박승철 / 범계점)
           var midY = top + mainH / 2, lineH = mainH * 0.45;
-          drawFilled(nameLines[0], fitFill(nameLines[0], nameW, lineH, true, 1.5), nameLeft + nameW / 2, top, midY, '#000', ol);
-          drawFilled(nameLines[1], fitFill(nameLines[1], nameW, lineH, true, 1.5), nameLeft + nameW / 2, midY, bottom, '#000', ol);
+          drawFilled(nameLines[0], fitFill(nameLines[0], nameW, lineH, true, 1.5), nameLeft + nameW / 2, top, midY, '#000', nameOl);
+          drawFilled(nameLines[1], fitFill(nameLines[1], nameW, lineH, true, 1.5), nameLeft + nameW / 2, midY, bottom, '#000', nameOl);
         } else {
-          drawFilled(tag.m, fitFill(tag.m, nameW, mainH * 0.96, true), nameLeft + nameW / 2, top, bottom, '#000', ol);
+          drawFilled(tag.m, fitFill(tag.m, nameW, mainH * 0.96, true), nameLeft + nameW / 2, top, bottom, '#000', nameOl);
         }
       }
       drawText(tag.s, mm(50), mm(NT.TRADE_CENTER), mm(NT.RIGHT - NT.LEFT), mm(2.4), mm(2), '#000', 'center');
