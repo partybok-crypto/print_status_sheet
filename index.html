@@ -526,8 +526,14 @@
 
     .print-only { display: block !important; }
     #printStatus, #printAddress, #printCloser, #printAddressAll, #printChanges, #printWash, #printWashCheck, #printNameTag { display: none !important; }
-    body.printing-name-tag #printNameTag { display: block !important; page: nameTagPage; }
-    #printNameTag img { display: block; width: 100mm; height: 100mm; }
+    body.printing-name-tag #printNameTag {
+      display: block !important;
+      page: nameTagPage;
+      width: 98mm;
+      padding: 2mm 0 0 2mm;
+      break-inside: avoid;
+    }
+    #printNameTag img { display: block; width: 96mm; height: 96mm; }
     body.printing-status #printStatus { display: block !important; page: portraitPage; }
     body.printing-address #printAddress { display: block !important; page: landscapePage; }
     body.printing-closer #printCloser { display: block !important; page: portraitPage; }
@@ -3501,10 +3507,16 @@
     var payload = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     // PC(윈도우)에서는 출력 앱을 부를 수 없으므로 100x100mm 그림을 브라우저 인쇄로 보낸다(TSC TTP-247 등 PC에 연결된 라벨 프린터)
     if (!/Android/i.test(navigator.userAgent)) {
-      var pt = currentNameTag(); pt.o = !!outline;
-      drawNameTag(ntCanvas, pt);
-      $('printNameTagImg').src = ntCanvas.toDataURL('image/png');
-      setTimeout(function () { doPrint('printing-name-tag', function () { ntOutline = !!outline; redrawNameTag(); }); }, 100);
+      tag.o = !!outline;
+      var fontsReady = document.fonts ? document.fonts.ready : Promise.resolve();
+      fontsReady.then(function () {
+        drawNameTag(ntCanvas, tag);
+        var image = $('printNameTagImg');
+        image.src = ntCanvas.toDataURL('image/png');
+        return image.decode();
+      }).then(function () {
+        doPrint('printing-name-tag', function () { ntOutline = !!outline; redrawNameTag(); });
+      });
       return;
     }
     var fallback = encodeURIComponent('https://yuseong-packing-production.up.railway.app/label-app-guide');
