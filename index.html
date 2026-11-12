@@ -156,6 +156,7 @@
   .modal-actions.nt-actions { flex-wrap: wrap; gap: calc(18 * var(--s)); margin-top: calc(10 * var(--s)); padding: calc(12 * var(--s)) 0 calc(16 * var(--s)); position: sticky; bottom: 0; background: #fff; border-top: 2px solid var(--border); }
   .modal-actions.nt-actions button { min-height: calc(80 * var(--s)); padding: 0 calc(40 * var(--s)); border-radius: calc(18 * var(--s)); font-size: calc(28 * var(--s)); }
   .nt-actions .confirm:disabled { opacity: .45; }
+  .modal-actions.nt-actions button.nt-small { min-height: calc(52 * var(--s)); padding: 0 calc(22 * var(--s)); font-size: calc(20 * var(--s)); border-radius: calc(12 * var(--s)); background: var(--blue-bg); color: var(--text-sub); font-weight: 600; }
   .primary-doc-btn .pdb-title { font-size: 17.5px; font-weight: 800; color: inherit; }
   .primary-doc-btn .pdb-sub { font-size: 12.5px; font-weight: 600; color: var(--text-sub); }
   .primary-doc-btn .pdb-title[data-no]::before { content: attr(data-no) ' '; }
@@ -740,8 +741,7 @@
     </div>
     <div class="modal-actions nt-actions">
       <button class="confirm" id="ntPrint1" disabled data-i18n="ntPrint1">라벨 출력 1</button>
-      <button class="confirm" id="ntPrint2" disabled data-i18n="ntPrint2">라벨 출력 2</button>
-      <button class="confirm" id="ntPrint3" disabled data-i18n="ntPrint3">라벨 출력 3</button>
+      <button class="confirm nt-small" id="ntPrint2" disabled data-i18n="ntPrint2">라벨 출력 2</button>
       <button class="cancel" id="ntClose" data-i18n="close">닫기</button>
     </div>
   </div>
@@ -781,7 +781,7 @@
       pdbChanges: '출력 후 라벨코스 변경내역',
       pdbNameTag: '이름표 출력', pdbNameTagSub: '업체번호 입력 · 라벨 프린터로 이름표 1장 출력',
       ntNo: '업체번호', ntLoad: '불러오기', ntType: '업종', ntAddr: '주소', ntShort: '약칭', ntTrade: '상호',
-      ntPrint1: '라벨 출력 1', ntPrint2: '라벨 출력 2', ntPrint3: '라벨 출력 3', ntHint: '업체번호를 입력하고 불러오기를 누르세요. 내용은 고쳐서 출력할 수 있습니다.',
+      ntPrint1: '라벨 출력 1', ntPrint2: '라벨 출력 2', ntHint: '업체번호를 입력하고 불러오기를 누르세요. 내용은 고쳐서 출력할 수 있습니다.',
       ntHelperSent: '라벨 프린터로 보냈습니다.', ntLoading: '불러오는 중...', ntReady: '확인 후 라벨 출력을 누르세요.', ntNoAddr: '주소가 시트에 없습니다. 직접 적거나 빈칸으로 출력하세요.',
       ntInactive: '{n}번은 배차표에 없는(해지 등) 업체입니다.', ntNotFound: '{n}번 업체를 찾을 수 없습니다.',
       ntFail: '업체 정보를 불러오지 못했습니다.', ntNet: '네트워크 오류로 불러오지 못했습니다.',
@@ -832,7 +832,7 @@
       pdbChanges: 'Perubahan rute label setelah cetak',
       pdbNameTag: 'Cetak label nama', pdbNameTagSub: 'Masukkan nomor usaha · cetak 1 label nama di printer label',
       ntNo: 'Nomor usaha', ntLoad: 'Muat', ntType: 'Jenis usaha', ntAddr: 'Alamat', ntShort: 'Singkatan', ntTrade: 'Nama usaha',
-      ntPrint1: 'Cetak label 1', ntPrint2: 'Cetak label 2', ntPrint3: 'Cetak label 3', ntHint: 'Masukkan nomor usaha lalu tekan Muat. Isi bisa diubah sebelum dicetak.',
+      ntPrint1: 'Cetak label 1', ntPrint2: 'Cetak label 2', ntHint: 'Masukkan nomor usaha lalu tekan Muat. Isi bisa diubah sebelum dicetak.',
       ntHelperSent: 'Dikirim ke printer label.', ntLoading: 'Memuat...', ntReady: 'Periksa lalu tekan cetak label.', ntNoAddr: 'Alamat tidak ada di sheet. Isi manual atau cetak kosong.',
       ntInactive: 'Usaha nomor {n} tidak ada di tabel pengiriman (misalnya sudah berhenti).', ntNotFound: 'Usaha nomor {n} tidak ditemukan.',
       ntFail: 'Gagal memuat data usaha.', ntNet: 'Gagal memuat karena kesalahan jaringan.',
@@ -883,7 +883,7 @@
       pdbChanges: 'Thay đổi tuyến nhãn sau khi in',
       pdbNameTag: 'In thẻ tên', pdbNameTagSub: 'Nhập số cơ sở · in 1 thẻ tên bằng máy in nhãn',
       ntNo: 'Số cơ sở', ntLoad: 'Tải', ntType: 'Loại hình', ntAddr: 'Địa chỉ', ntShort: 'Tên viết tắt', ntTrade: 'Tên cơ sở',
-      ntPrint1: 'In nhãn 1', ntPrint2: 'In nhãn 2', ntPrint3: 'In nhãn 3', ntHint: 'Nhập số cơ sở rồi bấm Tải. Có thể sửa nội dung trước khi in.',
+      ntPrint1: 'In nhãn 1', ntPrint2: 'In nhãn 2', ntHint: 'Nhập số cơ sở rồi bấm Tải. Có thể sửa nội dung trước khi in.',
       ntHelperSent: 'Đã gửi tới máy in nhãn.', ntLoading: 'Đang tải...', ntReady: 'Kiểm tra rồi bấm in nhãn.', ntNoAddr: 'Không có địa chỉ trong bảng. Hãy nhập tay hoặc in để trống.',
       ntInactive: 'Cơ sở số {n} không có trong bảng giao hàng (ví dụ đã ngừng).', ntNotFound: 'Không tìm thấy cơ sở số {n}.',
       ntFail: 'Không tải được thông tin cơ sở.', ntNet: 'Không tải được do lỗi mạng.',
@@ -3269,7 +3269,7 @@
     MAIN_TOP: 15.6, MAIN_BOTTOM: 46, TRADE_CENTER: 47.9, HALF: 50, NUMBER_BOX_MAX: 50, MIN_SCALE_X: 0.55 };
   var ntModal = $('nameTagModal'), ntBox = $('ntBox'), ntNo = $('ntNo'), ntMsg = $('ntMsg'), ntCanvas = $('ntCanvas');
   var ntType = $('ntType'), ntAddr = $('ntAddr'), ntShort = $('ntShort'), ntTrade = $('ntTrade');
-  var ntPrint1 = $('ntPrint1'), ntPrint2 = $('ntPrint2'), ntPrint3 = $('ntPrint3');
+  var ntPrint1 = $('ntPrint1'), ntPrint2 = $('ntPrint2');
   var ntInv = false; // 라벨 출력 3: 큰 번호 위·약칭 아래 배치(줄당 점이 적어 TTP-247 에서 진하게 나옴)
   var ntCompanyNo = '';
   var ntOutline = true;
@@ -3372,14 +3372,15 @@
       return best;
     }
     function drawHalf() {
-      var topCenter = mm((NT.TOP_ROW_TOP + NT.TOP_ROW_BOTTOM) / 2);
+      var UP = ol ? 0 : 4; // 라벨 출력 1: 윗 여백 4mm를 번호 칸 높이로 돌린다(윤곽선은 안내문이 있어 그대로)
+      var topCenter = mm(((NT.TOP_ROW_TOP - UP) + (NT.TOP_ROW_BOTTOM - UP)) / 2);
       var typeW = drawText(tag.t, mm(NT.LEFT), topCenter, mm(36), mm(7), mm(4), '#000', 'left', ol);
       var addrLeft = mm(NT.LEFT) + typeW + mm(3);
       var addrRight = mm(NT.RIGHT), addrText = tag.a;
       var fl = extractFloor(tag.a);
       if (fl) {
         // 층수는 주소 줄에서 빼서 오른쪽 끝에 큰 둥근 상자로 따로 그린다
-        var rowH = mm(NT.TOP_ROW_BOTTOM - NT.TOP_ROW_TOP);
+        var rowH = mm((NT.TOP_ROW_BOTTOM - UP) - (NT.TOP_ROW_TOP - UP));
         ctx.font = font(rowH * 0.78);
         var bw = ctx.measureText(fl.text).width + mm(3.2), bx = mm(NT.RIGHT) - bw, by = topCenter - rowH / 2;
         var lw = mm(0.5), r = rowH * 0.3;
@@ -3398,9 +3399,9 @@
       }
       drawText(addrText, addrRight, topCenter, addrRight - addrLeft, mm(4.2), mm(2.6), '#000', 'right');
       ctx.fillStyle = '#000';
-      ctx.fillRect(0, mm(NT.RULE_TOP), W, mm(NT.RULE_BOTTOM - NT.RULE_TOP));
+      ctx.fillRect(0, mm((NT.RULE_TOP - UP)), W, mm((NT.RULE_BOTTOM - UP) - (NT.RULE_TOP - UP)));
 
-      var top = mm(NT.MAIN_TOP), bottom = mm(NT.MAIN_BOTTOM), mainH = bottom - top;
+      var top = mm((NT.MAIN_TOP - UP)), bottom = mm(NT.MAIN_BOTTOM), mainH = bottom - top;
       var nameLeft = mm(NT.LEFT);
       if (tag.inv) {
         // 이 PC의 라벨 프린터(도우미)용 배치: 큰 번호 위, 약칭 아래. 한 줄에 한 가지만 있게 해서(줄당 점 한도 ~110) 둘 다 솎지 않고 진하게 찍는다.
@@ -3482,7 +3483,7 @@
     tag.inv = ntInv && !ntOutline;
     drawNameTag(ntCanvas, tag);
   }
-  function setNtPrintEnabled(on) { ntPrint1.disabled = !on; ntPrint2.disabled = !on; ntPrint3.disabled = !on; }
+  function setNtPrintEnabled(on) { ntPrint1.disabled = !on; ntPrint2.disabled = !on; }
 
   function openNameTag() {
     ntModal.classList.add('show');
@@ -3565,7 +3566,7 @@
       '#Intent;scheme=yuseongprint;package=kr.co.yuseong.labelprinter;S.browser_fallback_url=' + fallback + ';end';
   }
 
-  [[ntPrint1, false, false], [ntPrint2, true, false], [ntPrint3, false, true]].forEach(function (p) {
+  [[ntPrint1, false, false], [ntPrint2, true, false]].forEach(function (p) {
     ['pointerenter', 'pointerdown', 'focus'].forEach(function (ev) {
       p[0].addEventListener(ev, function () { if (ntOutline !== p[1] || ntInv !== p[2]) { ntOutline = p[1]; ntInv = p[2]; redrawNameTag(); } });
     });
