@@ -165,10 +165,9 @@ function scheduleHour_(v) {
   return (isNaN(n) || n < 0 || n > 24) ? null : n;
 }
 
-// 세탁은 수거일 다음 영업일(월요일은 휴무라 건너뜀)에 하므로, 작성자는 그 세탁일 아침 근무자 기준이다.
+// 세탁은 수거일 바로 다음 날(일요일 수거분은 월요일 세탁)에 하므로, 작성자는 그 세탁일 아침 근무자 기준이다.
 function washDateOf_(dateObj) {
   var w = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate() + 1);
-  if (w.getDay() === 1) w = new Date(w.getFullYear(), w.getMonth(), w.getDate() + 1);
   return w;
 }
 

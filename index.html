@@ -1944,10 +1944,9 @@
   var W2_PAGE_CAP_PX = 1030;      // A4 세로 한 쪽에 쓸 수 있는 높이(여백 제외, 약간 여유)
   var W2_GAP_PX = 9, W2_BORDER_PX = 6;
 
-  // 선택한 날짜 = 세탁하는 날. 그날 세탁할 것은 전 영업일(월요일은 휴무라 건너뜀)에 수거한 것이다.
+  // 선택한 날짜 = 세탁하는 날. 그날 세탁할 것은 바로 전날(월요일 세탁 = 일요일 수거분)에 수거한 것이다.
   function washCollectDate(d) {
     var p = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1);
-    if (p.getDay() === 1) p = new Date(p.getFullYear(), p.getMonth(), p.getDate() - 1);
     return p;
   }
   function washKey() {
