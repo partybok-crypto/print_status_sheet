@@ -308,7 +308,10 @@ function buildDayData_(weekday, explicitDate) {
 
   var flagCol = WEEKDAY_FLAG_COL[weekday];
   var lastRow = sheet.getLastRow();
-  var dataEndRow = lastRow - 2; // 하단 요약행 제외 (기존 로직과 동일)
+  // 마지막 행까지 읽는다. 예전에는 "하단 요약행 2줄 제외"로 lastRow - 2 까지만 읽었는데,
+  // 시트 맨 아래에 새 업체가 추가되면 그 마지막 2행이 통째로 빠졌다(2026-11-17 차홍룸·스테이 누락).
+  // 요약행은 요일 칸이 1이 아니고 코스 코드도 없어 아래 필터에서 자연히 걸러진다.
+  var dataEndRow = lastRow;
   var numRows = dataEndRow - DATA_START_ROW + 1;
 
   var origin = { name: "", address: "", comment: "", phone: "" };
