@@ -157,9 +157,13 @@
   .modal-actions.nt-actions button { min-height: calc(80 * var(--s)); padding: 0 calc(40 * var(--s)); border-radius: calc(18 * var(--s)); font-size: calc(28 * var(--s)); }
   .nt-actions .confirm:disabled { opacity: .45; }
   .nt-memo-area { display: none; flex: 1 1 0; min-width: 0; }
-  .nt-memo-area textarea { width: 100%; height: calc(400 * var(--s)); padding: calc(16 * var(--s)) calc(20 * var(--s)); border: 1px solid var(--border); border-radius: calc(16 * var(--s)); font-size: calc(28 * var(--s)); line-height: 1.35; resize: none; font-family: inherit; box-sizing: border-box; }
+  .nt-memo-area textarea { width: 100%; height: calc(320 * var(--s)); padding: calc(16 * var(--s)) calc(20 * var(--s)); border: 1px solid var(--border); border-radius: calc(16 * var(--s)); font-size: calc(28 * var(--s)); line-height: 1.35; resize: none; font-family: inherit; box-sizing: border-box; }
   .nt-memo .nt-canvas, .nt-memo .nt-memo-area { display: block; }
   .nt-memo .nt-fields { display: none; }
+  .nt-memo-size { display: flex; align-items: center; gap: calc(12 * var(--s)); margin-top: calc(12 * var(--s)); }
+  .nt-memo-size button { height: calc(64 * var(--s)); min-width: calc(88 * var(--s)); padding: 0 calc(18 * var(--s)); border: 1px solid var(--border); border-radius: calc(14 * var(--s)); background: var(--blue-bg); color: var(--navy); font-weight: 800; font-size: calc(26 * var(--s)); }
+  .nt-memo-size button.on { background: var(--blue); color: #fff; }
+  .nt-memo-size span { font-size: calc(22 * var(--s)); color: var(--text-sub); min-width: calc(110 * var(--s)); text-align: center; }
   #ntMemoPrint { display: none; }
   .nt-memo #ntMemoPrint { display: inline-block; }
   .nt-memo #ntPrint1, .nt-memo #ntPrint2 { display: none; }
@@ -745,7 +749,9 @@
         <div class="modal-field"><label data-i18n="ntShort">약칭</label><input type="text" id="ntShort" maxlength="20"></div>
         <div class="modal-field"><label data-i18n="ntTrade">상호</label><input type="text" id="ntTrade" maxlength="30"></div>
       </div>
-      <div class="nt-memo-area"><textarea id="ntMemoText" maxlength="300" data-i18n-placeholder="ntMemoPh" placeholder="메모 내용을 적으세요"></textarea></div>
+      <div class="nt-memo-area"><textarea id="ntMemoText" maxlength="300" data-i18n-placeholder="ntMemoPh" placeholder="메모 내용을 적으세요"></textarea>
+        <div class="nt-memo-size"><button type="button" id="ntMemoSm">A－</button><span id="ntMemoSizeLbl">자동</span><button type="button" id="ntMemoLg">A＋</button><button type="button" id="ntMemoAuto" class="on" data-i18n="ntMemoAuto">자동</button></div>
+      </div>
     </div>
     <div class="modal-actions nt-actions">
       <button class="confirm" id="ntPrint1" disabled data-i18n="ntPrint1">라벨 출력 1</button>
@@ -791,7 +797,7 @@
       pdbChanges: '출력 후 라벨코스 변경내역',
       pdbNameTag: '이름표 출력', pdbNameTagSub: '업체번호 입력 · 라벨 프린터로 이름표 1장 출력',
       ntNo: '업체번호', ntLoad: '불러오기', ntType: '업종', ntAddr: '주소', ntShort: '약칭', ntTrade: '상호',
-      ntPrint1: '라벨 출력 1', ntPrint2: '라벨 출력 2', ntPrint3: '라벨 출력 3 (메모)', ntMemoPrint: '메모 출력', ntMemoPh: '메모 내용을 적으세요', ntMemoHint: '메모를 적고 메모 출력을 누르세요. 글자 크기는 자동으로 맞춰집니다.', ntHint: '업체번호를 입력하고 불러오기를 누르세요. 내용은 고쳐서 출력할 수 있습니다.',
+      ntPrint1: '라벨 출력 1', ntPrint2: '라벨 출력 2', ntPrint3: '라벨 출력 3 (메모)', ntMemoPrint: '메모 출력', ntMemoAuto: '자동', ntMemoPh: '메모 내용을 적으세요', ntMemoHint: '메모를 적고 메모 출력을 누르세요. 글자 크기는 자동으로 맞춰집니다.', ntHint: '업체번호를 입력하고 불러오기를 누르세요. 내용은 고쳐서 출력할 수 있습니다.',
       ntHelperSent: '라벨 프린터로 보냈습니다.', ntLoading: '불러오는 중...', ntReady: '확인 후 라벨 출력을 누르세요.', ntNoAddr: '주소가 시트에 없습니다. 직접 적거나 빈칸으로 출력하세요.',
       ntInactive: '{n}번은 배차표에 없는(해지 등) 업체입니다.', ntNotFound: '{n}번 업체를 찾을 수 없습니다.',
       ntFail: '업체 정보를 불러오지 못했습니다.', ntNet: '네트워크 오류로 불러오지 못했습니다.',
@@ -842,7 +848,7 @@
       pdbChanges: 'Perubahan rute label setelah cetak',
       pdbNameTag: 'Cetak label nama', pdbNameTagSub: 'Masukkan nomor usaha · cetak 1 label nama di printer label',
       ntNo: 'Nomor usaha', ntLoad: 'Muat', ntType: 'Jenis usaha', ntAddr: 'Alamat', ntShort: 'Singkatan', ntTrade: 'Nama usaha',
-      ntPrint1: 'Cetak label 1', ntPrint2: 'Cetak label 2', ntPrint3: 'Cetak label 3 (memo)', ntMemoPrint: 'Cetak memo', ntMemoPh: 'Tulis isi memo', ntMemoHint: 'Tulis memo lalu tekan Cetak memo. Ukuran huruf otomatis.', ntHint: 'Masukkan nomor usaha lalu tekan Muat. Isi bisa diubah sebelum dicetak.',
+      ntPrint1: 'Cetak label 1', ntPrint2: 'Cetak label 2', ntPrint3: 'Cetak label 3 (memo)', ntMemoPrint: 'Cetak memo', ntMemoAuto: 'Otomatis', ntMemoPh: 'Tulis isi memo', ntMemoHint: 'Tulis memo lalu tekan Cetak memo. Ukuran huruf otomatis.', ntHint: 'Masukkan nomor usaha lalu tekan Muat. Isi bisa diubah sebelum dicetak.',
       ntHelperSent: 'Dikirim ke printer label.', ntLoading: 'Memuat...', ntReady: 'Periksa lalu tekan cetak label.', ntNoAddr: 'Alamat tidak ada di sheet. Isi manual atau cetak kosong.',
       ntInactive: 'Usaha nomor {n} tidak ada di tabel pengiriman (misalnya sudah berhenti).', ntNotFound: 'Usaha nomor {n} tidak ditemukan.',
       ntFail: 'Gagal memuat data usaha.', ntNet: 'Gagal memuat karena kesalahan jaringan.',
@@ -893,7 +899,7 @@
       pdbChanges: 'Thay đổi tuyến nhãn sau khi in',
       pdbNameTag: 'In thẻ tên', pdbNameTagSub: 'Nhập số cơ sở · in 1 thẻ tên bằng máy in nhãn',
       ntNo: 'Số cơ sở', ntLoad: 'Tải', ntType: 'Loại hình', ntAddr: 'Địa chỉ', ntShort: 'Tên viết tắt', ntTrade: 'Tên cơ sở',
-      ntPrint1: 'In nhãn 1', ntPrint2: 'In nhãn 2', ntPrint3: 'In nhãn 3 (ghi chú)', ntMemoPrint: 'In ghi chú', ntMemoPh: 'Nhập nội dung ghi chú', ntMemoHint: 'Nhập ghi chú rồi bấm In ghi chú. Cỡ chữ tự động.', ntHint: 'Nhập số cơ sở rồi bấm Tải. Có thể sửa nội dung trước khi in.',
+      ntPrint1: 'In nhãn 1', ntPrint2: 'In nhãn 2', ntPrint3: 'In nhãn 3 (ghi chú)', ntMemoPrint: 'In ghi chú', ntMemoAuto: 'Tự động', ntMemoPh: 'Nhập nội dung ghi chú', ntMemoHint: 'Nhập ghi chú rồi bấm In ghi chú. Cỡ chữ tự động.', ntHint: 'Nhập số cơ sở rồi bấm Tải. Có thể sửa nội dung trước khi in.',
       ntHelperSent: 'Đã gửi tới máy in nhãn.', ntLoading: 'Đang tải...', ntReady: 'Kiểm tra rồi bấm in nhãn.', ntNoAddr: 'Không có địa chỉ trong bảng. Hãy nhập tay hoặc in để trống.',
       ntInactive: 'Cơ sở số {n} không có trong bảng giao hàng (ví dụ đã ngừng).', ntNotFound: 'Không tìm thấy cơ sở số {n}.',
       ntFail: 'Không tải được thông tin cơ sở.', ntNet: 'Không tải được do lỗi mạng.',
@@ -3291,7 +3297,7 @@
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, 0, W, W);
-    if (tag.memo !== undefined) { drawMemoTag(ctx, W, tag.memo); return; }
+    if (tag.memo !== undefined) { drawMemoTag(ctx, W, tag.memo, tag.px); return; }
 
     function fitSize(text, maxW, maxPx, minPx) {
       var size = maxPx;
@@ -3485,7 +3491,7 @@
   }
 
   // 라벨 출력 3: 메모지 — 자유 입력 글을 라벨 크기에 맞춰 자동 줄바꿈·글자 크기 조절(검은 면 없이 글자만)
-  function drawMemoTag(ctx, W, text) {
+  function drawMemoTag(ctx, W, text, fixedPx) {
     var pad = W * 0.07, maxW = W - pad * 2, maxH = W - pad * 2;
     function fontOf(px) { return 'bold ' + px + 'px Pretendard, "Malgun Gothic", sans-serif'; }
     function wrap(px) {
@@ -3501,17 +3507,33 @@
       });
       return out;
     }
-    var px = 130, lines = wrap(px);
-    while (px > 28 && lines.length * px * 1.3 > maxH) { px -= 2; lines = wrap(px); }
+    var px = fixedPx || 130, lines = wrap(px);
+    if (!fixedPx) while (px > 28 && lines.length * px * 1.3 > maxH) { px -= 2; lines = wrap(px); }
     ctx.fillStyle = '#000';
     ctx.textBaseline = 'top';
     ctx.textAlign = 'left';
     ctx.font = fontOf(px);
     lines.forEach(function (ln, i) { ctx.fillText(ln, pad, pad + i * px * 1.3); });
   }
-  var ntMemoMode = false;
+  var ntMemoMode = false, ntMemoPx = 0; // 0=자동 크기, 그 외는 직접 지정한 글자 크기(캔버스 px, 800px=100mm)
   var ntMemoText = $('ntMemoText'), ntPrint3 = $('ntPrint3'), ntMemoPrint = $('ntMemoPrint');
-  function redrawMemo() { drawNameTag(ntCanvas, { memo: ntMemoText.value }); }
+  function memoTag() { return { memo: ntMemoText.value, px: ntMemoPx }; }
+  function redrawMemo() {
+    drawNameTag(ntCanvas, memoTag());
+    $('ntMemoSizeLbl').textContent = ntMemoPx ? Math.round(ntMemoPx / 8 * 10) / 10 + 'mm' : t('ntMemoAuto');
+    $('ntMemoAuto').classList.toggle('on', !ntMemoPx);
+  }
+  function memoStep(dir) {
+    if (!ntMemoPx) { // 자동 상태에서 누르면 현재 자동 크기에서 출발
+      var c = document.createElement('canvas'); c.width = 800; c.height = 800;
+      var cx = c.getContext('2d'), px = 130, maxW = 800 * 0.86;
+      var lines = function (p) { cx.font = 'bold ' + p + 'px "Malgun Gothic", sans-serif'; var n = 0; String(ntMemoText.value).split('\n').forEach(function (para) { var l = ''; if (!para) { n++; return; } para.split('').forEach(function (ch) { if (cx.measureText(l + ch).width > maxW && l) { n++; l = ch; } else l += ch; }); n++; }); return n; };
+      while (px > 28 && lines(px) * px * 1.3 > 800 * 0.86) px -= 2;
+      ntMemoPx = px;
+    }
+    ntMemoPx = Math.max(24, Math.min(400, ntMemoPx + dir * 12));
+    redrawMemo();
+  }
   function openMemo() {
     ntMemoMode = true;
     ntBox.classList.remove('nt-loaded');
@@ -3525,9 +3547,10 @@
   function printMemo() {
     var text = ntMemoText.value;
     if (!text.trim()) return;
+    var memoObj = memoTag();
     var fontsReady = document.fonts ? document.fonts.ready : Promise.resolve();
     fontsReady.then(function () {
-      drawNameTag(ntCanvas, { memo: text });
+      drawNameTag(ntCanvas, memoObj);
       var dataUrl = ntCanvas.toDataURL('image/png');
       var ctl = (window.AbortController ? new AbortController() : null);
       var to = setTimeout(function () { if (ctl) ctl.abort(); }, 4000);
@@ -3560,6 +3583,7 @@
     ntCompanyNo = '';
     closeMemoMode();
     ntMemoText.value = '';
+    ntMemoPx = 0;
     setNtPrintEnabled(false);
     ntMsg.textContent = t('ntHint');
     ntNo.focus();
@@ -3647,6 +3671,9 @@
   ntPrint3.addEventListener('click', openMemo);
   ntMemoPrint.addEventListener('click', printMemo);
   ntMemoText.addEventListener('input', redrawMemo);
+  $('ntMemoLg').addEventListener('click', function () { memoStep(1); });
+  $('ntMemoSm').addEventListener('click', function () { memoStep(-1); });
+  $('ntMemoAuto').addEventListener('click', function () { ntMemoPx = 0; redrawMemo(); });
   $('btnNameTag').addEventListener('click', openNameTag);
   $('ntClose').addEventListener('click', function () { ntModal.classList.remove('show'); });
   $('ntForm').addEventListener('submit', function (e) { e.preventDefault(); loadNameTag(); });
