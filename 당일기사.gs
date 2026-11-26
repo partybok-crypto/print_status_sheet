@@ -13,7 +13,8 @@
  *   - 기사 = 「거래처」 시트 요일별 배송기사 열(AD~AI)에서 업체번호로 찾은 값
  * 월요일(휴무)은 I열을 전부 비운다.
  *
- * 처음 한 번: 편집기에서 setupTodayDriverTrigger 실행(권한 허용) → 매일 0시대 자동 실행.
+ * 처음 한 번: 편집기에서 setupTodayDriverTrigger 실행(권한 허용) → 매일 0시대 자동 실행,
+ * 그리고 낮에 요일 플래그·배송순서·거래처 기사 배정을 고치면 그 자리에서 다시 기록(onEditTodayDrivers).
  *****************************************************/
 
 const TODAY_DRIVER_TZ = "Asia/Seoul";
@@ -68,13 +69,35 @@ function driverNameOnly_(raw) {
   return /[가-힣A-Za-z]/.test(name) ? name : "";
 }
 
-// 처음 한 번 실행: 기존 같은 트리거를 지우고 매일 0시대(한국 시간) 트리거를 새로 단 뒤 바로 한 번 기록한다.
+// 낮에 배정을 고치면 바로 다시 기록한다 — 기사 배정에 영향을 주는 칸을 고쳤을 때만.
+//   세탁물 현황: A~F(요일별 배송순서) · K(업체번호) · T~Z(요일 플래그)
+//   거래처: A(업체코드) · X~AI(요일별 배송코스·배송기사)
+function onEditTodayDrivers(e) {
+  if (!e || !e.range) return;
+  var sheetName = e.range.getSheet().getName();
+  var c1 = e.range.getColumn(), c2 = e.range.getLastColumn();
+  var hits = function (from, to) { return c1 <= to && c2 >= from; };
+  var relevant =
+    (sheetName === WEB_SHEET_NAME && e.range.getLastRow() >= DATA_START_ROW &&
+      (hits(1, 6) || hits(COL_COMPANY_NO, COL_COMPANY_NO) || hits(20, 26))) ||
+    (sheetName === TRADE_SHEET_NAME && (hits(1, 1) || hits(24, 35)));
+  if (!relevant) return;
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(20000)) return;
+  try { updateTodayDrivers(); } finally { lock.releaseLock(); }
+}
+
+// 처음 한 번 실행: 기존 같은 트리거를 지우고 매일 0시대(한국 시간) 트리거 + 편집 시 트리거를 새로 단 뒤 바로 한 번 기록한다.
 function setupTodayDriverTrigger() {
   ScriptApp.getProjectTriggers().forEach(function (t) {
-    if (t.getHandlerFunction() === "updateTodayDrivers") ScriptApp.deleteTrigger(t);
+    var fn = t.getHandlerFunction();
+    if (fn === "updateTodayDrivers" || fn === "onEditTodayDrivers") ScriptApp.deleteTrigger(t);
   });
   ScriptApp.newTrigger("updateTodayDrivers")
     .timeBased().everyDays(1).atHour(0).nearMinute(5).inTimezone(TODAY_DRIVER_TZ)
+    .create();
+  ScriptApp.newTrigger("onEditTodayDrivers")
+    .forSpreadsheet(SpreadsheetApp.getActiveSpreadsheet()).onEdit()
     .create();
   return updateTodayDrivers();
 }
