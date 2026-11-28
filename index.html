@@ -1756,6 +1756,19 @@
     return wrap.firstElementChild;
   }
 
+  // 현황지 전용: 지원차·자차 표 위에 마감자가 총 포대배송·총 수건배송 개수를 손으로 적는 칸 2줄을 더한다(마감자용 수량표는 그대로).
+  function buildStatusBottomTable() {
+    var table = buildVehicleCheckTable();
+    var thead = table.querySelector('thead');
+    var head = document.createElement('tr'); head.className = 'vc-head-row vc-total-head';
+    head.innerHTML = '<th colspan="2">총 포대배송 (개)</th><th>총 수건배송 (개)</th>';
+    var input = document.createElement('tr'); input.className = 'vc-input-row vc-total-input';
+    input.innerHTML = '<td colspan="2"></td><td></td>';
+    thead.insertBefore(input, thead.firstChild);
+    thead.insertBefore(head, input);
+    return table;
+  }
+
   function renderStatusRows(tbody, items) {
     tbody.innerHTML = '';
     items.forEach(function (it) {
@@ -1821,7 +1834,7 @@
     applyCourseColorBlock(wrap.querySelector('tr.doc-title-row'), wrap.querySelector('tr.doc-col-row'), course);
     renderStatusRows(wrap.querySelector('tbody'), items);
     appendCloserContactRow(wrap, merged);
-    wrap.appendChild(buildVehicleCheckTable());
+    wrap.appendChild(buildStatusBottomTable());
     return wrap;
   }
   function buildAddressCourseBlock(course, items, driver, merged) {
