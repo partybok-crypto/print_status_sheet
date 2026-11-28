@@ -410,6 +410,10 @@
   .status-table td.col-shipno { font-weight: 700; font-size: 20pt; }
   .status-table td.col-qty { border: 2px solid #1d4ed8; }
   .status-table td.col-closecheck { border: 2px solid #000; background: #fff; }
+  .status-table th.th-open { padding: 3px 2px; line-height: 1.15; }
+  .status-table th.th-open .tho-date { display: block; font-size: 10pt; font-weight: 900; }
+  .status-table th.th-open .tho-label { display: block; font-size: 7.5pt; font-weight: 700; white-space: nowrap; }
+  .status-table th.th-open .tho-name { display: block; font-size: 12pt; font-weight: 900; }
   .status-table th .th-sub { font-size: 8pt; font-weight: 700; }
   .status-table td.has-note { background: #fff59d; color: var(--red); font-weight: 700; }
   .status-table tr.missing-row td.col-nickname, .status-table tr.missing-row td.col-companyno { background: var(--red-bg); }
@@ -1272,7 +1276,7 @@
       requestedDate: raw.requestedDate,
       weekday: raw.weekday,
       origin: raw.origin,
-      closers: raw.closers || [],
+      closers: raw.closers || [], opener: raw.opener || null,
       closedDay: raw.closedDay,
       courses: courses,
       byCourse: byCourse,
@@ -1877,7 +1881,7 @@
           '<th colspan="5" class="title-main" data-slot="main"></th>' +
         '</tr>' +
         '<tr class="doc-col-row">' +
-          '<th>배송순서</th><th>업체번호</th><th>약칭</th><th>업종</th><th>포대 배송</th><th>수건 배송</th><th>수거량<br>(중요!)</th><th>출고</th><th>오픈<br>수량기입</th>' +
+          '<th>배송순서</th><th>업체번호</th><th>약칭</th><th>업종</th><th>포대 배송</th><th>수건 배송</th><th>수거량<br>(중요!)</th><th>출고</th><th class="th-open">오픈자<br>수량메모</th>' +
         '</tr>' +
       '</thead>' +
       '<tbody></tbody>' +
@@ -1985,6 +1989,28 @@
     table.parentNode.insertBefore(head, table);
   }
 
+  // 현황지 마지막 열 제목: 다음 날 날짜 / 오픈자 수량메모 / 그날 일정표 "오픈" 포지션 이름(서버 opener).
+  // 세탁팀은 화요일 휴무라 다음 날이 화요일이면 수요일. 서버 값이 없으면 날짜만 직접 계산한다.
+  function fillOpenerHeader(wrap, merged) {
+    var th = wrap.querySelector('table.status-table tr.doc-col-row th.th-open');
+    if (!th) return;
+    var op = merged && merged.opener, dateTxt = '', names = [];
+    var wdNames = ['일', '월', '화', '수', '목', '금', '토'];
+    var m = op && op.date ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(op.date) : null;
+    if (m) { dateTxt = Number(m[2]) + '/' + Number(m[3]) + '(' + (op.weekday || '') + ')'; names = op.names || []; }
+    else if (state.selectedDate) {
+      var base = new Date(state.selectedDate);
+      var d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + 1);
+      if (d.getDay() === 2) d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+      dateTxt = (d.getMonth() + 1) + '/' + d.getDate() + '(' + wdNames[d.getDay()] + ')';
+    }
+    th.innerHTML = '';
+    var a = document.createElement('span'); a.className = 'tho-date'; a.textContent = dateTxt;
+    var b = document.createElement('span'); b.className = 'tho-label'; b.textContent = '오픈자 수량메모';
+    var c = document.createElement('span'); c.className = 'tho-name'; c.textContent = names.length ? names.join('·') : '______';
+    th.appendChild(a); th.appendChild(b); th.appendChild(c);
+  }
+
   function buildStatusCourseBlock(course, items, driver, merged) {
     var wrap = document.createElement('div');
     wrap.className = 'print-course';
@@ -1994,6 +2020,7 @@
     wrap.querySelector('[data-slot="main"]').textContent = merged.dayOfWeek + ' 세탁물 현황';
     renderStatusRows(wrap.querySelector('tbody'), items);
     appendCloserContactRow(wrap, merged);
+    fillOpenerHeader(wrap, merged);
     return wrap;
   }
   function buildAddressCourseBlock(course, items, driver, merged) {

@@ -239,7 +239,25 @@ function getClosers_(dateObj, force) {
   return found;
 }
 
-// 30분마다(06~22시) 오늘·내일 현황지의 마감 담당과 세탁공정 작성자를 미리 읽어 기억해 둔다.
+// 현황지 "오픈자 수량메모" 열: 현황지 다음 날의 오픈 근무자. 세탁팀은 화요일 휴무라 다음 날이 화요일이면 수요일.
+// { date: "YYYY-MM-DD", weekday: "일", names: ["아헠"] } — 일정표에 그날이 없으면 names: [].
+function openerDateOf_(dateObj) {
+  var d = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate() + 1);
+  if (d.getDay() === 2) d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+  return d;
+}
+
+function getOpener_(dateObj, force) {
+  var od = openerDateOf_(dateObj);
+  var res = { date: toIsoDate_(od), weekday: weekdayOfDate_(od), names: [] };
+  var cache = null, ckey = "opener:" + res.date;
+  try { cache = CacheService.getScriptCache(); var hit = force ? null : cache.get(ckey); if (hit) { res.names = JSON.parse(hit); return res; } } catch (e0) {}
+  try { res.names = positionNamesIn_(scheduleValues_(true), od, "오픈") || []; } catch (e1) { res.names = []; }
+  try { cache.put(ckey, JSON.stringify(res.names), res.names.length ? SCHEDULE_CACHE_FOUND_SEC : SCHEDULE_CACHE_EMPTY_SEC); } catch (e2) {}
+  return res;
+}
+
+// 30분마다(06~22시) 오늘·내일 현황지의 마감 담당·오픈자와 세탁공정 작성자를 미리 읽어 기억해 둔다.
 // 그래야 현장에서 그날 처음 조회해도 일정표 파일 여는 시간(수 초)을 기다리지 않는다.
 function warmStatusCaches() {
   var hour = Number(Utilities.formatDate(new Date(), "Asia/Seoul", "H"));
@@ -250,7 +268,8 @@ function warmStatusCaches() {
     var d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + add);
     var c = getClosers_(d, true);
     var w = getFirstWorkerName_(washDateOf_(d), true);
-    out.push(toIsoDate_(d) + " 마감 " + c.length + "명, 작성자 " + (w || "-"));
+    var o = getOpener_(d, true);
+    out.push(toIsoDate_(d) + " 마감 " + c.length + "명, 오픈 " + (o.names.join(",") || "-") + ", 작성자 " + (w || "-"));
   });
   return out.join(" / ");
 }
@@ -272,7 +291,10 @@ function getClosersUncached_(dateObj) {
 }
 
 // 그 날짜 블록(포지션·이름 머리글)이 있으면 "마감" 근무자 이름 배열, 블록 자체가 없으면 null.
-function closerNamesIn_(v, dateObj) {
+function closerNamesIn_(v, dateObj) { return positionNamesIn_(v, dateObj, "마감"); }
+
+// 그 날짜 블록에서 포지션에 keyword(예: "마감", "오픈")가 들어간 사람 이름 배열. 블록 자체가 없으면 null.
+function positionNamesIn_(v, dateObj, keyword) {
   var wd = ["일", "월", "화", "수", "목", "금", "토"][dateObj.getDay()];
   var mm = dateObj.getMonth() + 1, dd = dateObj.getDate();
   for (var r = 0; r + 1 < v.length; r++) {
@@ -291,7 +313,7 @@ function closerNamesIn_(v, dateObj) {
       for (var i = r + 2; i < Math.min(v.length, r + 2 + 40); i++) {
         var pos = String(v[i][posCol] || "").trim(), name = String(v[i][nameCol] || "").trim();
         if (!pos && !name) break; // 블록 끝
-        if (name && pos.indexOf("마감") !== -1 && names.indexOf(name) === -1) names.push(name);
+        if (name && pos.indexOf(keyword) !== -1 && names.indexOf(name) === -1) names.push(name);
       }
       return names;
     }
@@ -584,6 +606,7 @@ function buildDayData_(weekday, explicitDate) {
     courses: order,
     washWriter: (function () { var t0 = Date.now(); var w = getFirstWorkerName_(washDateOf_(dateObj)); writerMs = Date.now() - t0; return w; })(),
     closers: (function () { var t0 = Date.now(); var c = getClosers_(dateObj); closerMs = Date.now() - t0; return c; })(),
+    opener: (function () { try { return getOpener_(dateObj); } catch (e) { return null; } })(),
     drivers: drivers,
     items: items,
     count: items.length,
