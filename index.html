@@ -3848,10 +3848,22 @@
   function showUpdateOverlay(verTime) {
     var old = document.getElementById('psUpdateOverlay');
     if (old) { var ov = document.getElementById('psUpdateVer'); if (ov && verTime) ov.textContent = '(버전: ' + verTime + ')'; return; }
+    if (!document.getElementById('psUpdateStyle')) {
+      // 빠르게 깜박임: 안내창 테두리·바탕(0.5초)과 새로고침 버튼(0.5초, 엇갈리게)
+      var st = document.createElement('style'); st.id = 'psUpdateStyle';
+      st.textContent =
+        '@keyframes psUpdBox{0%,100%{border-color:#2563eb;background:#fff}50%{border-color:#ef4444;background:#fff7ed}}' +
+        '@keyframes psUpdBtn{0%,100%{background:#2563eb;transform:scale(1)}50%{background:#ef4444;transform:scale(1.06)}}' +
+        '#psUpdateOverlay .ps-upd-box{animation:psUpdBox .5s steps(1,end) infinite}' +
+        '#psUpdateOverlay .ps-upd-btn{animation:psUpdBtn .5s ease-in-out infinite}' +
+        '#psUpdateOverlay .ps-upd-btn:hover{animation-play-state:paused}';
+      document.head.appendChild(st);
+    }
     var bg = document.createElement('div');
     bg.id = 'psUpdateOverlay'; bg.className = 'no-print';
     bg.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;';
     var box = document.createElement('div');
+    box.className = 'ps-upd-box';
     box.style.cssText = 'width:80vw;height:80vh;background:#fff;border:6px solid #2563eb;border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,.35);' +
       'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5vh;text-align:center;padding:4vh 4vw;box-sizing:border-box;';
     var t1 = document.createElement('div');
@@ -3861,7 +3873,7 @@
     t2.textContent = '새로고침 해주세요';
     t2.style.cssText = 'font-size:min(5vw,8vh);font-weight:800;color:#2563eb;line-height:1.2;';
     var btn = document.createElement('button');
-    btn.type = 'button'; btn.textContent = '새로고침';
+    btn.type = 'button'; btn.textContent = '새로고침'; btn.className = 'ps-upd-btn';
     btn.style.cssText = 'font-size:min(4.5vw,7vh);font-weight:900;color:#fff;background:#2563eb;border:0;border-radius:20px;padding:2.2vh 8vw;cursor:pointer;';
     btn.addEventListener('click', function () { location.reload(); });
     var t3 = document.createElement('div');
