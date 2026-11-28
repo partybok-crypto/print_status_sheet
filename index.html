@@ -52,6 +52,8 @@
   .conn-text.ok { color: var(--green); }
   .conn-text.err { color: var(--red); }
   .conn-text.pending { color: var(--text-sub); }
+  .conn-text.stale { color: #d97706; }
+  .ver-text { font-size: 11px; font-weight: 600; color: #94a3b8; margin-left: -4px; white-space: nowrap; }
   .icon-btn {
     width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border);
     background: #fff; font-size: 18px; display: flex; align-items: center; justify-content: center;
@@ -626,7 +628,7 @@
         <button class="lang-btn" data-lang="id">Bahasa Indonesia</button>
         <button class="lang-btn" data-lang="vi">Tiếng Việt</button>
       </div>
-      <span class="conn-text pending" id="connText">연결 확인 중</span>
+      <span class="conn-text pending" id="connText">데이터 불러오는 중</span><span class="ver-text" id="verText"></span>
       <button class="icon-btn" id="btnSettings" title="설정" data-i18n-title="settings" style="display:none">⚙</button>
     </div>
   </header>
@@ -839,7 +841,7 @@
   var I18N = {
     ko: {
       appTitle: '유성클리닝 현황지 출력', settings: '설정', retry: '재시도', close: '닫기', save: '저장',
-      sec1: '1. 날짜 선택', sec2: '2. 코스 선택', sec3: '3. 자주 사용하는 출력', sec4: '4. 인쇄',
+      sec1: '1. 배송날짜 선택', sec2: '2. 코스 선택', sec3: '3. 자주 사용하는 출력', sec4: '4. 인쇄',
       today: '오늘', nextBiz: '다음 영업일',
       pdbStatusAddr: '현황지 + 주소지', pdbStatusAddrSub: '배송기사용 · 2개 문서 연속 출력',
       pdbStatusAddrWash: '현황지 + 주소지 + 세탁공정', pdbStatusAddrWashSub: '배송기사용 + 세탁팀용 · 3개 문서 연속 출력',
@@ -871,7 +873,7 @@
       guideStep1: '1. 현황지 인쇄', guideStep2: '2. 주소지 인쇄',
       closerTitle: '세탁 마감용 문서 출력', closerBody: '1. 마감자용 수량표<br>2. 전체주소지<br><br>두 문서를 순서대로 출력해주세요.',
       closerStep1: '1. 마감자용 수량표 인쇄', closerStep2: '2. 전체주소지 인쇄', closerDone: '출력 완료',
-      connPending: '연결 확인 중', connOk: '원본 데이터 연결됨', connErr: '데이터 연결 오류',
+      connPending: '데이터 불러오는 중', connOk: '데이터 {time} 불러옴', connStale: '데이터 {time} 불러옴 · 곧 새로 불러옴', connErr: '데이터 불러오기 실패', connErrOld: '불러오기 실패 · {time} 데이터 표시 중',
       errTimeout: '요청이 너무 오래 걸려 중단됐어요. 다시 시도해주세요.', errGas: 'GAS 연결을 확인해주세요.', errLoad: '데이터를 불러오지 못했습니다.',
       loading: '데이터를 불러오는 중...', loadingDocs: '데이터를 불러오는 중입니다...',
       closedCourse: '이 날짜는 휴무일입니다 — 배정된 코스가 없습니다.', closedInfo: 'ℹ 휴무일 — 인쇄할 수 있는 코스가 없습니다.',
@@ -894,7 +896,7 @@
     },
     id: {
       appTitle: 'Cetak Lembar Status Yuseong Cleaning', settings: 'Pengaturan', retry: 'Coba lagi', close: 'Tutup', save: 'Simpan',
-      sec1: '1. Pilih tanggal', sec2: '2. Pilih rute', sec3: '3. Cetakan yang sering dipakai', sec4: '4. Cetak',
+      sec1: '1. Pilih tanggal kirim', sec2: '2. Pilih rute', sec3: '3. Cetakan yang sering dipakai', sec4: '4. Cetak',
       today: 'Hari ini', nextBiz: 'Hari kerja berikutnya',
       pdbStatusAddr: 'Lembar status + Daftar alamat', pdbStatusAddrSub: 'Untuk pengantar · cetak 2 dokumen berurutan',
       pdbCloserAll: 'Tabel jumlah penutupan + Semua alamat', pdbCloserAllSub: 'Untuk penutupan cucian · cetak 2 dokumen berurutan',
@@ -922,7 +924,7 @@
       guideStep1: '1. Cetak lembar status', guideStep2: '2. Cetak daftar alamat',
       closerTitle: 'Cetak dokumen penutupan cucian', closerBody: '1. Tabel jumlah penutupan<br>2. Semua alamat<br><br>Cetak kedua dokumen sesuai urutan.',
       closerStep1: '1. Cetak tabel jumlah penutupan', closerStep2: '2. Cetak semua alamat', closerDone: 'Selesai mencetak',
-      connPending: 'Memeriksa koneksi', connOk: 'Data asli terhubung', connErr: 'Kesalahan koneksi data',
+      connPending: 'Memuat data', connOk: 'Data dimuat {time}', connStale: 'Data dimuat {time} · segera diperbarui', connErr: 'Gagal memuat data', connErrOld: 'Gagal memuat · menampilkan data {time}',
       errTimeout: 'Permintaan terlalu lama dan dihentikan. Silakan coba lagi.', errGas: 'Periksa koneksi GAS.', errLoad: 'Gagal memuat data.',
       loading: 'Memuat data...', loadingDocs: 'Memuat data...',
       closedCourse: 'Tanggal ini hari libur — tidak ada rute.', closedInfo: 'ℹ Hari libur — tidak ada rute yang bisa dicetak.',
@@ -945,7 +947,7 @@
     },
     vi: {
       appTitle: 'In bảng tình hình Yuseong Cleaning', settings: 'Cài đặt', retry: 'Thử lại', close: 'Đóng', save: 'Lưu',
-      sec1: '1. Chọn ngày', sec2: '2. Chọn tuyến', sec3: '3. Bản in thường dùng', sec4: '4. In',
+      sec1: '1. Chọn ngày giao', sec2: '2. Chọn tuyến', sec3: '3. Bản in thường dùng', sec4: '4. In',
       today: 'Hôm nay', nextBiz: 'Ngày làm việc tiếp theo',
       pdbStatusAddr: 'Bảng tình hình + Danh sách địa chỉ', pdbStatusAddrSub: 'Dành cho tài xế giao hàng · in liên tiếp 2 tài liệu',
       pdbCloserAll: 'Bảng số lượng chốt + Tất cả địa chỉ', pdbCloserAllSub: 'Dành cho chốt giặt · in liên tiếp 2 tài liệu',
@@ -973,7 +975,7 @@
       guideStep1: '1. In bảng tình hình', guideStep2: '2. In danh sách địa chỉ',
       closerTitle: 'In tài liệu chốt giặt', closerBody: '1. Bảng số lượng chốt<br>2. Tất cả địa chỉ<br><br>Hãy in hai tài liệu theo thứ tự.',
       closerStep1: '1. In bảng số lượng chốt', closerStep2: '2. In tất cả địa chỉ', closerDone: 'In xong',
-      connPending: 'Đang kiểm tra kết nối', connOk: 'Đã kết nối dữ liệu gốc', connErr: 'Lỗi kết nối dữ liệu',
+      connPending: 'Đang tải dữ liệu', connOk: 'Dữ liệu tải lúc {time}', connStale: 'Dữ liệu tải lúc {time} · sắp làm mới', connErr: 'Lỗi tải dữ liệu', connErrOld: 'Lỗi tải · đang hiện dữ liệu {time}',
       errTimeout: 'Yêu cầu quá lâu nên đã bị dừng. Vui lòng thử lại.', errGas: 'Vui lòng kiểm tra kết nối GAS.', errLoad: 'Không tải được dữ liệu.',
       loading: 'Đang tải dữ liệu...', loadingDocs: 'Đang tải dữ liệu...',
       closedCourse: 'Ngày này là ngày nghỉ — không có tuyến được giao.', closedInfo: 'ℹ Ngày nghỉ — không có tuyến để in.',
@@ -1258,11 +1260,23 @@
   btnRetry.addEventListener('click', function () { loadDayData(true); });
 
   var connState = { kind: 'pending', key: 'connPending' };
-  function setConn(kind, key) {
-    connState = { kind: kind, key: key };
+  // 위쪽 상태 글자: 마지막으로 시트를 불러온 시각(초록 3분 이내 / 주황 3분 넘음 / 빨강 실패)
+  function setConn(kind, key, vars) {
+    connState = { kind: kind, key: key, vars: vars || connState && connState.key === key && connState.vars || null };
     connText.className = 'conn-text ' + kind;
-    connText.textContent = t(key);
+    connText.textContent = t(key, connState.vars || undefined);
   }
+  function hhmm(ms) { var d = new Date(ms); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+  setInterval(function () {
+    if (!connState || (connState.kind !== 'ok' && connState.kind !== 'stale')) return;
+    var age = dataAgeMs();
+    if (age >= 180000 && connState.kind === 'ok') setConn('stale', 'connStale', connState.vars);
+  }, 20000);
+  (function () {
+    var bt = '__BUILD_TIME__'; // 배포할 때 "11/29 00:23" 형태로 바뀐다
+    var el = document.getElementById('verText');
+    if (el && bt.indexOf('__') !== 0) el.textContent = 'v ' + bt;
+  })();
 
   // ================= 드래프트(로컬 임시저장, 관리 화면과 동일한 키 사용) =================
   function draftKey(dateIso) { return DRAFT_KEY_PREFIX + dateIso; }
@@ -1306,6 +1320,7 @@
     var rc = state.rawCache[dateIso];
     if (!force && rc && rc.__at && Date.now() - rc.__at < 180000) {
       applyRawData(state.rawCache[dateIso], dateIso);
+      setConn(dataAgeMs() >= 180000 ? 'stale' : 'ok', dataAgeMs() >= 180000 ? 'connStale' : 'connOk', { time: hhmm(rc.__at) });
       return;
     }
     if (state.isLoading) return;
@@ -1337,7 +1352,7 @@
         data.__at = Date.now(); state.rawCache[dateIso] = data;
         try { localStorage.setItem('ps_lastgood_' + dateIso, JSON.stringify({ at: Date.now(), data: data })); } catch (e) {}
         applyRawData(data, dateIso);
-        setConn('ok', 'connOk');
+        setConn('ok', 'connOk', { time: hhmm(data.__at) });
         runAfterLoad(true);
       })
       .catch(function (err) {
@@ -1347,7 +1362,7 @@
           if (lg && lg.data && lg.data.requestedDate === dateIso && isoDate(state.selectedDate) === dateIso) {
             applyRawData(lg.data, dateIso);
             var tm = new Date(lg.at);
-            setConn('err', 'connErr');
+            setConn('err', 'connErrOld', { time: (tm.getMonth() + 1) + '/' + tm.getDate() + ' ' + hhmm(lg.at) });
             showInlineError('서버 응답이 없어 ' + (tm.getMonth() + 1) + '/' + tm.getDate() + ' ' + tm.getHours() + ':' + String(tm.getMinutes()).padStart(2, '0') + '에 불러왔던 이전 데이터를 보여줍니다. 출력 전에 「다시 시도」를 눌러 최신으로 바꿔주세요.');
             runAfterLoad(false);
             return;
