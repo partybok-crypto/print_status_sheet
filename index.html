@@ -289,15 +289,14 @@
   }
   .vehicle-check-table tr.vc-head-row th { background: #f3f4f6; font-weight: 800; font-size: 13pt; padding: 7px 6px; }
   .vehicle-check-table tr.vc-input-row td { height: 14mm; background: #fff; border-width: 2px; }
-  .status-closer-box {
-    width: 210mm; box-sizing: border-box; margin-top: -1px; background: #fff;
-    border: 2px solid #000; padding: 7px 10px; font-size: 13pt; line-height: 1.5;
-    display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 18px;
-    break-inside: avoid; page-break-inside: avoid; break-before: avoid; page-break-before: avoid;
+  /* 현황지 상단 오늘 마감 담당 줄 */
+  .status-table tr.closer-contact-row th {
+    background: #fff8e1; color: #000; text-align: left; font-weight: 800;
+    padding: 8px 12px; line-height: 1.35; border: 2px solid #000;
   }
-  .status-closer-box .scb-label { font-weight: 800; }
-  .status-closer-box .scb-person { font-weight: 700; white-space: nowrap; }
-  .status-closer-box .scb-person b { font-size: 14pt; }
+  .status-table tr.closer-contact-row .ccr-label { display: block; font-size: 18pt; white-space: nowrap; }
+  .status-table tr.closer-contact-row .ccr-person { font-size: 22pt; font-weight: 700; margin-right: 26px; white-space: nowrap; display: inline-block; }
+  .status-table tr.closer-contact-row .ccr-person b { font-size: 28pt; font-weight: 900; }
 
   .address-footnote {
     width: 297mm; text-align: center; font-size: 12pt; font-weight: 700;
@@ -1679,27 +1678,27 @@
       '</tbody>' +
     '</table>';
 
-  // 현황지 하단: 그날 일정표의 "마감" 포지션 근무자 이름·전화번호 — 수량을 적은 사람이 누구인지 드러나게 한다
-  function buildCloserContact(merged) {
-    var box = document.createElement('div');
-    box.className = 'status-closer-box';
-    var lab = document.createElement('span'); lab.className = 'scb-label';
+  // 현황지 상단(제목 바로 아래, 표 머리글 안이라 2장이면 장마다 반복): 그날 일정표 "마감" 포지션 근무자 이름·전화번호
+  function appendCloserContactRow(wrap, merged) {
+    var thead = wrap.querySelector('thead');
+    var titleRow = wrap.querySelector('tr.doc-title-row');
+    if (!thead || !titleRow) return;
+    var tr = document.createElement('tr'); tr.className = 'closer-contact-row';
+    var th = document.createElement('th'); th.colSpan = 8;
+    var lab = document.createElement('span'); lab.className = 'ccr-label';
     lab.textContent = '오늘 마감 담당 (수량 확인)';
-    box.appendChild(lab);
+    th.appendChild(lab);
     var list = (merged && merged.closers) || [];
-    if (!list.length) {
-      var none = document.createElement('span'); none.className = 'scb-person';
-      none.textContent = '________________  010-____-____';
-      box.appendChild(none);
-    }
+    if (!list.length) list = [{ name: '________', phone: '' }];
     list.forEach(function (c) {
-      var sp = document.createElement('span'); sp.className = 'scb-person';
+      var sp = document.createElement('span'); sp.className = 'ccr-person';
       var nm = document.createElement('b'); nm.textContent = c.name;
       sp.appendChild(nm);
       sp.appendChild(document.createTextNode(' ' + (c.phone || '010-____-____')));
-      box.appendChild(sp);
+      th.appendChild(sp);
     });
-    return box;
+    tr.appendChild(th);
+    titleRow.parentNode.insertBefore(tr, titleRow.nextSibling);
   }
 
   function buildVehicleCheckTable() {
@@ -1771,9 +1770,9 @@
     stamp.textContent = '출력 ' + (now.getMonth() + 1) + '/' + now.getDate() + ' ' + fmtPrintTime(now);
     wrap.querySelector('[data-slot="title"]').appendChild(stamp);
     applyCourseColorBlock(wrap.querySelector('tr.doc-title-row'), wrap.querySelector('tr.doc-col-row'), course);
+    appendCloserContactRow(wrap, merged);
     renderStatusRows(wrap.querySelector('tbody'), items);
     wrap.appendChild(buildVehicleCheckTable());
-    wrap.appendChild(buildCloserContact(merged));
     return wrap;
   }
   function buildAddressCourseBlock(course, items, driver, merged) {

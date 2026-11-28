@@ -191,6 +191,14 @@
   .error-banner.show { display: flex; }
   .error-banner button { margin-left: auto; }
 
+  .closer-info-bar {
+    margin: -6px 0 16px; padding: 12px 16px; border-radius: 12px;
+    background: #fff8e1; border: 2px solid #f59e0b; color: #111827;
+    display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 22px; row-gap: 4px;
+  }
+  .closer-info-bar .cib-label { font-size: 15px; font-weight: 800; }
+  .closer-info-bar .cib-person { font-size: 18px; font-weight: 700; white-space: nowrap; }
+  .closer-info-bar .cib-person b { font-size: 22px; font-weight: 900; }
   .ready-banner {
     margin-bottom: 16px;
     padding: 13px 16px;
@@ -403,6 +411,14 @@
   .status-table td.col-qty { border: 2px solid #1d4ed8; }
   .status-table td.has-note { background: #fff59d; color: var(--red); font-weight: 700; }
   .status-table tr.missing-row td.col-nickname, .status-table tr.missing-row td.col-companyno { background: var(--red-bg); }
+  /* 현황지 상단 오늘 마감 담당 줄 */
+  .status-table tr.closer-contact-row th {
+    background: #fff8e1; color: #000; text-align: left; font-weight: 800;
+    padding: 8px 12px; line-height: 1.35; border: 2px solid #000;
+  }
+  .status-table tr.closer-contact-row .ccr-label { display: block; font-size: 18pt; white-space: nowrap; }
+  .status-table tr.closer-contact-row .ccr-person { font-size: 22pt; font-weight: 700; margin-right: 26px; white-space: nowrap; display: inline-block; }
+  .status-table tr.closer-contact-row .ccr-person b { font-size: 28pt; font-weight: 900; }
 
   .address-table td, .address-table th { font-size: 12.5pt; }
   .address-table td.col-order { background: #f2eaff; }
@@ -541,6 +557,7 @@
 
         <div class="ready-banner loading" id="readyBanner"><span id="readyBannerText">데이터를 불러오는 중...</span></div>
         <div class="issue-detail" id="issueDetail" style="display:none;"></div>
+        <div class="closer-info-bar" id="closerInfoBar" style="display:none;"></div>
 
         <div id="closedDayNotice" class="closed-banner" style="display:none;"></div>
 
@@ -1249,6 +1266,7 @@
       requestedDate: raw.requestedDate,
       weekday: raw.weekday,
       origin: raw.origin,
+      closers: raw.closers || [],
       closedDay: raw.closedDay,
       courses: courses,
       byCourse: byCourse,
@@ -1327,7 +1345,33 @@
     issueDetail.style.display = 'none';
   }
 
+  // 화면 위쪽: 그날 일정표 "마감" 근무자(현황지 상단과 같은 내용)
+  function renderCloserInfoBar() {
+    var bar = document.getElementById('closerInfoBar');
+    if (!bar) return;
+    var list = (state.merged && !state.merged.closedDay && state.merged.closers) || [];
+    bar.innerHTML = '';
+    if (!state.merged || state.merged.closedDay) { bar.style.display = 'none'; return; }
+    bar.style.display = '';
+    var lab = document.createElement('span'); lab.className = 'cib-label';
+    lab.textContent = '오늘 마감 담당 (수량 확인)';
+    bar.appendChild(lab);
+    if (!list.length) {
+      var none = document.createElement('span'); none.className = 'cib-person';
+      none.textContent = '일정표에 이날 마감 근무자가 없습니다';
+      bar.appendChild(none);
+    }
+    list.forEach(function (c) {
+      var sp = document.createElement('span'); sp.className = 'cib-person';
+      var nm = document.createElement('b'); nm.textContent = c.name;
+      sp.appendChild(nm);
+      sp.appendChild(document.createTextNode(' ' + (c.phone || '번호 없음')));
+      bar.appendChild(sp);
+    });
+  }
+
   function renderReadyBanner() {
+    renderCloserInfoBar();
     if (!state.merged) return;
     if (state.merged.closedDay) { setReadyBanner('ok', '휴무일입니다.'); return; }
     var totalCourses = state.merged.courses.length;
@@ -1900,6 +1944,29 @@
     });
   }
 
+  // 현황지 상단(제목 바로 아래, 표 머리글 안이라 2장이면 장마다 반복): 그날 일정표 "마감" 포지션 근무자 이름·전화번호
+  function appendCloserContactRow(wrap, merged) {
+    var thead = wrap.querySelector('thead');
+    var titleRow = wrap.querySelector('tr.doc-title-row');
+    if (!thead || !titleRow) return;
+    var tr = document.createElement('tr'); tr.className = 'closer-contact-row';
+    var th = document.createElement('th'); th.colSpan = 8;
+    var lab = document.createElement('span'); lab.className = 'ccr-label';
+    lab.textContent = '오늘 마감 담당 (수량 확인)';
+    th.appendChild(lab);
+    var list = (merged && merged.closers) || [];
+    if (!list.length) list = [{ name: '________', phone: '' }];
+    list.forEach(function (c) {
+      var sp = document.createElement('span'); sp.className = 'ccr-person';
+      var nm = document.createElement('b'); nm.textContent = c.name;
+      sp.appendChild(nm);
+      sp.appendChild(document.createTextNode(' ' + (c.phone || '010-____-____')));
+      th.appendChild(sp);
+    });
+    tr.appendChild(th);
+    titleRow.parentNode.insertBefore(tr, titleRow.nextSibling);
+  }
+
   function buildStatusCourseBlock(course, items, driver, merged) {
     var wrap = document.createElement('div');
     wrap.className = 'print-course';
@@ -1907,6 +1974,7 @@
     wrap.querySelector('[data-slot="course"]').textContent = course + '코스 · ' + (driver || '기사 미배정');
     wrap.querySelector('[data-slot="date"]').textContent = fmtDisplayDate(state.selectedDate);
     wrap.querySelector('[data-slot="main"]').textContent = merged.dayOfWeek + ' 세탁물 현황';
+    appendCloserContactRow(wrap, merged);
     renderStatusRows(wrap.querySelector('tbody'), items);
     return wrap;
   }

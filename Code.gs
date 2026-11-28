@@ -174,18 +174,21 @@ function washDateOf_(dateObj) {
 // 그 날짜 일정표 블록(날짜 칸 "10-31-토" + 바로 아래 머리글 출근/종료/포지션/이름/작업)에서
 // 휴무가 아닌 사람 중 출근이 가장 이른 사람의 이름을 돌려준다(같으면 시트 순서). 못 찾거나 접근이 안 되면 "".
 function getFirstWorkerName_(dateObj) {
-  // 다른 스프레드시트를 열어 읽는 데 몇 초 걸리므로 날짜별로 30분간 기억한다(찾은 이름만 기억 - 못 찾으면 매번 다시 시도).
+  // 다른 스프레드시트를 열어 읽는 데 몇 초 걸리므로 날짜별로 기억한다(찾으면 30분, 못 찾으면 10분).
   var cache = null, ckey = "washWriter:" + toIsoDate_(dateObj);
-  try { cache = CacheService.getScriptCache(); var hit = cache.get(ckey); if (hit) return hit; } catch (e0) {}
+  try { cache = CacheService.getScriptCache(); var hit = cache.get(ckey); if (hit) return hit === "-" ? "" : hit; } catch (e0) {}
   var found = getFirstWorkerNameUncached_(dateObj);
-  if (found) { try { cache.put(ckey, found, 1800); } catch (e1) {} }
+  // 못 찾은 날(예: 일요일 수거분의 세탁일인 다음 주 월요일)도 10분 기억해 매번 다시 읽지 않는다.
+  try { cache.put(ckey, found || "-", found ? 1800 : 600); } catch (e1) {}
   return found;
 }
 
 // 한 번의 실행 안에서 일정표 스프레드시트·쉬프트 탭 값을 한 번만 읽는다(작성자·마감자 조회가 같이 쓴다).
 // 이번 주 일정표는 탭 맨 위(2~18행)에 있으므로 위쪽 SCHEDULE_TOP_ROWS 행만 먼저 읽고(빠름),
-// 거기서 그 날짜를 못 찾을 때만 탭 전체를 읽는다(예전 주 블록). 전체 읽기는 몇 초 걸린다.
+// 거기서 그 날짜를 못 찾을 때만 위쪽 SCHEDULE_MAX_ROWS 행까지 읽는다(지난주 블록은 50~70행 근처).
+// 탭 전체(수천 행)를 읽으면 10초 가까이 걸려 현황지 조회가 10초 제한에 걸린다.
 const SCHEDULE_TOP_ROWS = 30;
+const SCHEDULE_MAX_ROWS = 200;
 var SCHEDULE_SS_MEMO_ = null, SCHEDULE_VALUES_MEMO_ = {};
 function scheduleSpreadsheet_() {
   if (!SCHEDULE_SS_MEMO_) SCHEDULE_SS_MEMO_ = SpreadsheetApp.openById(SCHEDULE_SPREADSHEET_ID);
@@ -200,7 +203,7 @@ function scheduleValues_(topOnly) {
     var lastRow = sh.getLastRow(), lastCol = sh.getLastColumn();
     if (lastRow > 0 && lastCol > 0) {
       v = topOnly ? sh.getRange(1, 1, Math.min(lastRow, SCHEDULE_TOP_ROWS), lastCol).getDisplayValues()
-                  : sh.getRange(1, 1, lastRow, lastCol).getDisplayValues();
+                  : sh.getRange(1, 1, Math.min(lastRow, SCHEDULE_MAX_ROWS), lastCol).getDisplayValues();
     }
   }
   SCHEDULE_VALUES_MEMO_[key] = v;
@@ -281,7 +284,9 @@ function formatPhone_(raw) {
 function getFirstWorkerNameUncached_(dateObj) {
   try {
     var found = firstWorkerIn_(scheduleValues_(true), dateObj);
-    if (found === null) found = firstWorkerIn_(scheduleValues_(false), dateObj);
+    // 아래쪽(지난주 블록) 읽기는 수 초~십수 초 걸린다. 오늘 이후 날짜는 지난 블록에 있을 수 없으니 지난 날짜만 찾는다.
+    var today = new Date(); today = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    if (found === null && dateObj < today) found = firstWorkerIn_(scheduleValues_(false), dateObj);
     return found || "";
   } catch (err) {}
   return "";
