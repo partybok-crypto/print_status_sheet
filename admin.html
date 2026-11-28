@@ -416,7 +416,8 @@
     background: #fff8e1; color: #000; text-align: left; font-weight: 800;
     padding: 8px 12px; line-height: 1.35; border: 2px solid #000;
   }
-  .status-table tr.closer-contact-row .ccr-label { display: block; font-size: 18pt; white-space: nowrap; }
+  .status-table tr.closer-contact-row .ccr-label { display: block; font-size: 18pt; font-weight: 900; white-space: nowrap; }
+  .status-table tr.closer-contact-row .ccr-sub { display: block; font-size: 10.5pt; font-weight: 600; margin: 2px 0 4px; }
   .status-table tr.closer-contact-row .ccr-person { font-size: 22pt; font-weight: 700; margin-right: 26px; white-space: nowrap; display: inline-block; }
   .status-table tr.closer-contact-row .ccr-person b { font-size: 28pt; font-weight: 900; }
 
@@ -1944,16 +1945,19 @@
     });
   }
 
-  // 현황지 상단(제목 바로 아래, 표 머리글 안이라 2장이면 장마다 반복): 그날 일정표 "마감" 포지션 근무자 이름·전화번호
+  // 현황지 상단(코스 첫 장에만): 그날 일정표 "마감" 포지션 근무자 이름·전화번호.
+  // 표 머리글(thead)은 장마다 반복되므로 본문(tbody) 첫 줄에 넣는다 — renderStatusRows 뒤에 호출할 것.
   function appendCloserContactRow(wrap, merged) {
-    var thead = wrap.querySelector('thead');
-    var titleRow = wrap.querySelector('tr.doc-title-row');
-    if (!thead || !titleRow) return;
+    var tbody = wrap.querySelector('tbody');
+    if (!tbody) return;
     var tr = document.createElement('tr'); tr.className = 'closer-contact-row';
     var th = document.createElement('th'); th.colSpan = 8;
     var lab = document.createElement('span'); lab.className = 'ccr-label';
-    lab.textContent = '오늘 마감 담당 (수량 확인)';
+    lab.textContent = '현황지 수량 이상 시 마감자에 바로 연락';
     th.appendChild(lab);
+    var sub = document.createElement('span'); sub.className = 'ccr-sub';
+    sub.textContent = '포대·수건 수량이 다르거나 다른 거래처 수건이 섞여 있으면 아래 마감 담당자에게 바로 연락해 주세요.';
+    th.appendChild(sub);
     var list = (merged && merged.closers) || [];
     if (!list.length) list = [{ name: '________', phone: '' }];
     list.forEach(function (c) {
@@ -1964,7 +1968,7 @@
       th.appendChild(sp);
     });
     tr.appendChild(th);
-    titleRow.parentNode.insertBefore(tr, titleRow.nextSibling);
+    tbody.insertBefore(tr, tbody.firstChild);
   }
 
   function buildStatusCourseBlock(course, items, driver, merged) {
@@ -1974,8 +1978,8 @@
     wrap.querySelector('[data-slot="course"]').textContent = course + '코스 · ' + (driver || '기사 미배정');
     wrap.querySelector('[data-slot="date"]').textContent = fmtDisplayDate(state.selectedDate);
     wrap.querySelector('[data-slot="main"]').textContent = merged.dayOfWeek + ' 세탁물 현황';
-    appendCloserContactRow(wrap, merged);
     renderStatusRows(wrap.querySelector('tbody'), items);
+    appendCloserContactRow(wrap, merged);
     return wrap;
   }
   function buildAddressCourseBlock(course, items, driver, merged) {
