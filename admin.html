@@ -418,6 +418,7 @@
   }
   .status-table tr.closer-contact-row .ccr-label { display: block; font-size: 18pt; font-weight: 900; white-space: nowrap; }
   .status-table tr.closer-contact-row .ccr-sub { display: block; font-size: 10.5pt; font-weight: 600; margin: 2px 0 4px; }
+  .status-head-table.doc-table { margin-bottom: -1px; break-after: avoid; page-break-after: avoid; break-inside: avoid; page-break-inside: avoid; }
   .status-table tr.closer-contact-row .ccr-person { font-size: 22pt; font-weight: 700; margin-right: 26px; white-space: nowrap; display: inline-block; }
   .status-table tr.closer-contact-row .ccr-person b { font-size: 28pt; font-weight: 900; }
 
@@ -1945,11 +1946,20 @@
     });
   }
 
-  // 현황지 상단(코스 첫 장에만): 그날 일정표 "마감" 포지션 근무자 이름·전화번호.
-  // 표 머리글(thead)은 장마다 반복되므로 본문(tbody) 첫 줄에 넣는다 — renderStatusRows 뒤에 호출할 것.
+  // 현황지 제목 바로 아래(코스 첫 장에만): 그날 일정표 "마감" 포지션 근무자 이름·전화번호.
+  // 표 머리글(thead)은 장마다 반복되므로, 제목 줄을 꺼내 별도의 머리 표(첫 장 맨 위)로 옮기고 그 아래에 이 줄을 단다.
+  // 2장째부터는 본 표의 열 제목 줄만 반복된다.
   function appendCloserContactRow(wrap, merged) {
-    var tbody = wrap.querySelector('tbody');
-    if (!tbody) return;
+    var table = wrap.querySelector('table.status-table');
+    var titleRow = table && table.querySelector('tr.doc-title-row');
+    if (!table || !titleRow) return;
+    var head = document.createElement('table');
+    head.className = table.className + ' status-head-table';
+    var cg = table.querySelector('colgroup');
+    if (cg) head.appendChild(cg.cloneNode(true));
+    var headBody = document.createElement('thead'); // tbody가 아니어야 인쇄 가능 검사(첫 tbody)가 본 표를 본다
+    head.appendChild(headBody);
+    headBody.appendChild(titleRow);
     var tr = document.createElement('tr'); tr.className = 'closer-contact-row';
     var th = document.createElement('th'); th.colSpan = 8;
     var lab = document.createElement('span'); lab.className = 'ccr-label';
@@ -1968,7 +1978,8 @@
       th.appendChild(sp);
     });
     tr.appendChild(th);
-    tbody.insertBefore(tr, tbody.firstChild);
+    headBody.appendChild(tr);
+    table.parentNode.insertBefore(head, table);
   }
 
   function buildStatusCourseBlock(course, items, driver, merged) {
