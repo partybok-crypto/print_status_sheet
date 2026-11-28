@@ -185,7 +185,11 @@
   .primary-doc-btn.selected .pdb-badge { color: rgba(255,255,255,.9); }
 
   /* 기타 출력 — 작은 단독 출력 버튼 4개 */
-  .other-doc-head { display: flex; align-items: baseline; gap: 8px; margin-top: 3px; }
+  .other-doc-head { display: flex; align-items: baseline; gap: 8px; margin-top: 3px; width: 100%; padding: 2px 0;
+    background: none; border: 0; cursor: pointer; text-align: left; }
+  .other-doc-head .odt-arrow { font-size: 12px; color: var(--text-sub); width: 12px; }
+  .other-doc-head:hover .other-doc-title { color: var(--navy); }
+  .other-doc-grid.collapsed { display: none; }
   .other-doc-title { font-size: 12.5px; font-weight: 800; color: var(--text-sub); }
   .other-doc-sub { font-size: 11px; font-weight: 600; color: #94a3b8; }
   .other-doc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-top: 4px; }
@@ -214,6 +218,24 @@
   .print-btn:not(:disabled):hover { animation-play-state: paused; }
   .print-sub-row { display: flex; gap: 8px; margin-top: 4px; }
   .print-caption { text-align: center; font-size: 11px; color: var(--text-sub); margin-top: 2px; }
+  .print-sub-row .sub-btn { font-size: 12.5px; gap: 4px; white-space: nowrap; }
+
+  /* 세로가 짧은 화면(현장 PC: 1920x1080 150% 배율 → 크롬 화면 약 580px): 스크롤 없이 인쇄 버튼까지 한 화면에 */
+  @media screen and (min-width: 821px) and (max-height: 860px) {
+    .left-panel { gap: 2px; padding: 4px 14px 3px; }
+    .section-label { margin-bottom: 2px; font-size: 11.5px; }
+    .date-box { min-height: 38px; font-size: 16px; }
+    .date-sub-row { margin-top: 3px; }
+    .sub-btn { min-height: 30px; }
+    .course-btn { min-height: 30px; }
+    .primary-doc-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .primary-doc-btn, .nametag-open-btn { min-height: 0; padding: 5px 10px; border-radius: 11px; gap: 1px; }
+    .primary-doc-btn .pdb-title, .nametag-open-btn .pdb-title { font-size: 14.5px; line-height: 1.2; }
+    .primary-doc-btn .pdb-sub, .nametag-open-btn .pdb-sub { font-size: 10.5px; line-height: 1.2; }
+    .print-btn { min-height: 44px; }
+    .print-sub-row .sub-btn { min-height: 28px; }
+    .print-caption { display: none; }
+  }
 
   .admin-open-btn {
     width: 100%; min-height: 34px; margin-top: 4px; border: 1.5px solid var(--blue); background: #fff;
@@ -630,7 +652,7 @@
       <div class="field-section">
         <div class="section-label" data-i18n="sec2">2. 코스 선택</div>
         <div class="course-grid" id="courseGrid"></div>
-        <div class="info-card" id="courseInfoCard">데이터를 불러오는 중...</div>
+        <div class="info-card" id="courseInfoCard" style="display:none">데이터를 불러오는 중...</div>
       </div>
 
       <div class="field-section">
@@ -662,11 +684,12 @@
           </button>
         </div>
 
-        <div class="other-doc-head">
+        <button type="button" class="other-doc-head" id="otherDocToggle" aria-expanded="false">
+          <span class="odt-arrow" id="otherDocArrow">▸</span>
           <span class="other-doc-title" data-i18n="otherTitle">기타 출력</span>
           <span class="other-doc-sub" data-i18n="otherSub">필요할 때만 선택하세요</span>
-        </div>
-        <div class="other-doc-grid" id="otherDocGrid">
+        </button>
+        <div class="other-doc-grid collapsed" id="otherDocGrid">
           <button class="other-doc-btn" data-doc="address" data-i18n="odAddress">주소지만</button>
           <button class="other-doc-btn" data-doc="status" data-i18n="odStatus">현황지만</button>
           <button class="other-doc-btn" data-doc="closer" data-i18n="odCloser">마감자용 수량표만</button>
@@ -680,11 +703,11 @@
         <div class="print-sub-row">
           <button class="sub-btn" id="btnEdit"><span>✏</span><span data-i18n="edit">내용 수정</span></button>
           <button class="sub-btn" id="btnChangesTest"><span>🧪</span><span data-i18n="changesTest">변경내역 테스트 출력</span></button>
+          <button class="sub-btn" id="btnOpenAdmin"><span>🔗</span><span data-i18n="openAdminShort">관리·편집</span></button>
         </div>
         <div class="print-caption" data-i18n="caption">미리보기와 동일하게 출력됩니다</div>
       </div>
 
-      <button class="admin-open-btn" id="btnOpenAdmin"><span data-i18n="openAdmin">🔗 관리·편집 화면 열기</span></button>
     </aside>
 
     <main class="right-panel">
@@ -843,7 +866,7 @@
       otherTitle: '기타 출력', otherSub: '필요할 때만 선택하세요',
       odAddress: '주소지만', odStatus: '현황지만', odCloser: '마감자용 수량표만', odAllAddr: '전체주소지만',
       edit: '내용 수정', changesTest: '변경내역 테스트 출력', caption: '미리보기와 동일하게 출력됩니다',
-      openAdmin: '🔗 관리·편집 화면 열기', previewTitle: '인쇄 미리보기',
+      openAdmin: '🔗 관리·편집 화면 열기', openAdminShort: '관리·편집', previewTitle: '인쇄 미리보기',
       guideTitle: '인쇄 순서 안내', guideBody: '현황지와 주소지를 각각 안정적으로 출력합니다. 아래 순서대로 눌러주세요.',
       guideStep1: '1. 현황지 인쇄', guideStep2: '2. 주소지 인쇄',
       closerTitle: '세탁 마감용 문서 출력', closerBody: '1. 마감자용 수량표<br>2. 전체주소지<br><br>두 문서를 순서대로 출력해주세요.',
@@ -894,7 +917,7 @@
       otherTitle: 'Cetakan lainnya', otherSub: 'Pilih hanya jika diperlukan',
       odAddress: 'Daftar alamat saja', odStatus: 'Lembar status saja', odCloser: 'Tabel jumlah penutupan saja', odAllAddr: 'Semua alamat saja',
       edit: 'Ubah isi', changesTest: 'Cetak uji perubahan', caption: 'Dicetak sama seperti pratinjau',
-      openAdmin: '🔗 Buka layar kelola/ubah', previewTitle: 'Pratinjau cetak',
+      openAdmin: '🔗 Buka layar kelola/ubah', openAdminShort: 'Kelola', previewTitle: 'Pratinjau cetak',
       guideTitle: 'Urutan cetak', guideBody: 'Lembar status dan daftar alamat dicetak satu per satu agar stabil. Tekan sesuai urutan di bawah.',
       guideStep1: '1. Cetak lembar status', guideStep2: '2. Cetak daftar alamat',
       closerTitle: 'Cetak dokumen penutupan cucian', closerBody: '1. Tabel jumlah penutupan<br>2. Semua alamat<br><br>Cetak kedua dokumen sesuai urutan.',
@@ -945,7 +968,7 @@
       otherTitle: 'Bản in khác', otherSub: 'Chỉ chọn khi cần',
       odAddress: 'Chỉ danh sách địa chỉ', odStatus: 'Chỉ bảng tình hình', odCloser: 'Chỉ bảng số lượng chốt', odAllAddr: 'Chỉ tất cả địa chỉ',
       edit: 'Sửa nội dung', changesTest: 'In thử thay đổi', caption: 'In giống như bản xem trước',
-      openAdmin: '🔗 Mở màn hình quản lý/chỉnh sửa', previewTitle: 'Xem trước khi in',
+      openAdmin: '🔗 Mở màn hình quản lý/chỉnh sửa', openAdminShort: 'Quản lý', previewTitle: 'Xem trước khi in',
       guideTitle: 'Thứ tự in', guideBody: 'Bảng tình hình và danh sách địa chỉ được in riêng từng bản để ổn định. Hãy bấm theo thứ tự bên dưới.',
       guideStep1: '1. In bảng tình hình', guideStep2: '2. In danh sách địa chỉ',
       closerTitle: 'In tài liệu chốt giặt', closerBody: '1. Bảng số lượng chốt<br>2. Tất cả địa chỉ<br><br>Hãy in hai tài liệu theo thứ tự.',
@@ -1542,8 +1565,21 @@
 
   function renderDocCards() {
     docCards.forEach(function (card) { card.classList.toggle('selected', card.dataset.doc === state.docType); });
+    var selOther = document.querySelector('.other-doc-btn.selected');
+    if (selOther && typeof setOtherDocOpen === 'function' && document.getElementById('otherDocGrid').classList.contains('collapsed')) setOtherDocOpen(true, false);
   }
   docCards.forEach(function (card) { card.addEventListener('click', function () { selectDocType(card.dataset.doc); }); });
+
+  // 기타 출력: 평소에는 접어 두고 ▸ 기타 출력 을 눌러 펼친다(펼침 상태는 기억). 기타 문서가 선택돼 있으면 펼쳐 둔다.
+  var otherDocToggle = $('otherDocToggle'), otherDocGrid = $('otherDocGrid'), otherDocArrow = $('otherDocArrow');
+  function setOtherDocOpen(open, remember) {
+    otherDocGrid.classList.toggle('collapsed', !open);
+    otherDocArrow.textContent = open ? '▾' : '▸';
+    otherDocToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (remember) { try { localStorage.setItem('ysc_other_doc_open', open ? '1' : '0'); } catch (e) {} }
+  }
+  otherDocToggle.addEventListener('click', function () { setOtherDocOpen(otherDocGrid.classList.contains('collapsed'), true); });
+  try { setOtherDocOpen(localStorage.getItem('ysc_other_doc_open') === '1', false); } catch (e) {}
 
   function courseLabel() {
     if (state.selectedCourse === ALL_SENTINEL) return t('lblAll');
