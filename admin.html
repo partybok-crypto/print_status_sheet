@@ -407,6 +407,11 @@
 
   .status-table td { font-size: 14pt; }
   .status-table td.col-companyno, .status-table td.col-nickname { font-weight: 700; font-size: 14pt; }
+  /* 업체번호: 칸에 꽉 차게 크게, 줄바꿈 없이 */
+  .status-table td.col-companyno { font-size: 24pt; font-weight: 900; white-space: nowrap; letter-spacing: -0.5px; padding-left: 1px; padding-right: 1px; }
+  /* 열 제목: 배송순서·업체번호 등이 두 글자씩 끊기지 않게 한 줄로 */
+  .status-table td.col-companyno.long { font-size: 18pt; }
+  .status-table tr.doc-col-row th { white-space: nowrap; letter-spacing: -0.3px; padding-left: 2px; padding-right: 2px; }
   .status-table td.col-shipno { font-weight: 700; font-size: 20pt; }
   .status-table td.col-qty { border: 2px solid #1d4ed8; }
   .status-table td.col-closecheck { border: 2px solid #000; background: #fff; }
@@ -1870,7 +1875,7 @@
   });
 
   // ================= 문서 템플릿 (현황지 / 주소지) =================
-  var STATUS_COL_WIDTHS = [9, 9, 12, 10, 15, 14, 10, 9, 12]; // 마지막: 오픈 수량기입(오픈 근무자 손기입)
+  var STATUS_COL_WIDTHS = [9, 11, 12, 10, 14, 13, 10, 9, 12]; // 마지막: 오픈 수량기입(오픈 근무자 손기입)
   var STATUS_TEMPLATE =
     '<table class="doc-table status-table">' +
       '<colgroup>' + STATUS_COL_WIDTHS.map(function (w) { return '<col style="width:' + w + '%">'; }).join('') + '</colgroup>' +
@@ -1911,7 +1916,7 @@
       var tr = document.createElement('tr');
       if (!it.nickname || !it.companyNumber) tr.classList.add('missing-row');
       tr.appendChild(td(it.deliveryOrder, 'col-order'));
-      tr.appendChild(td(it.companyNumber, 'col-companyno'));
+      var noCell = td(it.companyNumber, 'col-companyno'); if (String(it.companyNumber || '').length >= 5) noCell.classList.add('long'); tr.appendChild(noCell);
       tr.appendChild(td(it.nickname, 'col-nickname'));
       var bizCell = td(it.businessType, 'col-biztype');
       var style = bizTypeStyle(it.businessType);
