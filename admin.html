@@ -1946,20 +1946,18 @@
     });
   }
 
-  // 현황지 제목 바로 아래(코스 첫 장에만): 그날 일정표 "마감" 포지션 근무자 이름·전화번호.
-  // 표 머리글(thead)은 장마다 반복되므로, 제목 줄을 꺼내 별도의 머리 표(첫 장 맨 위)로 옮기고 그 아래에 이 줄을 단다.
-  // 2장째부터는 본 표의 열 제목 줄만 반복된다.
+  // 현황지 맨 위(코스 첫 장에만): 그날 일정표 "마감" 포지션 근무자 이름·전화번호.
+  // 본 표 머리글(제목 줄 + 열 제목)은 장마다 반복되므로, 이 줄은 본 표 바로 위의 별도 머리 표에 단다.
+  // 1장: 마감 담당 → 제목 → 열 제목, 2장째부터: 제목 → 열 제목.
   function appendCloserContactRow(wrap, merged) {
     var table = wrap.querySelector('table.status-table');
-    var titleRow = table && table.querySelector('tr.doc-title-row');
-    if (!table || !titleRow) return;
+    if (!table) return;
     var head = document.createElement('table');
     head.className = table.className + ' status-head-table';
     var cg = table.querySelector('colgroup');
     if (cg) head.appendChild(cg.cloneNode(true));
     var headBody = document.createElement('thead'); // tbody가 아니어야 인쇄 가능 검사(첫 tbody)가 본 표를 본다
     head.appendChild(headBody);
-    headBody.appendChild(titleRow);
     var tr = document.createElement('tr'); tr.className = 'closer-contact-row';
     var th = document.createElement('th'); th.colSpan = 8;
     var lab = document.createElement('span'); lab.className = 'ccr-label';
