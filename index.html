@@ -1292,11 +1292,12 @@
         if (data.requestedDate !== dateIso) {
           throw new Error('날짜 불일치: 요청 ' + dateIso + ' / 응답 ' + data.requestedDate);
         }
-        if (isoDate(state.selectedDate) !== dateIso) return;
+        if (isoDate(state.selectedDate) !== dateIso) { state.afterLoad = null; updatePrintButton(); return; }
         data.__at = Date.now(); state.rawCache[dateIso] = data;
         try { localStorage.setItem('ps_lastgood_' + dateIso, JSON.stringify({ at: Date.now(), data: data })); } catch (e) {}
         applyRawData(data, dateIso);
         setConn('ok', 'connOk');
+        runAfterLoad(true);
       })
       .catch(function (err) {
         // 끝내 못 불러왔으면 이 날짜로 마지막에 성공했던 데이터를 보여주되 오래된 것임을 알린다.
@@ -1307,6 +1308,7 @@
             var tm = new Date(lg.at);
             setConn('err', 'connErr');
             showInlineError('서버 응답이 없어 ' + (tm.getMonth() + 1) + '/' + tm.getDate() + ' ' + tm.getHours() + ':' + String(tm.getMinutes()).padStart(2, '0') + '에 불러왔던 이전 데이터를 보여줍니다. 출력 전에 「다시 시도」를 눌러 최신으로 바꿔주세요.');
+            runAfterLoad(false);
             return;
           }
         } catch (e2) {}
@@ -1315,9 +1317,41 @@
           ? t('errTimeout')
           : (err && err.message) ? err.message : t('errGas');
         showInlineError(msg);
+        runAfterLoad(false);
       })
       .finally(function () { state.isLoading = false; });
   }
+
+  // 데이터를 다시 불러온 뒤 이어서 할 일(인쇄 버튼 → 최신 데이터 확인 → 인쇄). ok=false면 이전 데이터로라도 진행한다.
+  try {
+    if (sessionStorage.getItem('ps_reloaded_for_update')) {
+      sessionStorage.removeItem('ps_reloaded_for_update');
+      setTimeout(function () { showInlineError('프로그램이 새 버전으로 바뀌어 새로고침했습니다. 인쇄 버튼을 다시 눌러 주세요.'); }, 0);
+    }
+  } catch (e) {}
+  function runAfterLoad(ok) {
+    var f = state.afterLoad; state.afterLoad = null;
+    if (f) setTimeout(function () { f(ok); }, 50);
+  }
+  function dataAgeMs() {
+    var rc = state.rawCache[isoDate(state.selectedDate)];
+    return (rc && rc.__at) ? Date.now() - rc.__at : Infinity;
+  }
+  function uiBusy() {
+    return state.isPrinting || state.isLoading || !!document.querySelector('.modal-overlay.show') ||
+      /(^|\s)printing-/.test(document.body.className);
+  }
+
+  // 창을 계속 켜 둔 PC(마감 PC 등)도 시트 수정이 반영되도록: 화면이 보이고 1분 넘게 아무도 안 만지면 3분마다 다시 불러온다.
+  var lastUserInputAt = Date.now();
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) {
+    document.addEventListener(ev, function () { lastUserInputAt = Date.now(); }, { passive: true, capture: true });
+  });
+  setInterval(function () {
+    if (document.hidden || !state.raw || uiBusy()) return;
+    if (Date.now() - lastUserInputAt < 60000) return;
+    if (dataAgeMs() >= 180000) loadDayData(true);
+  }, 60000);
 
   function applyRawData(data, dateIso) {
     state.raw = data;
@@ -3179,6 +3213,26 @@
 
   btnPrintMain.addEventListener('click', function () {
     if (!canPrint()) return;
+    preparePrint(mainPrintAction);
+  });
+  function preparePrint(fn) {
+    if (state.isLoading) return;
+    btnPrintMain.disabled = true;
+    printBtnLabel.textContent = '최신 데이터 확인 중...';
+    var verCheck = window.__psCheckNewVersion ? window.__psCheckNewVersion() : Promise.resolve(false);
+    verCheck.then(function (newer) {
+      if (newer) {
+        try { sessionStorage.setItem('ps_reloaded_for_update', '1'); } catch (e) {}
+        location.reload();
+        return;
+      }
+      if (dataAgeMs() < 180000) { updatePrintButton(); fn(); return; }
+      state.afterLoad = function () { updatePrintButton(); if (canPrint()) fn(); };
+      loadDayData(true);
+    });
+  }
+  function mainPrintAction() {
+    if (!canPrint()) return;
     if (state.docType === 'changes') { printChangesDoc(); return; }
     if (state.docType === 'status_address') { guideModal.classList.add('show'); return; }
     if (state.docType === 'closer') { printCloserDoc(); return; }
@@ -3188,7 +3242,7 @@
     if (state.docType === 'washCheck') { printWashCheckDoc(); return; }
     if (state.docType === 'status_address_wash') { washGuideModal.classList.add('show'); return; }
     printSingle(state.docType);
-  });
+  }
   guideStatusBtn.addEventListener('click', function () { printSingle('status'); guideStatusBtn.classList.add('done'); });
   guideAddressBtn.addEventListener('click', function () { printSingle('address'); guideAddressBtn.classList.add('done'); });
   guideClose.addEventListener('click', function () {
@@ -3726,6 +3780,35 @@
   $('ntForm').addEventListener('submit', function (e) { e.preventDefault(); loadNameTag(); });
 
   init();
+})();
+</script>
+
+<script>
+/* 새 버전 확인: 배포할 때 GitHub Actions가 __BUILD_ID__ 자리를 커밋 번호로 바꾸고 version.json을 만든다.
+   열어 둔 창이 옛 버전이면, 아무도 1분 넘게 안 만질 때 자동으로 새로고침한다(로컬 실행 중에는 동작 안 함). */
+(function () {
+  var BUILD_ID = '__BUILD_ID__';
+  if (BUILD_ID.indexOf('__') === 0) { window.__psCheckNewVersion = function () { return Promise.resolve(false); }; return; }
+  var newer = false, lastInput = Date.now();
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) {
+    document.addEventListener(ev, function () { lastInput = Date.now(); }, { passive: true, capture: true });
+  });
+  function check() {
+    return fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (v) { if (v && v.build && v.build !== BUILD_ID) newer = true; return newer; })
+      .catch(function () { return newer; });
+  }
+  function busy() {
+    return !!document.querySelector('.modal-overlay.show, .modal.show, .modal-backdrop.show') ||
+      /(^|\s)printing-/.test(document.body.className);
+  }
+  function maybeReload() {
+    if (newer && !document.hidden && !busy() && Date.now() - lastInput > 60000) location.reload();
+  }
+  window.__psCheckNewVersion = check;
+  setInterval(function () { check().then(maybeReload); }, 5 * 60 * 1000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) check(); });
 })();
 </script>
 </body>

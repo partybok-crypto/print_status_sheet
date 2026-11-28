@@ -25,6 +25,12 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
+      - name: Stamp build id (열어 둔 창의 새 버전 확인용)
+        run: |
+          BID="${GITHUB_SHA::7}"
+          sed -i "s/__BUILD_ID__/${BID}/g" index.html admin.html
+          printf '{"build":"%s"}\n' "$BID" > version.json
+          grep -c "$BID" index.html admin.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

@@ -2338,5 +2338,34 @@
   init();
 })();
 </script>
+
+<script>
+/* 새 버전 확인: 배포할 때 GitHub Actions가 __BUILD_ID__ 자리를 커밋 번호로 바꾸고 version.json을 만든다.
+   열어 둔 창이 옛 버전이면, 아무도 1분 넘게 안 만질 때 자동으로 새로고침한다(로컬 실행 중에는 동작 안 함). */
+(function () {
+  var BUILD_ID = '__BUILD_ID__';
+  if (BUILD_ID.indexOf('__') === 0) { window.__psCheckNewVersion = function () { return Promise.resolve(false); }; return; }
+  var newer = false, lastInput = Date.now();
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) {
+    document.addEventListener(ev, function () { lastInput = Date.now(); }, { passive: true, capture: true });
+  });
+  function check() {
+    return fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (v) { if (v && v.build && v.build !== BUILD_ID) newer = true; return newer; })
+      .catch(function () { return newer; });
+  }
+  function busy() {
+    return !!document.querySelector('.modal-overlay.show, .modal.show, .modal-backdrop.show') ||
+      /(^|\s)printing-/.test(document.body.className);
+  }
+  function maybeReload() {
+    if (newer && !document.hidden && !busy() && Date.now() - lastInput > 60000) location.reload();
+  }
+  window.__psCheckNewVersion = check;
+  setInterval(function () { check().then(maybeReload); }, 5 * 60 * 1000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) check(); });
+})();
+</script>
 </body>
 </html>
