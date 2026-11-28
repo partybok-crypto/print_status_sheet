@@ -2341,7 +2341,7 @@
 
 <script>
 /* 새 버전 확인: 배포할 때 GitHub Actions가 __BUILD_ID__ 자리를 커밋 번호로 바꾸고 version.json을 만든다.
-   열어 둔 창이 옛 버전이면, 아무도 1분 넘게 안 만질 때 자동으로 새로고침한다(로컬 실행 중에는 동작 안 함). */
+   열어 둔 창이 옛 버전이면 화면 80% 크기 안내창(새로고침 버튼)을 띄우고, 아무도 1분 넘게 안 만지면 자동으로 새로고침한다(로컬 실행 중에는 동작 안 함). */
 (function () {
   var BUILD_ID = '__BUILD_ID__';
   if (BUILD_ID.indexOf('__') === 0) { window.__psCheckNewVersion = function () { return Promise.resolve(false); }; return; }
@@ -2352,8 +2352,30 @@
   function check() {
     return fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (v) { if (v && v.build && v.build !== BUILD_ID) newer = true; return newer; })
+      .then(function (v) { if (v && v.build && v.build !== BUILD_ID) { newer = true; showUpdateOverlay(); } return newer; })
       .catch(function () { return newer; });
+  }
+  function showUpdateOverlay() {
+    if (document.getElementById('psUpdateOverlay')) return;
+    var bg = document.createElement('div');
+    bg.id = 'psUpdateOverlay'; bg.className = 'no-print';
+    bg.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;';
+    var box = document.createElement('div');
+    box.style.cssText = 'width:80vw;height:80vh;background:#fff;border:6px solid #2563eb;border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,.35);' +
+      'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5vh;text-align:center;padding:4vh 4vw;box-sizing:border-box;';
+    var t1 = document.createElement('div');
+    t1.textContent = '프로그램이 업데이트 되었습니다';
+    t1.style.cssText = 'font-size:min(6.5vw,11vh);font-weight:900;color:#111827;line-height:1.2;word-break:keep-all;';
+    var t2 = document.createElement('div');
+    t2.textContent = '새로고침 해주세요';
+    t2.style.cssText = 'font-size:min(5vw,8vh);font-weight:800;color:#2563eb;line-height:1.2;';
+    var btn = document.createElement('button');
+    btn.type = 'button'; btn.textContent = '새로고침';
+    btn.style.cssText = 'font-size:min(4.5vw,7vh);font-weight:900;color:#fff;background:#2563eb;border:0;border-radius:20px;padding:2.2vh 8vw;cursor:pointer;';
+    btn.addEventListener('click', function () { location.reload(); });
+    box.appendChild(t1); box.appendChild(t2); box.appendChild(btn);
+    bg.appendChild(box);
+    document.body.appendChild(bg);
   }
   function busy() {
     return !!document.querySelector('.modal-overlay.show, .modal.show, .modal-backdrop.show') ||
