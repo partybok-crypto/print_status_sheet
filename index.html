@@ -268,6 +268,11 @@
   .status-table td.col-bag .packed-gray .packed-num, .status-table td.col-towel .packed-gray .packed-num { font-size: 16pt; font-weight: 600; line-height: 1.1; }
   .status-table td.has-note { background: #fff59d; color: var(--red); font-weight: 700; }
   .status-table tr.missing-row td.col-nickname, .status-table tr.missing-row td.col-companyno { background: #fef2f2; }
+  .status-table tr.status-total-row td { height: 13mm; border-top: 2px solid #000; }
+  .status-table tr.status-total-row td.st-label { font-size: 13pt; font-weight: 800; text-align: right; padding-right: 12px; background: #f3f4f6; }
+  .status-table tr.status-total-row td.st-fill { border: 2px solid #000; vertical-align: top; text-align: left; padding: 2px 5px; }
+  .status-table tr.status-total-row .st-unit { font-size: 8.5pt; font-weight: 700; color: #6b7280; }
+  .status-table tr.status-total-row td.st-blank { background: #f3f4f6; }
 
   .address-table td, .address-table th { font-size: 12.5pt; }
   .address-table td.col-companyno, .address-table td.col-nickname { font-weight: 700; }
@@ -1756,17 +1761,17 @@
     return wrap.firstElementChild;
   }
 
-  // 현황지 전용: 지원차·자차 표 위에 마감자가 총 포대배송·총 수건배송 개수를 손으로 적는 칸 2줄을 더한다(마감자용 수량표는 그대로).
-  function buildStatusBottomTable() {
-    var table = buildVehicleCheckTable();
-    var thead = table.querySelector('thead');
-    var head = document.createElement('tr'); head.className = 'vc-head-row vc-total-head';
-    head.innerHTML = '<th colspan="2">총 포대배송 (개)</th><th>총 수건배송 (개)</th>';
-    var input = document.createElement('tr'); input.className = 'vc-input-row vc-total-input';
-    input.innerHTML = '<td colspan="2"></td><td></td>';
-    thead.insertBefore(input, thead.firstChild);
-    thead.insertBefore(head, input);
-    return table;
+  // 현황지 전용: 본 표 맨 아래 한 줄 — 마감자가 총 포대배송·총 수건배송 개수를 포대/수건 배송 열 아래에 손으로 적는다.
+  // tfoot은 장마다 반복되므로 본문(tbody) 마지막 줄로 넣는다.
+  function appendStatusTotalRow(wrap) {
+    var tbody = wrap.querySelector('table.status-table tbody');
+    if (!tbody) return;
+    var tr = document.createElement('tr'); tr.className = 'status-total-row';
+    tr.innerHTML = '<td colspan="4" class="st-label">총 개수 (마감자 기입)</td>' +
+      '<td class="st-fill"><span class="st-unit">포대</span></td>' +
+      '<td class="st-fill"><span class="st-unit">수건</span></td>' +
+      '<td colspan="2" class="st-blank"></td>';
+    tbody.appendChild(tr);
   }
 
   function renderStatusRows(tbody, items) {
@@ -1834,7 +1839,8 @@
     applyCourseColorBlock(wrap.querySelector('tr.doc-title-row'), wrap.querySelector('tr.doc-col-row'), course);
     renderStatusRows(wrap.querySelector('tbody'), items);
     appendCloserContactRow(wrap, merged);
-    wrap.appendChild(buildStatusBottomTable());
+    appendStatusTotalRow(wrap);
+    wrap.appendChild(buildVehicleCheckTable());
     return wrap;
   }
   function buildAddressCourseBlock(course, items, driver, merged) {
