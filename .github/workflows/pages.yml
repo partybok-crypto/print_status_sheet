@@ -37,6 +37,9 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: '.'
+      # 업로드 직후 바로 배포하면 GitHub가 artifact를 아직 못 찾아 실패하는 일이 반복돼 잠시 기다린다.
+      - name: Wait for artifact
+        run: sleep 20
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
