@@ -274,6 +274,31 @@ function warmStatusCaches() {
   return out.join(" / ");
 }
 
+// 일정표(세탁공장-일정표)를 누가 고치면 기억해 둔 마감 담당·오픈자·작성자를 지운다 →
+// 다음 현황지 조회 때 바뀐 인원을 새로 읽는다(현장 화면은 3분마다 다시 불러온다).
+function onScheduleEdited(e) {
+  clearScheduleCaches_();
+}
+function clearScheduleCaches_() {
+  var base = parseIsoDate_(Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd"));
+  var keys = [];
+  for (var i = -3; i <= 10; i++) {
+    var iso = toIsoDate_(new Date(base.getFullYear(), base.getMonth(), base.getDate() + i));
+    keys.push("closers:" + iso, "opener:" + iso, "washWriter:" + iso);
+  }
+  CacheService.getScriptCache().removeAll(keys);
+  return keys.length;
+}
+
+// 처음 한 번 편집기에서 실행: 일정표 파일에 "수정 시" 트리거를 달고, 지금 기억해 둔 것도 바로 지운다.
+function setupScheduleEditTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === "onScheduleEdited") ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger("onScheduleEdited").forSpreadsheet(SCHEDULE_SPREADSHEET_ID).onEdit().create();
+  return clearScheduleCaches_();
+}
+
 // 처음 한 번 편집기에서 실행: 미리 채우기 트리거(30분마다)를 새로 달고 바로 한 번 채운다.
 function setupWarmCacheTrigger() {
   ScriptApp.getProjectTriggers().forEach(function (t) {
