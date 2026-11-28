@@ -182,11 +182,114 @@ function getFirstWorkerName_(dateObj) {
   return found;
 }
 
+// 한 번의 실행 안에서 일정표 스프레드시트·쉬프트 탭 값을 한 번만 읽는다(작성자·마감자 조회가 같이 쓴다).
+// 이번 주 일정표는 탭 맨 위(2~18행)에 있으므로 위쪽 SCHEDULE_TOP_ROWS 행만 먼저 읽고(빠름),
+// 거기서 그 날짜를 못 찾을 때만 탭 전체를 읽는다(예전 주 블록). 전체 읽기는 몇 초 걸린다.
+const SCHEDULE_TOP_ROWS = 30;
+var SCHEDULE_SS_MEMO_ = null, SCHEDULE_VALUES_MEMO_ = {};
+function scheduleSpreadsheet_() {
+  if (!SCHEDULE_SS_MEMO_) SCHEDULE_SS_MEMO_ = SpreadsheetApp.openById(SCHEDULE_SPREADSHEET_ID);
+  return SCHEDULE_SS_MEMO_;
+}
+function scheduleValues_(topOnly) {
+  var key = topOnly ? "top" : "all";
+  if (SCHEDULE_VALUES_MEMO_[key]) return SCHEDULE_VALUES_MEMO_[key];
+  var sh = scheduleSpreadsheet_().getSheetByName(SCHEDULE_SHEET_NAME);
+  var v = [];
+  if (sh) {
+    var lastRow = sh.getLastRow(), lastCol = sh.getLastColumn();
+    if (lastRow > 0 && lastCol > 0) {
+      v = topOnly ? sh.getRange(1, 1, Math.min(lastRow, SCHEDULE_TOP_ROWS), lastCol).getDisplayValues()
+                  : sh.getRange(1, 1, lastRow, lastCol).getDisplayValues();
+    }
+  }
+  SCHEDULE_VALUES_MEMO_[key] = v;
+  return v;
+}
+
+// =============================================
+// 현황지 하단 "오늘 마감 담당" — 일정표(주차별 쉬프트) 그 날짜 블록에서 포지션이 "마감"인 사람들과
+// 「근무자정보」 탭의 핸드폰번호(근무자명 일치). [{ name, phone }] 시트 순서대로, 못 찾으면 [].
+// 마감자가 그날 현황지를 출력하므로 현황지 날짜와 같은 날의 마감 근무자를 쓴다.
+// =============================================
+const WORKER_INFO_SHEET_NAME = "근무자정보"; // D=분류 E=근무자명 M=핸드폰번호
+
+function getClosers_(dateObj) {
+  var cache = null, ckey = "closers:" + toIsoDate_(dateObj);
+  try { cache = CacheService.getScriptCache(); var hit = cache.get(ckey); if (hit) return JSON.parse(hit); } catch (e0) {}
+  var found = [];
+  try { found = getClosersUncached_(dateObj); } catch (e1) { found = []; }
+  // 못 찾은 날(화요일처럼 일정표에 블록이 없는 날)도 10분 기억해 매번 다시 읽지 않는다.
+  try { cache.put(ckey, JSON.stringify(found), found.length ? 1800 : 600); } catch (e2) {}
+  return found;
+}
+
+// 이번 주 일정표(탭 위쪽)에서만 찾는다 — 탭 전체 읽기는 몇 초 걸려 현황지 조회가 10초 제한을 넘길 수 있다.
+function getClosersUncached_(dateObj) {
+  var names = closerNamesIn_(scheduleValues_(true), dateObj);
+  if (!names || !names.length) return [];
+  return attachPhones_(names);
+}
+
+// 그 날짜 블록(포지션·이름 머리글)이 있으면 "마감" 근무자 이름 배열, 블록 자체가 없으면 null.
+function closerNamesIn_(v, dateObj) {
+  var wd = ["일", "월", "화", "수", "목", "금", "토"][dateObj.getDay()];
+  var mm = dateObj.getMonth() + 1, dd = dateObj.getDate();
+  for (var r = 0; r + 1 < v.length; r++) {
+    for (var c = 0; c < v[r].length; c++) {
+      var m = /^\s*(\d{1,2})\s*-\s*(\d{1,2})\s*-\s*([월화수목금토일])\s*$/.exec(v[r][c]);
+      if (!m || Number(m[1]) !== mm || Number(m[2]) !== dd || m[3] !== wd) continue;
+      // 포지션·이름 머리글이 있는 블록만(출근·퇴근·작업시간만 있는 다른 표는 건너뜀)
+      var posCol = -1, nameCol = -1;
+      for (var k = Math.max(0, c - 1); k < Math.min(v[r + 1].length, c + 8); k++) {
+        var lab = String(v[r + 1][k]).trim();
+        if (lab === "포지션" && posCol === -1) posCol = k;
+        if (lab === "이름" && nameCol === -1) nameCol = k;
+      }
+      if (posCol === -1 || nameCol === -1) continue;
+      var names = [];
+      for (var i = r + 2; i < Math.min(v.length, r + 2 + 40); i++) {
+        var pos = String(v[i][posCol] || "").trim(), name = String(v[i][nameCol] || "").trim();
+        if (!pos && !name) break; // 블록 끝
+        if (name && pos.indexOf("마감") !== -1 && names.indexOf(name) === -1) names.push(name);
+      }
+      return names;
+    }
+  }
+  return null;
+}
+
+function attachPhones_(names) {
+  var phones = {};
+  var info = scheduleSpreadsheet_().getSheetByName(WORKER_INFO_SHEET_NAME);
+  if (info && info.getLastRow() >= 2) {
+    var rows = info.getRange(2, 4, info.getLastRow() - 1, 10).getDisplayValues(); // D~M
+    rows.forEach(function (row) {
+      var n = String(row[1] || "").trim(), p = formatPhone_(row[9]);
+      if (n && p && names.indexOf(n) !== -1) phones[n] = p; // 같은 이름이 여러 줄이면 아래쪽(최근) 번호
+    });
+  }
+  return names.map(function (n) { return { name: n, phone: phones[n] || "" }; });
+}
+
+function formatPhone_(raw) {
+  var d = String(raw || "").replace(/\D/g, "");
+  if (/^01[016789]\d{7,8}$/.test(d)) return d.slice(0, 3) + "-" + d.slice(3, d.length - 4) + "-" + d.slice(-4);
+  return "";
+}
+
 function getFirstWorkerNameUncached_(dateObj) {
   try {
-    var sh = SpreadsheetApp.openById(SCHEDULE_SPREADSHEET_ID).getSheetByName(SCHEDULE_SHEET_NAME);
-    if (!sh) return "";
-    var v = sh.getDataRange().getDisplayValues();
+    var found = firstWorkerIn_(scheduleValues_(true), dateObj);
+    if (found === null) found = firstWorkerIn_(scheduleValues_(false), dateObj);
+    return found || "";
+  } catch (err) {}
+  return "";
+}
+
+// 그 날짜 일정표 블록이 있으면 첫 출근자 이름(없으면 ""), 블록 자체가 없으면 null.
+function firstWorkerIn_(v, dateObj) {
+  {
     var wd = ["일", "월", "화", "수", "목", "금", "토"][dateObj.getDay()];
     var mm = dateObj.getMonth() + 1, dd = dateObj.getDate();
     for (var r = 0; r + 1 < v.length; r++) {
@@ -214,8 +317,8 @@ function getFirstWorkerNameUncached_(dateObj) {
         return best;
       }
     }
-  } catch (err) {}
-  return "";
+  }
+  return null;
 }
 
 // 셀 값을 항상 문자열로. "30_3" 같은 값이 날짜/숫자로 바뀌는 일이 없게 하고,
@@ -268,7 +371,7 @@ function buildTradeAssignmentMap_(weekday) {
 // 문제가 있었다. 날짜와 요일이 서로 다른 요일을 가리키면 오류로 처리한다.
 // =============================================
 function buildDayData_(weekday, explicitDate) {
-  var buildStart = Date.now(), writerMs = 0;
+  var buildStart = Date.now(), writerMs = 0, closerMs = 0;
   var fullName = WEEKDAY_FULL_NAME[weekday];
   if (!fullName) throw new Error("요일 값이 올바르지 않습니다: " + weekday);
 
@@ -438,11 +541,12 @@ function buildDayData_(weekday, explicitDate) {
     origin: origin,
     courses: order,
     washWriter: (function () { var t0 = Date.now(); var w = getFirstWorkerName_(washDateOf_(dateObj)); writerMs = Date.now() - t0; return w; })(),
+    closers: (function () { var t0 = Date.now(); var c = getClosers_(dateObj); closerMs = Date.now() - t0; return c; })(),
     drivers: drivers,
     items: items,
     count: items.length,
     closedDay: false,
-    timing: { tradeMs: tradeMs, writerMs: writerMs, totalMs: Date.now() - buildStart },
+    timing: { tradeMs: tradeMs, writerMs: writerMs, closerMs: closerMs, totalMs: Date.now() - buildStart },
     fetchedAt: new Date().toISOString()
   };
 }

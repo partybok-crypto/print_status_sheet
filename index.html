@@ -289,6 +289,15 @@
   }
   .vehicle-check-table tr.vc-head-row th { background: #f3f4f6; font-weight: 800; font-size: 13pt; padding: 7px 6px; }
   .vehicle-check-table tr.vc-input-row td { height: 14mm; background: #fff; border-width: 2px; }
+  .status-closer-box {
+    width: 210mm; box-sizing: border-box; margin-top: -1px; background: #fff;
+    border: 2px solid #000; padding: 7px 10px; font-size: 13pt; line-height: 1.5;
+    display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 18px;
+    break-inside: avoid; page-break-inside: avoid; break-before: avoid; page-break-before: avoid;
+  }
+  .status-closer-box .scb-label { font-weight: 800; }
+  .status-closer-box .scb-person { font-weight: 700; white-space: nowrap; }
+  .status-closer-box .scb-person b { font-size: 14pt; }
 
   .address-footnote {
     width: 297mm; text-align: center; font-size: 12pt; font-weight: 700;
@@ -1399,7 +1408,7 @@
     var editedCount = list.filter(function (it) { return it.isEdited || it.isAdded; }).length;
 
     return {
-      dayOfWeek: raw.dayOfWeek, requestedDate: raw.requestedDate, weekday: raw.weekday, origin: raw.origin, washWriter: raw.washWriter || '',
+      dayOfWeek: raw.dayOfWeek, requestedDate: raw.requestedDate, weekday: raw.weekday, origin: raw.origin, washWriter: raw.washWriter || '', closers: raw.closers || [],
       closedDay: raw.closedDay, courses: courses, byCourse: byCourse, drivers: drivers, items: list,
       excludedItems: excludedItems, totalCount: list.length, excludedCount: excludedItems.length, editedCount: editedCount
     };
@@ -1670,6 +1679,29 @@
       '</tbody>' +
     '</table>';
 
+  // 현황지 하단: 그날 일정표의 "마감" 포지션 근무자 이름·전화번호 — 수량을 적은 사람이 누구인지 드러나게 한다
+  function buildCloserContact(merged) {
+    var box = document.createElement('div');
+    box.className = 'status-closer-box';
+    var lab = document.createElement('span'); lab.className = 'scb-label';
+    lab.textContent = '오늘 마감 담당 (수량 확인)';
+    box.appendChild(lab);
+    var list = (merged && merged.closers) || [];
+    if (!list.length) {
+      var none = document.createElement('span'); none.className = 'scb-person';
+      none.textContent = '________________  010-____-____';
+      box.appendChild(none);
+    }
+    list.forEach(function (c) {
+      var sp = document.createElement('span'); sp.className = 'scb-person';
+      var nm = document.createElement('b'); nm.textContent = c.name;
+      sp.appendChild(nm);
+      sp.appendChild(document.createTextNode(' ' + (c.phone || '010-____-____')));
+      box.appendChild(sp);
+    });
+    return box;
+  }
+
   function buildVehicleCheckTable() {
     var wrap = document.createElement('div');
     wrap.innerHTML = VEHICLE_CHECK_TEMPLATE;
@@ -1741,6 +1773,7 @@
     applyCourseColorBlock(wrap.querySelector('tr.doc-title-row'), wrap.querySelector('tr.doc-col-row'), course);
     renderStatusRows(wrap.querySelector('tbody'), items);
     wrap.appendChild(buildVehicleCheckTable());
+    wrap.appendChild(buildCloserContact(merged));
     return wrap;
   }
   function buildAddressCourseBlock(course, items, driver, merged) {
