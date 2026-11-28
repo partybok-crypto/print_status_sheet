@@ -47,6 +47,19 @@
     text-decoration: none; white-space: nowrap;
   }
   .hdr-link:hover { background: var(--blue-bg); }
+  /* 신규 바로가기: 노란색으로 깜박이고 NEW 뱃지(12/13까지, 그 뒤엔 자동으로 평범한 버튼) */
+  @keyframes hdrNewBlink {
+    0%, 100% { background: #fff; border-color: var(--blue); box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
+    50% { background: #fde047; border-color: #eab308; box-shadow: 0 0 0 5px rgba(250, 204, 21, .45); }
+  }
+  .hdr-link.is-new { position: relative; animation: hdrNewBlink .8s ease-in-out infinite; }
+  .hdr-link.is-new:hover { animation-play-state: paused; }
+  .hdr-link .new-badge { display: none; }
+  .hdr-link.is-new .new-badge {
+    display: inline-block; position: absolute; top: -9px; right: -10px; padding: 1px 6px; border-radius: 999px;
+    background: #ef4444; color: #fff; font-size: 10.5px; font-weight: 900; letter-spacing: .3px; line-height: 1.5;
+    box-shadow: 0 1px 3px rgba(0,0,0,.25);
+  }
   .app-header-right { display: flex; align-items: center; gap: 18px; }
   .conn-text { font-size: 14.5px; font-weight: 700; }
   .lang-switch { display: flex; gap: 4px; }
@@ -636,8 +649,8 @@
   <header class="app-header">
     <div class="app-header-title-wrap">
       <div class="app-header-left" data-i18n="appTitle">유성클리닝 현황지 출력</div>
-      <a class="hdr-link" href="https://towel-jokbo-production.up.railway.app/" target="_blank" rel="noopener">🧺 수건족보</a>
-      <a class="hdr-link" href="https://yuseong-delivery-production.up.railway.app/" target="_blank" rel="noopener">📋 현장입력</a>
+      <a class="hdr-link is-new" href="https://towel-jokbo-production.up.railway.app/" target="_blank" rel="noopener">🧺 수건족보<span class="new-badge">NEW</span></a>
+      <a class="hdr-link is-new" href="https://yuseong-delivery-production.up.railway.app/" target="_blank" rel="noopener">📋 현장입력<span class="new-badge">NEW</span></a>
     </div>
     <div class="app-header-right">
       <div class="lang-switch" id="langSwitch">
@@ -1289,6 +1302,10 @@
     var age = dataAgeMs();
     if (age >= 180000 && connState.kind === 'ok') setConn('stale', 'connStale', connState.vars);
   }, 20000);
+  // 신규 바로가기 표시(노란 깜박임·NEW)는 2026-12-13까지만
+  if (new Date() > new Date(2026, 11, 13, 23, 59)) {
+    Array.prototype.forEach.call(document.querySelectorAll('.hdr-link.is-new'), function (a) { a.classList.remove('is-new'); });
+  }
   (function () {
     var bt = '__BUILD_TIME__'; // 배포할 때 "11/29 00:23" 형태로 바뀐다
     var el = document.getElementById('verText');
