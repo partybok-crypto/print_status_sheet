@@ -5,6 +5,8 @@
 
 - 화면 주소: https://partybok-crypto.github.io/print_status_sheet/
 - 배포: `master`에 push하면 GitHub Pages로 자동 배포된다(`.github/workflows/pages.yml`).
+  - 배포 때 `index.html`·`admin.html`의 `__BUILD_ID__`를 커밋 번호로 바꾸고 `version.json`을 만든다. 열어 둔 창은 5분마다 이것을 비교해, 옛 버전이면 1분 넘게 조작이 없을 때 자동으로 새로고침한다. 인쇄 버튼을 누른 순간에 옛 버전이면 새로고침하고 다시 누르라고 안내한다.
+  - 현장 화면은 불러온 지 3분 넘은 데이터로는 인쇄하지 않는다(인쇄 버튼을 누르면 먼저 다시 불러온다). 조작이 없을 때도 3분마다 다시 불러온다.
 
 ## 구성
 
