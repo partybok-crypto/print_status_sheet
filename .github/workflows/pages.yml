@@ -34,7 +34,7 @@ jobs:
           cat version.json
           grep -c "$BID" index.html admin.html
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: '.'
       - name: Deploy to GitHub Pages
