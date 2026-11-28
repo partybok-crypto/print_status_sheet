@@ -2352,11 +2352,12 @@
   function check() {
     return fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (v) { if (v && v.build && v.build !== BUILD_ID) { newer = true; showUpdateOverlay(); } return newer; })
+      .then(function (v) { if (v && v.build && v.build !== BUILD_ID) { newer = true; showUpdateOverlay(v.time || ''); } return newer; })
       .catch(function () { return newer; });
   }
-  function showUpdateOverlay() {
-    if (document.getElementById('psUpdateOverlay')) return;
+  function showUpdateOverlay(verTime) {
+    var old = document.getElementById('psUpdateOverlay');
+    if (old) { var ov = document.getElementById('psUpdateVer'); if (ov && verTime) ov.textContent = '(버전: ' + verTime + ')'; return; }
     var bg = document.createElement('div');
     bg.id = 'psUpdateOverlay'; bg.className = 'no-print';
     bg.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;';
@@ -2373,7 +2374,11 @@
     btn.type = 'button'; btn.textContent = '새로고침';
     btn.style.cssText = 'font-size:min(4.5vw,7vh);font-weight:900;color:#fff;background:#2563eb;border:0;border-radius:20px;padding:2.2vh 8vw;cursor:pointer;';
     btn.addEventListener('click', function () { location.reload(); });
-    box.appendChild(t1); box.appendChild(t2); box.appendChild(btn);
+    var t3 = document.createElement('div');
+    t3.id = 'psUpdateVer';
+    t3.textContent = verTime ? '(버전: ' + verTime + ')' : '';
+    t3.style.cssText = 'font-size:min(2.6vw,4.2vh);font-weight:700;color:#6b7280;margin-top:-3vh;';
+    box.appendChild(t1); box.appendChild(t2); box.appendChild(t3); box.appendChild(btn);
     bg.appendChild(box);
     document.body.appendChild(bg);
   }

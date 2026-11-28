@@ -29,7 +29,9 @@ jobs:
         run: |
           BID="${GITHUB_SHA::7}"
           sed -i "s/__BUILD_ID__/${BID}/g" index.html admin.html
-          printf '{"build":"%s"}\n' "$BID" > version.json
+          BTIME="$(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M')"
+          printf '{"build":"%s","time":"%s"}\n' "$BID" "$BTIME" > version.json
+          cat version.json
           grep -c "$BID" index.html admin.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

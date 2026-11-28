@@ -173,13 +173,17 @@ function washDateOf_(dateObj) {
 
 // 그 날짜 일정표 블록(날짜 칸 "10-31-토" + 바로 아래 머리글 출근/종료/포지션/이름/작업)에서
 // 휴무가 아닌 사람 중 출근이 가장 이른 사람의 이름을 돌려준다(같으면 시트 순서). 못 찾거나 접근이 안 되면 "".
-function getFirstWorkerName_(dateObj) {
-  // 다른 스프레드시트를 열어 읽는 데 몇 초 걸리므로 날짜별로 기억한다(찾으면 30분, 못 찾으면 10분).
+// 일정표 조회 결과를 기억하는 시간. warmStatusCaches(30분마다)가 미리 채워 두므로 그보다 조금 길게 둔다.
+const SCHEDULE_CACHE_FOUND_SEC = 2400;   // 찾았을 때 40분
+const SCHEDULE_CACHE_EMPTY_SEC = 600;    // 못 찾았을 때 10분
+
+function getFirstWorkerName_(dateObj, force) {
+  // 다른 스프레드시트를 열어 읽는 데 몇 초 걸리므로 날짜별로 기억한다. force면 기억을 무시하고 새로 읽는다(미리 채우기용).
   var cache = null, ckey = "washWriter:" + toIsoDate_(dateObj);
-  try { cache = CacheService.getScriptCache(); var hit = cache.get(ckey); if (hit) return hit === "-" ? "" : hit; } catch (e0) {}
+  try { cache = CacheService.getScriptCache(); var hit = force ? null : cache.get(ckey); if (hit) return hit === "-" ? "" : hit; } catch (e0) {}
   var found = getFirstWorkerNameUncached_(dateObj);
   // 못 찾은 날(예: 일요일 수거분의 세탁일인 다음 주 월요일)도 10분 기억해 매번 다시 읽지 않는다.
-  try { cache.put(ckey, found || "-", found ? 1800 : 600); } catch (e1) {}
+  try { cache.put(ckey, found || "-", found ? SCHEDULE_CACHE_FOUND_SEC : SCHEDULE_CACHE_EMPTY_SEC); } catch (e1) {}
   return found;
 }
 
@@ -217,14 +221,47 @@ function scheduleValues_(topOnly) {
 // =============================================
 const WORKER_INFO_SHEET_NAME = "근무자정보"; // D=분류 E=근무자명 M=핸드폰번호
 
-function getClosers_(dateObj) {
-  var cache = null, ckey = "closers:" + toIsoDate_(dateObj);
-  try { cache = CacheService.getScriptCache(); var hit = cache.get(ckey); if (hit) return JSON.parse(hit); } catch (e0) {}
+// 현황지 날짜 → 그 현황지를 작성하는 마감 근무일. 세탁팀은 화요일 휴무(배송팀은 월요일 휴무)라
+// 화요일 현황지는 월요일 마감자가 작성한다. 나머지 요일은 같은 날 마감자.
+function closerSourceDate_(dateObj) {
+  if (dateObj.getDay() === 2) return new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate() - 1);
+  return dateObj;
+}
+
+function getClosers_(dateObj, force) {
+  var src = closerSourceDate_(dateObj);
+  var cache = null, ckey = "closers:" + toIsoDate_(src);
+  try { cache = CacheService.getScriptCache(); var hit = force ? null : cache.get(ckey); if (hit) return JSON.parse(hit); } catch (e0) {}
   var found = [];
-  try { found = getClosersUncached_(dateObj); } catch (e1) { found = []; }
-  // 못 찾은 날(화요일처럼 일정표에 블록이 없는 날)도 10분 기억해 매번 다시 읽지 않는다.
-  try { cache.put(ckey, JSON.stringify(found), found.length ? 1800 : 600); } catch (e2) {}
+  try { found = getClosersUncached_(src); } catch (e1) { found = []; }
+  // 못 찾은 날도 10분 기억해 매번 다시 읽지 않는다.
+  try { cache.put(ckey, JSON.stringify(found), found.length ? SCHEDULE_CACHE_FOUND_SEC : SCHEDULE_CACHE_EMPTY_SEC); } catch (e2) {}
   return found;
+}
+
+// 30분마다(06~22시) 오늘·내일 현황지의 마감 담당과 세탁공정 작성자를 미리 읽어 기억해 둔다.
+// 그래야 현장에서 그날 처음 조회해도 일정표 파일 여는 시간(수 초)을 기다리지 않는다.
+function warmStatusCaches() {
+  var hour = Number(Utilities.formatDate(new Date(), "Asia/Seoul", "H"));
+  if (hour < 6 || hour > 22) return "skip";
+  var base = parseIsoDate_(Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd"));
+  var out = [];
+  [0, 1].forEach(function (add) {
+    var d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + add);
+    var c = getClosers_(d, true);
+    var w = getFirstWorkerName_(washDateOf_(d), true);
+    out.push(toIsoDate_(d) + " 마감 " + c.length + "명, 작성자 " + (w || "-"));
+  });
+  return out.join(" / ");
+}
+
+// 처음 한 번 편집기에서 실행: 미리 채우기 트리거(30분마다)를 새로 달고 바로 한 번 채운다.
+function setupWarmCacheTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === "warmStatusCaches") ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger("warmStatusCaches").timeBased().everyMinutes(30).create();
+  return warmStatusCaches();
 }
 
 // 이번 주 일정표(탭 위쪽)에서만 찾는다 — 탭 전체 읽기는 몇 초 걸려 현황지 조회가 10초 제한을 넘길 수 있다.
